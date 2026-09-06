@@ -132,6 +132,7 @@ def run_xml_import_engine_tests():
       'extractQueryFromXml',
       'applyQueryToForm',
       'applyXmlDomToForm',
+      'overrideFormFromXmlDom',
       'importXmlFile',
       'restoreFromUrlQuery'
     ];
@@ -250,6 +251,52 @@ def run_xml_import_engine_tests():
     if (fallbackElements.Keyboard.value !== '00000411') throw new Error('DOM fallback: Keyboard が不一致');
     if (fallbackElements.ComputerName.value !== 'FALLBACK-PC') throw new Error('DOM fallback: ComputerName が不一致');
     console.log('[PASS] applyXmlDomToForm によるDOMフォールバック反映確認');
+    console.log('\\n--- 6. XML本文優先反映 (overrideFormFromXmlDom) 単体検証 ---');
+    const overrideElements = {
+      AccountName0: { tagName: 'INPUT', name: 'AccountName0', value: '', dispatchEvent() {} },
+      AccountDisplayName0: { tagName: 'INPUT', name: 'AccountDisplayName0', value: '', dispatchEvent() {} },
+      AccountGroup0: { tagName: 'SELECT', name: 'AccountGroup0', value: '', dispatchEvent() {} },
+      AccountPassword0: { tagName: 'INPUT', name: 'AccountPassword0', value: 'OldCommentPass_Test', dispatchEvent() {} },
+      UserAccountMode: { tagName: 'INPUT', type: 'radio', name: 'UserAccountMode', checked: false, dispatchEvent() {} }
+    };
+    const mockOverrideForm = {
+      querySelector(sel) {
+        if (sel.includes('name="AccountName0"')) return overrideElements.AccountName0;
+        if (sel.includes('name="AccountDisplayName0"')) return overrideElements.AccountDisplayName0;
+        if (sel.includes('name="AccountGroup0"')) return overrideElements.AccountGroup0;
+        if (sel.includes('name="AccountPassword0"')) return overrideElements.AccountPassword0;
+        if (sel.includes('name="UserAccountMode"')) return overrideElements.UserAccountMode;
+        return null;
+      },
+      querySelectorAll(sel) { return []; }
+    };
+    const mockOverrideXmlDoc = {
+      querySelectorAll(sel) {
+        if (sel === 'LocalAccount') {
+          return [{
+            querySelector(subSel) {
+              if (subSel === 'Name') return { textContent: 'admin' };
+              if (subSel === 'DisplayName') return { textContent: 'Admin User' };
+              if (subSel === 'Group') return { textContent: 'Administrators' };
+              if (subSel === 'Password > Value') return { textContent: 'P@ssword' };
+              return null;
+            }
+          }];
+        }
+        return [];
+      },
+      querySelector(sel) { return null; }
+    };
+    const testParams = new URLSearchParams('AccountName0=admin&AccountPassword0=OldCommentPass_Test');
+    engine.overrideFormFromXmlDom(mockOverrideXmlDoc, mockOverrideForm, testParams);
+    if (overrideElements.AccountPassword0.value !== 'P@ssword') {
+      throw new Error('XML本文のパスワードが優先されていません: ' + overrideElements.AccountPassword0.value);
+    }
+    if (testParams.get('AccountPassword0') !== 'P@ssword') {
+      throw new Error('URLSearchParams のパスワードがXML本文と同期されていません: ' + testParams.get('AccountPassword0'));
+    }
+    console.log('[PASS] overrideFormFromXmlDom によりXML本文のパスワード (P@ssword) がコメント値よりも優先反映され、URLクエリも同期されました。');
+
 
     console.log('\\n[SUCCESS] すべてのエンジンユニットテストに合格しました。');
     """

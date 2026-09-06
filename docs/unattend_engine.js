@@ -1191,7 +1191,7 @@
             grpSel.dispatchEvent(new Event('change', { bubbles: true }));
           }
         }
-        if (pass) {
+        if (passElem) {
           var passInp = form.querySelector('input[name="AccountPassword' + idx + '"]');
           if (passInp) {
             passInp.value = pass;
@@ -1204,6 +1204,96 @@
 
     return true;
   }
+  // Override form values with actual XML DOM elements (prioritizing XML body over comment query)
+  function overrideFormFromXmlDom(xmlDoc, targetForm, params) {
+    if (!xmlDoc || typeof document === 'undefined') return false;
+
+    var form = targetForm || getMainForm();
+    if (!form) return false;
+
+    // 1. LocalAccounts: override account names, display names, groups, and passwords from XML body
+    var localAccs = xmlDoc.querySelectorAll('LocalAccount');
+    if (localAccs && localAccs.length > 0) {
+      var rAccUnattended = form.querySelector('input[name="UserAccountMode"][value="Unattended"]');
+      if (rAccUnattended && !rAccUnattended.checked) {
+        rAccUnattended.checked = true;
+        rAccUnattended.dispatchEvent(new Event('change', { bubbles: true }));
+        if (params) params.set('UserAccountMode', 'Unattended');
+      }
+
+      localAccs.forEach(function (acc, idx) {
+        var nameElem = acc.querySelector('Name');
+        var dispElem = acc.querySelector('DisplayName');
+        var grpElem = acc.querySelector('Group');
+        var passElem = acc.querySelector('Password > Value');
+
+        if (nameElem) {
+          var name = nameElem.textContent ? nameElem.textContent.trim() : '';
+          var nameInp = form.querySelector('input[name="AccountName' + idx + '"]');
+          if (nameInp) {
+            nameInp.value = name;
+            nameInp.dispatchEvent(new Event('input', { bubbles: true }));
+            nameInp.dispatchEvent(new Event('change', { bubbles: true }));
+            if (params) params.set('AccountName' + idx, name);
+          }
+        }
+
+        if (dispElem) {
+          var disp = dispElem.textContent ? dispElem.textContent.trim() : '';
+          var dispInp = form.querySelector('input[name="AccountDisplayName' + idx + '"]');
+          if (dispInp) {
+            dispInp.value = disp;
+            dispInp.dispatchEvent(new Event('input', { bubbles: true }));
+            dispInp.dispatchEvent(new Event('change', { bubbles: true }));
+            if (params) params.set('AccountDisplayName' + idx, disp);
+          }
+        }
+
+        if (grpElem) {
+          var grp = grpElem.textContent ? grpElem.textContent.trim() : '';
+          var grpSel = form.querySelector('select[name="AccountGroup' + idx + '"]');
+          if (grpSel && grp) {
+            grpSel.value = grp;
+            grpSel.dispatchEvent(new Event('change', { bubbles: true }));
+            if (params) params.set('AccountGroup' + idx, grp);
+          }
+        }
+
+        if (passElem) {
+          var pass = passElem.textContent ? passElem.textContent.trim() : '';
+          var passInp = form.querySelector('input[name="AccountPassword' + idx + '"]');
+          if (passInp) {
+            passInp.value = pass;
+            passInp.dispatchEvent(new Event('input', { bubbles: true }));
+            passInp.dispatchEvent(new Event('change', { bubbles: true }));
+            if (params) params.set('AccountPassword' + idx, pass);
+          }
+        }
+      });
+    }
+
+    // 2. ProductKey: override if custom key is present in XML body
+    var keyElem = xmlDoc.querySelector('ProductKey > Key');
+    if (keyElem && keyElem.textContent) {
+      var prodKey = keyElem.textContent.trim();
+      var keyInp = form.querySelector('input[name="ProductKey"]');
+      if (keyInp && prodKey) {
+        var rCustomKey = form.querySelector('input[name="ProductKeyMode"][value="Custom"]');
+        if (rCustomKey && !rCustomKey.checked) {
+          rCustomKey.checked = true;
+          rCustomKey.dispatchEvent(new Event('change', { bubbles: true }));
+          if (params) params.set('ProductKeyMode', 'Custom');
+        }
+        keyInp.value = prodKey;
+        keyInp.dispatchEvent(new Event('input', { bubbles: true }));
+        keyInp.dispatchEvent(new Event('change', { bubbles: true }));
+        if (params) params.set('ProductKey', prodKey);
+      }
+    }
+
+    return true;
+  }
+
 
   // File import dispatcher using FileReader
   function importXmlFile(file, callback, targetForm) {
@@ -1224,23 +1314,46 @@
         var text = evt.target.result;
         var query = extractQueryFromXml(text);
         var ok = false;
+
+        var xmlDoc = null;
+        if (typeof DOMParser !== 'undefined') {
+          try {
+            var parser = new DOMParser();
+            xmlDoc = parser.parseFromString(text, 'application/xml');
+            if (xmlDoc.querySelector('parsererror')) {
+              xmlDoc = null;
+            }
+          } catch (pe) {
+            xmlDoc = null;
+          }
+        }
+
         if (query) {
           ok = applyQueryToForm(query, form);
+          var params = null;
+          try {
+            params = new URLSearchParams(query.indexOf('?') === 0 ? query.substring(1) : query);
+          } catch (e) {
+            params = null;
+          }
+
+          // Override form values with actual XML DOM elements (prioritizing XML body over comment query)
+          if (xmlDoc) {
+            overrideFormFromXmlDom(xmlDoc, form, params);
+          }
+
+          var finalQuery = params ? params.toString() : query;
           if (ok && typeof window !== 'undefined' && window.history && window.history.replaceState) {
-            window.history.replaceState(null, '', '?' + query);
+            window.history.replaceState(null, '', '?' + finalQuery);
           }
         } else {
-          if (typeof DOMParser !== 'undefined') {
-            var parser = new DOMParser();
-            var xmlDoc = parser.parseFromString(text, 'application/xml');
-            if (xmlDoc.querySelector('parsererror')) {
-              var parseErr = new Error('XMLファイルの解析に失敗しました。書式が無効です。');
-              if (callback) callback(parseErr);
-              else alert(parseErr.message);
-              return;
-            }
-            ok = applyXmlDomToForm(xmlDoc, form);
+          if (!xmlDoc) {
+            var parseErr = new Error('XMLファイルの解析に失敗しました。書式が無効です。');
+            if (callback) callback(parseErr);
+            else alert(parseErr.message);
+            return;
           }
+          ok = applyXmlDomToForm(xmlDoc, form);
         }
 
         if (ok) {
@@ -1377,6 +1490,7 @@
     extractQueryFromXml: extractQueryFromXml,
     applyQueryToForm: applyQueryToForm,
     applyXmlDomToForm: applyXmlDomToForm,
+    overrideFormFromXmlDom: overrideFormFromXmlDom,
     importXmlFile: importXmlFile,
     restoreFromUrlQuery: restoreFromUrlQuery
   };
