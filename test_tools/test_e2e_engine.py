@@ -128,6 +128,7 @@ def run_xml_import_engine_tests():
 
     console.log('\\n--- 2. クライアント側インポート/復元関数エクスポート確認 ---');
     const requiredFunctions = [
+      'getMainForm',
       'extractQueryFromXml',
       'applyQueryToForm',
       'applyXmlDomToForm',
@@ -161,7 +162,13 @@ def run_xml_import_engine_tests():
       BypassRequirements: { tagName: 'INPUT', type: 'checkbox', name: 'BypassRequirements', checked: false, value: 'true', events: [], dispatchEvent(e) { this.events.push(e.type); } }
     };
 
-    const mockForm = {
+    const mockPresetForm = {
+      elements: [{ tagName: 'BUTTON' }],
+      querySelectorAll() { return []; },
+      querySelector() { return null; }
+    };
+    const mockMainForm = {
+      elements: [elements.Locale, elements.Keyboard, elements.ComputerName, elements.BypassRequirements],
       querySelectorAll(sel) {
         if (sel.startsWith('input[type="checkbox"]')) return [elements.BypassRequirements];
         if (sel.startsWith('input[type="radio"]')) return [];
@@ -175,10 +182,20 @@ def run_xml_import_engine_tests():
         return null;
       }
     };
-    global.document = { querySelector: () => mockForm };
+    global.document = {
+      getElementById: (id) => id === 'main-table' ? { closest: () => mockMainForm } : null,
+      querySelector: (sel) => {
+        if (sel === 'input[name="LanguageMode"], select[name="Locale"], select[name="ProcessorArchitecture"]') {
+          return { form: mockMainForm };
+        }
+        return mockPresetForm;
+      },
+      querySelectorAll: (sel) => sel === 'form' ? [mockPresetForm, mockMainForm] : []
+    };
 
     const testQuery = 'Locale=ja-JP&Keyboard=00000411&ComputerName=MY-PC&BypassRequirements=true';
-    const applyOk = engine.applyQueryToForm(testQuery, mockForm);
+    // targetForm を渡さずに実行し、getMainForm() が正しく mockMainForm を特定して反映することを検証
+    const applyOk = engine.applyQueryToForm(testQuery);
     if (!applyOk) {
       console.error('[FAIL] applyQueryToForm の実行が失敗しました。');
       process.exit(1);
@@ -187,7 +204,7 @@ def run_xml_import_engine_tests():
     if (elements.Keyboard.value !== '00000411') throw new Error('Keyboard が不一致: ' + elements.Keyboard.value);
     if (elements.ComputerName.value !== 'MY-PC') throw new Error('ComputerName が不一致: ' + elements.ComputerName.value);
     if (!elements.BypassRequirements.checked) throw new Error('BypassRequirements がチェックされていません');
-    console.log('[PASS] applyQueryToForm による全フィールド復元およびイベント発火確認');
+    console.log('[PASS] applyQueryToForm による全フィールド復元およびイベント発火確認 (複数フォーム共存環境でもgetMainFormで特定)');
 
     console.log('\\n--- 5. DOMフォールバック復元 (applyXmlDomToForm) 単体検証 ---');
     const mockXmlDoc = {

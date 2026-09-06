@@ -322,11 +322,22 @@
 
   // Generate full autounattend.xml from FormData or query string
   function generateAutounattendXml(formData) {
+    if (!formData && typeof document !== 'undefined') {
+      var defaultForm = getMainForm();
+      if (defaultForm) formData = new FormData(defaultForm);
+    } else if (formData && typeof HTMLFormElement !== 'undefined' && formData instanceof HTMLFormElement) {
+      formData = new FormData(formData);
+    } else if (typeof formData === 'string') {
+      formData = new URLSearchParams(formData.indexOf('?') !== -1 ? formData.split('?')[1] : formData);
+    }
+
     var getVal = function (name, def) {
+      if (!formData || typeof formData.get !== 'function') return def;
       var val = formData.get(name);
       return (val !== null && val !== undefined && val !== '') ? val : def;
     };
     var getBool = function (name, def) {
+      if (!formData || typeof formData.get !== 'function') return !!def;
       var val = formData.get(name);
       if (val === null || val === undefined) return !!def;
       return val === 'true' || val === 'on' || val === '1';
@@ -945,6 +956,34 @@
     return null;
   }
 
+  // Helper to reliably find the main configuration form (holding #main-table and inputs)
+  function getMainForm() {
+    if (typeof document === 'undefined') return null;
+    // 1. Form containing #main-table
+    var mainTable = document.getElementById('main-table');
+    if (mainTable) {
+      var parentForm = mainTable.closest('form');
+      if (parentForm) return parentForm;
+    }
+    // 2. Form containing core form inputs
+    var langElem = document.querySelector('input[name="LanguageMode"], select[name="Locale"], select[name="ProcessorArchitecture"]');
+    if (langElem && langElem.form) {
+      return langElem.form;
+    }
+    // 3. Form with the most elements
+    var forms = document.querySelectorAll('form');
+    var bestForm = null;
+    var maxElements = 0;
+    for (var i = 0; i < forms.length; i++) {
+      if (forms[i].elements && forms[i].elements.length > maxElements) {
+        maxElements = forms[i].elements.length;
+        bestForm = forms[i];
+      }
+    }
+    return bestForm || document.querySelector('form');
+  }
+
+
   // Apply parsed query parameters to form inputs
   function applyQueryToForm(queryString, targetForm) {
     if (!queryString || typeof document === 'undefined') return false;
@@ -954,50 +993,43 @@
     }
 
     var params = new URLSearchParams(queryString);
-    var form = targetForm || document.querySelector('form[action="./"][method="get"]') || document.querySelector('form[action="./"]') || document.querySelector('form');
+    var form = targetForm || getMainForm();
     if (!form) return false;
 
-    // 1. Checkboxes: set checked = true if present with truthy value, else false (reset unselected)
-    var checkboxes = form.querySelectorAll('input[type="checkbox"][name]');
-    checkboxes.forEach(function (cb) {
-      if (cb.disabled) return;
-      var name = cb.name;
-      var isChecked = false;
-      if (params.has(name)) {
-        var val = params.get(name);
-        isChecked = (val === 'true' || val === 'on' || val === '' || val === cb.value);
-      }
-      if (cb.checked !== isChecked) {
-        cb.checked = isChecked;
-        cb.dispatchEvent(new Event('change', { bubbles: true }));
-      }
-    });
-
-    // 2. Radio buttons
+    // 1. Radio buttons (apply first so dependent fieldsets get enabled/disabled correctly)
     var radios = form.querySelectorAll('input[type="radio"][name]');
     radios.forEach(function (rb) {
       var name = rb.name;
       if (params.has(name)) {
         var val = params.get(name);
-        if (rb.value === val && !rb.checked) {
+        if (rb.value === val) {
           rb.checked = true;
           rb.dispatchEvent(new Event('change', { bubbles: true }));
         }
       }
     });
 
-    // 3. Text inputs, textarea, password, number
-    var textInputs = form.querySelectorAll('input:not([type="radio"]):not([type="checkbox"]):not([type="button"]):not([type="submit"]):not([type="reset"]):not([type="file"]), textarea');
-    textInputs.forEach(function (input) {
-      var name = input.name;
-      if (name && params.has(name)) {
+    // 2. Checkboxes (reflect whether param exists in query string)
+    var checkboxes = form.querySelectorAll('input[type="checkbox"][name]');
+    checkboxes.forEach(function (cb) {
+      var name = cb.name;
+      var isChecked = false;
+      if (params.has(name)) {
         var val = params.get(name);
-        if (input.value !== val) {
-          input.value = val;
-          input.dispatchEvent(new Event('input', { bubbles: true }));
-          input.dispatchEvent(new Event('change', { bubbles: true }));
-        }
+        isChecked = (val === 'true' || val === 'on' || val === '' || val === cb.value);
       }
+      cb.checked = isChecked;
+      cb.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+
+    // 3. Account names first (enables password, display name, group inputs via whenEdited listener)
+    var accountNames = form.querySelectorAll('input[name^="AccountName"]');
+    accountNames.forEach(function (input) {
+      var name = input.name;
+      var val = params.has(name) ? params.get(name) : '';
+      input.value = val;
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+      input.dispatchEvent(new Event('change', { bubbles: true }));
     });
 
     // 4. Select boxes (single & multiple)
@@ -1012,23 +1044,32 @@
           }
         } else {
           var val = params.get(name);
-          if (sel.value !== val) {
-            sel.value = val;
-          }
+          sel.value = val;
         }
         sel.dispatchEvent(new Event('change', { bubbles: true }));
       }
     });
 
-    // 5. Dependent / sequential controls (Locale overrides Keyboard & GeoLocation on change)
-    // Re-apply explicit keyboard and geolocation values after locale change event fired
-    var dependentKeys = ['Keyboard', 'GeoLocation', 'Keyboard2', 'Keyboard3'];
+    // 5. All other text/textarea/password inputs
+    var textInputs = form.querySelectorAll('input:not([type="radio"]):not([type="checkbox"]):not([type="button"]):not([type="submit"]):not([type="reset"]):not([type="file"]), textarea');
+    textInputs.forEach(function (input) {
+      var name = input.name;
+      if (name && name.indexOf('AccountName') !== 0 && params.has(name)) {
+        var val = params.get(name);
+        input.value = val;
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+        input.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+    });
+
+    // 6. Dependent / sequential controls (Locale overrides Keyboard & GeoLocation on change)
+    var dependentKeys = ['Keyboard', 'GeoLocation', 'Keyboard2', 'Keyboard3', 'AccountGroup0', 'AccountGroup1', 'AccountGroup2', 'AccountGroup3', 'AccountGroup4', 'AccountGroup5', 'AccountGroup6', 'AccountGroup7', 'AccountGroup8', 'AccountGroup9'];
     dependentKeys.forEach(function (key) {
       if (params.has(key)) {
-        var sel = form.querySelector('select[name="' + key + '"]');
-        if (sel) {
-          sel.value = params.get(key);
-          sel.dispatchEvent(new Event('change', { bubbles: true }));
+        var el = form.querySelector('select[name="' + key + '"], input[name="' + key + '"]');
+        if (el) {
+          el.value = params.get(key);
+          el.dispatchEvent(new Event('change', { bubbles: true }));
         }
       }
     });
@@ -1040,7 +1081,7 @@
   function applyXmlDomToForm(xmlDoc, targetForm) {
     if (!xmlDoc || typeof document === 'undefined') return false;
 
-    var form = targetForm || document.querySelector('form[action="./"][method="get"]') || document.querySelector('form[action="./"]') || document.querySelector('form');
+    var form = targetForm || getMainForm();
     if (!form) return false;
 
     // UILanguage / Locale
@@ -1165,7 +1206,7 @@
   }
 
   // File import dispatcher using FileReader
-  function importXmlFile(file, callback) {
+  function importXmlFile(file, callback, targetForm) {
     if (!file) {
       if (callback) callback(new Error('ファイルが指定されていません。'));
       return;
@@ -1176,6 +1217,7 @@
       return;
     }
 
+    var form = targetForm || getMainForm();
     var reader = new FileReader();
     reader.onload = function (evt) {
       try {
@@ -1183,7 +1225,7 @@
         var query = extractQueryFromXml(text);
         var ok = false;
         if (query) {
-          ok = applyQueryToForm(query);
+          ok = applyQueryToForm(query, form);
           if (ok && typeof window !== 'undefined' && window.history && window.history.replaceState) {
             window.history.replaceState(null, '', '?' + query);
           }
@@ -1197,7 +1239,7 @@
               else alert(parseErr.message);
               return;
             }
-            ok = applyXmlDomToForm(xmlDoc);
+            ok = applyXmlDomToForm(xmlDoc, form);
           }
         }
 
@@ -1226,13 +1268,13 @@
   }
 
   // Restore form state from window.location.search
-  function restoreFromUrlQuery() {
+  function restoreFromUrlQuery(targetForm) {
     if (typeof window === 'undefined' || !window.location || !window.location.search) {
       return false;
     }
     var search = window.location.search;
     if (search.length > 1) {
-      return applyQueryToForm(search);
+      return applyQueryToForm(search, targetForm || getMainForm());
     }
     return false;
   }
@@ -1259,7 +1301,7 @@
         e.stopPropagation();
         var uploadInput = document.getElementById('Upload') || (btn.form && btn.form.querySelector('input[type="file"]'));
         if (uploadInput && uploadInput.files && uploadInput.files.length > 0) {
-          importXmlFile(uploadInput.files[0]);
+          importXmlFile(uploadInput.files[0], null, getMainForm());
         } else {
           alert('インポートするXMLファイルを選択してください。');
         }
@@ -1277,7 +1319,7 @@
       }
 
       if (actionType) {
-        var form = btn.form || document.querySelector('form');
+        var form = (btn.form && btn.form.elements && btn.form.elements.length > 10) ? btn.form : getMainForm();
         if (form) {
           e.preventDefault();
           e.stopPropagation();
@@ -1289,7 +1331,7 @@
     // 2. Intercept #Upload change event to auto-import on file selection
     document.addEventListener('change', function (e) {
       if (e.target && e.target.id === 'Upload' && e.target.files && e.target.files.length > 0) {
-        importXmlFile(e.target.files[0]);
+        importXmlFile(e.target.files[0], null, getMainForm());
       }
     }, true);
 
@@ -1300,7 +1342,7 @@
         e.stopPropagation();
         var uploadInput = e.target.querySelector('#Upload') || e.target.querySelector('input[type="file"]');
         if (uploadInput && uploadInput.files && uploadInput.files.length > 0) {
-          importXmlFile(uploadInput.files[0]);
+          importXmlFile(uploadInput.files[0], null, getMainForm());
         }
       }
     }, true);
@@ -1310,8 +1352,9 @@
       var restoreAttempts = 0;
       var tryRestore = function () {
         restoreAttempts++;
-        if (document.querySelector('select[name="Locale"]')) {
-          restoreFromUrlQuery();
+        var mainForm = getMainForm();
+        if (mainForm && mainForm.elements && mainForm.elements.length > 10) {
+          restoreFromUrlQuery(mainForm);
         } else if (restoreAttempts < 50) {
           setTimeout(tryRestore, 100);
         }
@@ -1332,6 +1375,7 @@
   // Export for testing & API usage
   var unattendEngine = {
     getConfig: getConfig,
+    getMainForm: getMainForm,
     generateAutounattendXml: generateAutounattendXml,
     createIsoBlob: createIsoBlob,
     handleEngineAction: handleEngineAction,
