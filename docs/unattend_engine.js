@@ -1328,14 +1328,7 @@
       }
     }, true);
 
-    // 2. Intercept #Upload change event to auto-import on file selection
-    document.addEventListener('change', function (e) {
-      if (e.target && e.target.id === 'Upload' && e.target.files && e.target.files.length > 0) {
-        importXmlFile(e.target.files[0], null, getMainForm());
-      }
-    }, true);
-
-    // 3. Intercept form submit to prevent HTTP POST (405 error on static server)
+    // 2. Intercept form submit to prevent HTTP POST (405 error on static server)
     document.addEventListener('submit', function (e) {
       if (e.target && (e.target.querySelector('#Upload') || e.target.getAttribute('enctype') === 'multipart/form-data')) {
         e.preventDefault();
@@ -1343,11 +1336,13 @@
         var uploadInput = e.target.querySelector('#Upload') || e.target.querySelector('input[type="file"]');
         if (uploadInput && uploadInput.files && uploadInput.files.length > 0) {
           importXmlFile(uploadInput.files[0], null, getMainForm());
+        } else {
+          alert('インポートするXMLファイルを選択してください。');
         }
       }
     }, true);
 
-    // 4. Auto-restore form from URL query parameters if present
+    // 3. Auto-restore form from URL query parameters if present
     if (typeof window !== 'undefined' && window.location && window.location.search && window.location.search.length > 1) {
       var restoreAttempts = 0;
       var tryRestore = function () {
