@@ -40,6 +40,16 @@ def verify_all_buttons():
 
     # 2. presets.html
     soup_presets = load_soup("sections/presets.html")
+    preset_form = soup_presets.find("form")
+    if not preset_form:
+        errors.append("presets.html: プリセットフォームが見つかりません。")
+    else:
+        onsubmit = preset_form.get("onsubmit", "")
+        if "return false" not in onsubmit:
+            errors.append(f"presets.html: プリセットフォームに onsubmit='return false;' が設定されていません: {onsubmit}")
+        else:
+            print("[OK] presets.html: プリセットフォーム onsubmit='return false;' 設定済み (HTTP 405防止)")
+
     preset_buttons = soup_presets.find_all("button")
     print(f"\n--- presets.html (ボタン数: {len(preset_buttons)}) ---")
     for btn in preset_buttons:
@@ -108,9 +118,9 @@ def simulate_button_action(button_id):
         print("  - 判定: [正常] 相対パス './' へGET送信 (LocalUser=true)")
     elif button_id == "import":
         print(" [シミュレーション] Import file ボタン押下")
-        print("  - 送信先: ./")
-        print("  - 期待される動作: 選択されたXMLファイルを自サイト環境内で処理。")
-        print("  - 判定: [正常] 相対パス './' へ送信")
+        print("  - 送信先: クライアントサイド (FileReader API / unattendEngine.importXmlFile)")
+        print("  - 期待される動作: 選択されたXMLファイルのコメント内URLクエリ文字列、またはXML DOMノードを解析し、フォーム状態およびURLパラメータを復元。")
+        print("  - 判定: [正常] クライアント側処理によりサーバーへのHTTP POSTを抑止し HTTP 405 を解消")
     elif button_id == "view":
         print(" [シミュレーション] View .xml file ボタン押下")
         print("  - 送信先: ./view/")

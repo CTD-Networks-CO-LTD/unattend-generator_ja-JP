@@ -935,15 +935,338 @@
     return false;
   }
 
+  // Extract query string from XML comment (e.g. <!--https://schneegans.de/windows/unattend-generator/?...-->)
+  function extractQueryFromXml(xmlText) {
+    if (!xmlText || typeof xmlText !== 'string') return null;
+    var commentMatch = xmlText.match(/<!--\s*https?:\/\/[^?]*?\?([\s\S]*?)-->/);
+    if (commentMatch && commentMatch[1]) {
+      return commentMatch[1].trim();
+    }
+    return null;
+  }
+
+  // Apply parsed query parameters to form inputs
+  function applyQueryToForm(queryString, targetForm) {
+    if (!queryString || typeof document === 'undefined') return false;
+
+    if (queryString.indexOf('?') === 0) {
+      queryString = queryString.substring(1);
+    }
+
+    var params = new URLSearchParams(queryString);
+    var form = targetForm || document.querySelector('form[action="./"][method="get"]') || document.querySelector('form[action="./"]') || document.querySelector('form');
+    if (!form) return false;
+
+    // 1. Checkboxes: set checked = true if present with truthy value, else false (reset unselected)
+    var checkboxes = form.querySelectorAll('input[type="checkbox"][name]');
+    checkboxes.forEach(function (cb) {
+      if (cb.disabled) return;
+      var name = cb.name;
+      var isChecked = false;
+      if (params.has(name)) {
+        var val = params.get(name);
+        isChecked = (val === 'true' || val === 'on' || val === '' || val === cb.value);
+      }
+      if (cb.checked !== isChecked) {
+        cb.checked = isChecked;
+        cb.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+    });
+
+    // 2. Radio buttons
+    var radios = form.querySelectorAll('input[type="radio"][name]');
+    radios.forEach(function (rb) {
+      var name = rb.name;
+      if (params.has(name)) {
+        var val = params.get(name);
+        if (rb.value === val && !rb.checked) {
+          rb.checked = true;
+          rb.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+      }
+    });
+
+    // 3. Text inputs, textarea, password, number
+    var textInputs = form.querySelectorAll('input:not([type="radio"]):not([type="checkbox"]):not([type="button"]):not([type="submit"]):not([type="reset"]):not([type="file"]), textarea');
+    textInputs.forEach(function (input) {
+      var name = input.name;
+      if (name && params.has(name)) {
+        var val = params.get(name);
+        if (input.value !== val) {
+          input.value = val;
+          input.dispatchEvent(new Event('input', { bubbles: true }));
+          input.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+      }
+    });
+
+    // 4. Select boxes (single & multiple)
+    var selects = form.querySelectorAll('select[name]');
+    selects.forEach(function (sel) {
+      var name = sel.name;
+      if (params.has(name)) {
+        if (sel.multiple) {
+          var allVals = params.getAll(name);
+          for (var i = 0; i < sel.options.length; i++) {
+            sel.options[i].selected = allVals.indexOf(sel.options[i].value) !== -1;
+          }
+        } else {
+          var val = params.get(name);
+          if (sel.value !== val) {
+            sel.value = val;
+          }
+        }
+        sel.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+    });
+
+    // 5. Dependent / sequential controls (Locale overrides Keyboard & GeoLocation on change)
+    // Re-apply explicit keyboard and geolocation values after locale change event fired
+    var dependentKeys = ['Keyboard', 'GeoLocation', 'Keyboard2', 'Keyboard3'];
+    dependentKeys.forEach(function (key) {
+      if (params.has(key)) {
+        var sel = form.querySelector('select[name="' + key + '"]');
+        if (sel) {
+          sel.value = params.get(key);
+          sel.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+      }
+    });
+
+    return true;
+  }
+
+  // Fallback: parse XML DOM when comment query string is absent
+  function applyXmlDomToForm(xmlDoc, targetForm) {
+    if (!xmlDoc || typeof document === 'undefined') return false;
+
+    var form = targetForm || document.querySelector('form[action="./"][method="get"]') || document.querySelector('form[action="./"]') || document.querySelector('form');
+    if (!form) return false;
+
+    // UILanguage / Locale
+    var uiLang = xmlDoc.querySelector('UILanguage');
+    if (uiLang && uiLang.textContent) {
+      var langVal = uiLang.textContent.trim();
+      var selLocale = form.querySelector('select[name="Locale"]');
+      if (selLocale) {
+        selLocale.value = langVal;
+        selLocale.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+    }
+
+    // InputLocale / Keyboard
+    var inputLocale = xmlDoc.querySelector('InputLocale');
+    if (inputLocale && inputLocale.textContent) {
+      var inLocText = inputLocale.textContent.trim();
+      var parts = inLocText.split(':');
+      var kbCode = parts.length > 1 ? parts[1] : parts[0];
+      var selKb = form.querySelector('select[name="Keyboard"]');
+      if (selKb) {
+        selKb.value = kbCode;
+        selKb.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+    }
+
+    // GeoLocation
+    var geoLoc = xmlDoc.querySelector('GeoLocation');
+    if (geoLoc && geoLoc.textContent) {
+      var selGeo = form.querySelector('select[name="GeoLocation"]');
+      if (selGeo) {
+        selGeo.value = geoLoc.textContent.trim();
+        selGeo.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+    }
+
+    // ComputerName
+    var compElem = xmlDoc.querySelector('ComputerName');
+    if (compElem && compElem.textContent) {
+      var compVal = compElem.textContent.trim();
+      if (compVal && compVal !== '*') {
+        var rCustom = form.querySelector('input[name="ComputerNameMode"][value="Custom"]');
+        if (rCustom) {
+          rCustom.checked = true;
+          rCustom.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+        var compInp = form.querySelector('input[name="ComputerName"]');
+        if (compInp) {
+          compInp.value = compVal;
+          compInp.dispatchEvent(new Event('input', { bubbles: true }));
+          compInp.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+      }
+    }
+
+    // TimeZone
+    var tzElem = xmlDoc.querySelector('TimeZone');
+    if (tzElem && tzElem.textContent) {
+      var tzVal = tzElem.textContent.trim();
+      var tzSel = form.querySelector('select[name="TimeZone"]');
+      if (tzSel) {
+        var rTzCustom = form.querySelector('input[name="TimeZoneMode"][value="Explicit"]');
+        if (rTzCustom) {
+          rTzCustom.checked = true;
+          rTzCustom.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+        tzSel.value = tzVal;
+        tzSel.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+    }
+
+    // LocalAccounts
+    var localAccs = xmlDoc.querySelectorAll('LocalAccount');
+    if (localAccs && localAccs.length > 0) {
+      var rAccUnattended = form.querySelector('input[name="UserAccountMode"][value="Unattended"]');
+      if (rAccUnattended) {
+        rAccUnattended.checked = true;
+        rAccUnattended.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+      localAccs.forEach(function (acc, idx) {
+        var name = acc.querySelector('Name') ? acc.querySelector('Name').textContent.trim() : '';
+        var disp = acc.querySelector('DisplayName') ? acc.querySelector('DisplayName').textContent.trim() : '';
+        var grp = acc.querySelector('Group') ? acc.querySelector('Group').textContent.trim() : '';
+        var passElem = acc.querySelector('Password > Value');
+        var pass = passElem ? passElem.textContent.trim() : '';
+
+        if (name) {
+          var nameInp = form.querySelector('input[name="AccountName' + idx + '"]');
+          if (nameInp) {
+            nameInp.value = name;
+            nameInp.dispatchEvent(new Event('input', { bubbles: true }));
+            nameInp.dispatchEvent(new Event('change', { bubbles: true }));
+          }
+        }
+        if (disp) {
+          var dispInp = form.querySelector('input[name="AccountDisplayName' + idx + '"]');
+          if (dispInp) {
+            dispInp.value = disp;
+            dispInp.dispatchEvent(new Event('input', { bubbles: true }));
+            dispInp.dispatchEvent(new Event('change', { bubbles: true }));
+          }
+        }
+        if (grp) {
+          var grpSel = form.querySelector('select[name="AccountGroup' + idx + '"]');
+          if (grpSel) {
+            grpSel.value = grp;
+            grpSel.dispatchEvent(new Event('change', { bubbles: true }));
+          }
+        }
+        if (pass) {
+          var passInp = form.querySelector('input[name="AccountPassword' + idx + '"]');
+          if (passInp) {
+            passInp.value = pass;
+            passInp.dispatchEvent(new Event('input', { bubbles: true }));
+            passInp.dispatchEvent(new Event('change', { bubbles: true }));
+          }
+        }
+      });
+    }
+
+    return true;
+  }
+
+  // File import dispatcher using FileReader
+  function importXmlFile(file, callback) {
+    if (!file) {
+      if (callback) callback(new Error('ファイルが指定されていません。'));
+      return;
+    }
+    if (typeof FileReader === 'undefined') {
+      var err = new Error('FileReader API に対応していません。');
+      if (callback) callback(err);
+      return;
+    }
+
+    var reader = new FileReader();
+    reader.onload = function (evt) {
+      try {
+        var text = evt.target.result;
+        var query = extractQueryFromXml(text);
+        var ok = false;
+        if (query) {
+          ok = applyQueryToForm(query);
+          if (ok && typeof window !== 'undefined' && window.history && window.history.replaceState) {
+            window.history.replaceState(null, '', '?' + query);
+          }
+        } else {
+          if (typeof DOMParser !== 'undefined') {
+            var parser = new DOMParser();
+            var xmlDoc = parser.parseFromString(text, 'application/xml');
+            if (xmlDoc.querySelector('parsererror')) {
+              var parseErr = new Error('XMLファイルの解析に失敗しました。書式が無効です。');
+              if (callback) callback(parseErr);
+              else alert(parseErr.message);
+              return;
+            }
+            ok = applyXmlDomToForm(xmlDoc);
+          }
+        }
+
+        if (ok) {
+          if (callback) {
+            callback(null, true);
+          } else {
+            alert('XMLファイルの設定を正常にインポートしました。');
+          }
+        } else {
+          var failErr = new Error('XML設定の反映に失敗しました。');
+          if (callback) callback(failErr);
+          else alert(failErr.message);
+        }
+      } catch (e) {
+        console.error('importXmlFile error:', e);
+        if (callback) callback(e);
+        else alert('インポート処理中にエラーが発生しました: ' + e.message);
+      }
+    };
+    reader.onerror = function (e) {
+      if (callback) callback(e);
+      else alert('ファイルの読み込みに失敗しました。');
+    };
+    reader.readAsText(file);
+  }
+
+  // Restore form state from window.location.search
+  function restoreFromUrlQuery() {
+    if (typeof window === 'undefined' || !window.location || !window.location.search) {
+      return false;
+    }
+    var search = window.location.search;
+    if (search.length > 1) {
+      return applyQueryToForm(search);
+    }
+    return false;
+  }
+
   // Setup form submission interceptor
   function initEngine() {
     if (typeof document === 'undefined') return;
 
+    // 1. Intercept buttons (View, ISO, Download, and Import)
     document.addEventListener('click', function (e) {
-      var btn = e.target.closest('button[formaction], input[type="submit"][formaction]');
+      var btn = e.target.closest('button, input[type="submit"]');
       if (!btn) return;
 
       var formaction = btn.getAttribute('formaction') || '';
+      var text = (btn.textContent || btn.value || '').trim();
+
+      // Check if button is "Import file"
+      var isImportButton = text.indexOf('Import file') !== -1 ||
+                           text.indexOf('ファイルのインポート') !== -1 ||
+                           (btn.form && btn.form.querySelector('#Upload'));
+
+      if (isImportButton) {
+        e.preventDefault();
+        e.stopPropagation();
+        var uploadInput = document.getElementById('Upload') || (btn.form && btn.form.querySelector('input[type="file"]'));
+        if (uploadInput && uploadInput.files && uploadInput.files.length > 0) {
+          importXmlFile(uploadInput.files[0]);
+        } else {
+          alert('インポートするXMLファイルを選択してください。');
+        }
+        return;
+      }
+
+      // Check if button is View / ISO / Download
       var actionType = null;
       if (formaction.indexOf('view') !== -1) {
         actionType = 'view';
@@ -962,6 +1285,39 @@
         }
       }
     }, true);
+
+    // 2. Intercept #Upload change event to auto-import on file selection
+    document.addEventListener('change', function (e) {
+      if (e.target && e.target.id === 'Upload' && e.target.files && e.target.files.length > 0) {
+        importXmlFile(e.target.files[0]);
+      }
+    }, true);
+
+    // 3. Intercept form submit to prevent HTTP POST (405 error on static server)
+    document.addEventListener('submit', function (e) {
+      if (e.target && (e.target.querySelector('#Upload') || e.target.getAttribute('enctype') === 'multipart/form-data')) {
+        e.preventDefault();
+        e.stopPropagation();
+        var uploadInput = e.target.querySelector('#Upload') || e.target.querySelector('input[type="file"]');
+        if (uploadInput && uploadInput.files && uploadInput.files.length > 0) {
+          importXmlFile(uploadInput.files[0]);
+        }
+      }
+    }, true);
+
+    // 4. Auto-restore form from URL query parameters if present
+    if (typeof window !== 'undefined' && window.location && window.location.search && window.location.search.length > 1) {
+      var restoreAttempts = 0;
+      var tryRestore = function () {
+        restoreAttempts++;
+        if (document.querySelector('select[name="Locale"]')) {
+          restoreFromUrlQuery();
+        } else if (restoreAttempts < 50) {
+          setTimeout(tryRestore, 100);
+        }
+      };
+      tryRestore();
+    }
   }
 
   // Auto-init on DOM ready
@@ -978,7 +1334,12 @@
     getConfig: getConfig,
     generateAutounattendXml: generateAutounattendXml,
     createIsoBlob: createIsoBlob,
-    handleEngineAction: handleEngineAction
+    handleEngineAction: handleEngineAction,
+    extractQueryFromXml: extractQueryFromXml,
+    applyQueryToForm: applyQueryToForm,
+    applyXmlDomToForm: applyXmlDomToForm,
+    importXmlFile: importXmlFile,
+    restoreFromUrlQuery: restoreFromUrlQuery
   };
 
   if (typeof module !== 'undefined' && module.exports) {
