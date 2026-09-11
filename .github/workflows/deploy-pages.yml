@@ -15,7 +15,7 @@ on:
       target:
         description: 'デプロイ対象の指定 (auto / preview / release / both)'
         required: false
-        default: 'auto'
+        default: 'preview'
         type: choice
         options:
           - auto
