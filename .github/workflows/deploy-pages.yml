@@ -55,12 +55,21 @@ jobs:
           DISPATCH_TARGET: ${{ inputs.target }}
         run: |
           set -euo pipefail
-          mkdir -p _site
-          mkdir -p _site/preview
 
           echo "=== Deploy Condition Check ==="
           echo "Event Name: $EVENT_NAME"
 
+          # 作業用クリーンディレクトリの準備
+          rm -rf _site _src_clean _tag_docs _tag_clean
+          mkdir -p _site
+          mkdir -p _src_clean
+
+          # 1. 現在のブランチの docs/ から preview ディレクトリを除外して _src_clean にステージング
+          echo "Staging clean sources from current branch (excluding preview/)..."
+          cp -r ./docs/* _src_clean/
+          rm -rf _src_clean/preview
+
+          # 2. デプロイモードの判定
           DEPLOY_MODE="preview"
 
           if [ "$EVENT_NAME" = "release" ]; then
@@ -85,51 +94,77 @@ jobs:
               fi
             fi
           elif [ "$EVENT_NAME" = "push" ]; then
+            # main / master ブランチのマージ・プッシュ時: preview のみ更新
             DEPLOY_MODE="preview"
           fi
 
           echo "Determined DEPLOY_MODE: $DEPLOY_MODE"
 
+          # 3. モードに応じた _site の構築
           if [ "$DEPLOY_MODE" = "release" ] || [ "$DEPLOY_MODE" = "both" ]; then
-            echo "Publishing release version to root (/)..."
-            cp -r ./docs/* ./_site/
-            echo "Updating preview (/preview/) with release version..."
-            cp -r ./docs/* ./_site/preview/
+            echo "--- Release Deployment ---"
+            echo "Publishing latest release to root (/)..."
+            cp -r _src_clean/* _site/
+            echo "Publishing latest release to preview (/preview/)..."
+            mkdir -p _site/preview
+            cp -r _src_clean/* _site/preview/
           else
-            # master マージ時: プレビュー更新 & ルートは最新リリースを維持
-            echo "Building preview version from current master to /preview/..."
-            cp -r ./docs/* ./_site/preview/
-
-            echo "Finding latest release tag for root (/)..."
+            echo "--- Preview Deployment (main / master merge) ---"
+            # ルート (/) には最新の安定リリースタグを展開し、本番提供中サイトを保護・維持
+            echo "Finding latest stable release tag for root site (/)..."
             LATEST_TAG=""
-            if command -v gh &> /dev/null; then
-              LATEST_TAG=$(gh release view --json tagName -q .tagName 2>/dev/null || echo "")
-            fi
+            # 優先度1: git tag によるセマンティックタグのソート
+            LATEST_TAG=$(git tag -l "v*" --sort=-v:refname | head -n 1 || echo "")
+            # 優先度2: git describe による直近タグ
             if [ -z "$LATEST_TAG" ]; then
               LATEST_TAG=$(git describe --tags --abbrev=0 $(git rev-list --tags --max-count=1) 2>/dev/null || echo "")
+            fi
+            # 優先度3: GitHub CLI
+            if [ -z "$LATEST_TAG" ] && command -v gh &> /dev/null; then
+              LATEST_TAG=$(gh release view --json tagName -q .tagName 2>/dev/null || echo "")
             fi
 
             echo "Identified Latest Release Tag: $LATEST_TAG"
 
             if [ -n "$LATEST_TAG" ]; then
-              echo "Extracting docs from tag $LATEST_TAG for root site..."
-              mkdir -p ./_tag_docs
+              echo "Extracting docs from tag $LATEST_TAG for root site (/)..."
+              mkdir -p _tag_docs
               git archive "$LATEST_TAG" docs | tar -x -C ./_tag_docs/
               if [ -d "./_tag_docs/docs" ]; then
-                cp -r ./_tag_docs/docs/* ./_site/
-                echo "Successfully staged release $LATEST_TAG to root (/)."
+                mkdir -p _tag_clean
+                cp -r ./_tag_docs/docs/* _tag_clean/
+                rm -rf _tag_clean/preview
+                cp -r _tag_clean/* _site/
+                echo "Successfully staged stable release $LATEST_TAG to root (/)."
               else
                 echo "Warning: docs folder not found in tag $LATEST_TAG. Falling back to current docs."
-                cp -r ./docs/* ./_site/
+                cp -r _src_clean/* _site/
               fi
             else
               echo "Notice: No release tag found in repository. Using current docs for root."
-              cp -r ./docs/* ./_site/
+              cp -r _src_clean/* _site/
             fi
+
+            # プレビュー (/preview/) には現在の main/master の最新成果物を展開
+            echo "Deploying current branch docs to preview (/preview/)..."
+            # 万が一タグ資材に preview が含まれていた場合に備えてクリーンアップ
+            rm -rf _site/preview
+            mkdir -p _site/preview
+            cp -r _src_clean/* _site/preview/
+            echo "Successfully staged current branch docs to preview (/preview/)."
           fi
 
+          # 4. Jekyll の静的ファイル無視・変換を防止するために .nojekyll を配置
+          touch _site/.nojekyll
+          touch _site/preview/.nojekyll
+
+          # 作業一時ディレクトリの整理
+          rm -rf _src_clean _tag_docs _tag_clean
+
           echo "=== Content Staging Complete ==="
+          echo "--- Root (_site/) ---"
           ls -la _site
+          echo "--- Preview (_site/preview/) ---"
           ls -la _site/preview
 
       - name: Upload artifact
@@ -140,4 +175,5 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+
 
