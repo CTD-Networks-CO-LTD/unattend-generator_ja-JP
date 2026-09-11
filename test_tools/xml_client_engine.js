@@ -56,7 +56,23 @@
   }
 
   // フォームデータから autounattend.xml を動的に生成するジェネレータ
+  // docs/unattend_engine.js の generateAutounattendXml を優先利用して同期する
   function generateAutounattendXml(formData) {
+    if (typeof window !== 'undefined' && window.unattendEngine && typeof window.unattendEngine.generateAutounattendXml === 'function') {
+      return window.unattendEngine.generateAutounattendXml(formData);
+    }
+    if (typeof globalThis !== 'undefined' && globalThis.generateAutounattendXml) {
+      return globalThis.generateAutounattendXml(formData);
+    }
+    try {
+      const engine = require('../docs/unattend_engine.js');
+      if (engine && typeof engine.generateAutounattendXml === 'function') {
+        return engine.generateAutounattendXml(formData);
+      }
+    } catch (e) {
+      // fallback
+    }
+
     const locale = formData.get('Locale') || 'en-US';
     const keyboard = formData.get('Keyboard') || '00000409';
     const geoLoc = formData.get('GeoLocation') || '244';

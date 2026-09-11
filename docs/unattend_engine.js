@@ -349,7 +349,7 @@
     var specializeScript = new PowerShellSequence('Running scripts to customize your Windows installation.', 'C:\\Windows\\Setup\\Scripts\\Specialize.log');
     var firstLogonScript = new PowerShellSequence('Running scripts to finalize your Windows installation.', 'C:\\Windows\\Setup\\Scripts\\FirstLogon.log');
     var userOnceScript = new PowerShellSequence('Running scripts to configure this user account.', '$env:TEMP\\UserOnce.log');
-    var defaultUserScript = new PowerShellSequence('Running scripts to modify the default user’s registry hive.', 'C:\\Windows\\Setup\\Scripts\\DefaultUser.log');
+    var defaultUserScript = new PowerShellSequence('Running scripts to modify default user registry hive.', 'C:\\Windows\\Setup\\Scripts\\DefaultUser.log');
 
     var embeddedFiles = [];
     var hasExtractScript = false;
@@ -469,8 +469,33 @@
       userOnceScript.append('reg.exe add "HKCU\\Software\\Classes\\CLSID\\{86ca1aa0-34aa-4e8b-a509-50c905bae2a2}\\InprocServer32" /ve /f;');
       userOnceScript.restartExplorer();
     }
-    if (getBool('ShowFileExtensions', false)) {
+    if (getBool('ShowFileExtensions', false) || getBool('HideFileExt', false)) {
       defaultUserScript.append('reg.exe add "HKU\\DefaultUser\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced" /v "HideFileExt" /t REG_DWORD /d 0 /f;');
+    }
+    if (getBool('DisableAppSuggestions', false)) {
+      defaultUserScript.append([
+        '$names = @(',
+        "  'ContentDeliveryAllowed';",
+        "  'FeatureManagementEnabled';",
+        "  'OEMPreInstalledAppsEnabled';",
+        "  'PreInstalledAppsEnabled';",
+        "  'PreInstalledAppsEverEnabled';",
+        "  'SilentInstalledAppsEnabled';",
+        "  'SoftLandingEnabled';",
+        "  'SubscribedContent-310093Enabled';",
+        "  'SubscribedContent-338387Enabled';",
+        "  'SubscribedContent-338388Enabled';",
+        "  'SubscribedContent-338389Enabled';",
+        "  'SubscribedContent-353698Enabled';",
+        "  'SystemPaneSuggestionsEnabled';",
+        ');',
+        'foreach( $name in $names ) {',
+        '  reg.exe add "HKU\\DefaultUser\\Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager" /v $name /t REG_DWORD /d 0 /f;',
+        '}'
+      ].join('\r\n'));
+      specializeScript.append(
+        'reg.exe add "HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\CloudContent" /v "DisableWindowsConsumerFeatures" /t REG_DWORD /d 1 /f;'
+      );
     }
     var hideFiles = getVal('HideFiles', 'Hidden');
     if (hideFiles === 'None') {
@@ -581,6 +606,89 @@
       ].join('\r\n'));
       firstLogonScript.invokeFile('C:\\Windows\\Setup\\Scripts\\VirtIoGuestTools.ps1');
     }
+    // Bloatware removal
+    var bloatwareMap = [
+      { key: 'Remove3DViewer', patterns: ['*Microsoft.Microsoft3DViewer*'] },
+      { key: 'RemoveBingSearch', patterns: ['*Microsoft.BingSearch*'] },
+      { key: 'RemoveCalculator', patterns: ['*Microsoft.WindowsCalculator*'] },
+      { key: 'RemoveCamera', patterns: ['*Microsoft.WindowsCamera*'] },
+      { key: 'RemoveClipchamp', patterns: ['*Clipchamp.Clipchamp*'] },
+      { key: 'RemoveClock', patterns: ['*Microsoft.WindowsAlarms*'] },
+      { key: 'RemoveCopilot', patterns: ['*Microsoft.Copilot*'] },
+      { key: 'RemoveCortana', patterns: ['*Microsoft.549981C3F5F10*'] },
+      { key: 'RemoveDevHome', patterns: ['*Microsoft.Windows.DevHome*'] },
+      { key: 'RemoveFamily', patterns: ['*MicrosoftCorporationII.MicrosoftFamily*'] },
+      { key: 'RemoveFeedbackHub', patterns: ['*Microsoft.WindowsFeedbackHub*'] },
+      { key: 'RemoveGameAssist', patterns: ['*Microsoft.Edge.GameAssist*'] },
+      { key: 'RemoveGetHelp', patterns: ['*Microsoft.GetHelp*'] },
+      { key: 'RemoveMailCalendar', patterns: ['*microsoft.windowscommunicationsapps*'] },
+      { key: 'RemoveMaps', patterns: ['*Microsoft.WindowsMaps*'] },
+      { key: 'RemoveMixedReality', patterns: ['*Microsoft.MixedReality.Portal*'] },
+      { key: 'RemoveNews', patterns: ['*Microsoft.BingNews*'] },
+      { key: 'RemoveOffice365', patterns: ['*Microsoft.MicrosoftOfficeHub*'] },
+      { key: 'RemoveOneDrive', patterns: ['*OneDrive*'] },
+      { key: 'RemoveOneNote', patterns: ['*Microsoft.Office.OneNote*'] },
+      { key: 'RemoveOutlook', patterns: ['*Microsoft.OutlookForWindows*'] },
+      { key: 'RemovePaint', patterns: ['*Microsoft.Paint*'] },
+      { key: 'RemovePeople', patterns: ['*Microsoft.People*'] },
+      { key: 'RemovePhotos', patterns: ['*Microsoft.Windows.Photos*'] },
+      { key: 'RemovePowerAutomate', patterns: ['*Microsoft.PowerAutomateDesktop*'] },
+      { key: 'RemoveQuickAssist', patterns: ['*MicrosoftCorporationII.QuickAssist*'] },
+      { key: 'RemoveSkype', patterns: ['*Microsoft.SkypeApp*'] },
+      { key: 'RemoveSnippingTool', patterns: ['*Microsoft.ScreenSketch*', '*Microsoft.Windows.SnippingTool*'] },
+      { key: 'RemoveSolitaire', patterns: ['*Microsoft.MicrosoftSolitaireCollection*'] },
+      { key: 'RemoveStickyNotes', patterns: ['*Microsoft.MicrosoftStickyNotes*'] },
+      { key: 'RemoveTeams', patterns: ['*MicrosoftTeams*', '*MSTeams*'] },
+      { key: 'RemoveGetStarted', patterns: ['*Microsoft.Getstarted*'] },
+      { key: 'RemoveToDo', patterns: ['*Microsoft.Todos*'] },
+      { key: 'RemoveVoiceRecorder', patterns: ['*Microsoft.WindowsSoundRecorder*'] },
+      { key: 'RemoveWallet', patterns: ['*Microsoft.Wallet*'] },
+      { key: 'RemoveWeather', patterns: ['*Microsoft.BingWeather*'] },
+      { key: 'RemoveWindowsTerminal', patterns: ['*Microsoft.WindowsTerminal*'] },
+      { key: 'RemoveXboxApps', patterns: ['*Microsoft.Xbox*', '*Microsoft.GamingApp*'] },
+      { key: 'RemoveYourPhone', patterns: ['*Microsoft.YourPhone*'] },
+      { key: 'RemoveZuneMusic', patterns: ['*Microsoft.ZuneMusic*'] }
+    ];
+
+    var selectedBloatwarePatterns = [];
+    bloatwareMap.forEach(function (item) {
+      if (getBool(item.key, false)) {
+        selectedBloatwarePatterns.push.apply(selectedBloatwarePatterns, item.patterns);
+      }
+    });
+
+    if (selectedBloatwarePatterns.length > 0) {
+      var removePkgLines = [
+        '$patterns = @(' + selectedBloatwarePatterns.map(function (p) { return "'" + p + "'"; }).join(', ') + ');',
+        'foreach( $pattern in $patterns ) {',
+        '  Get-AppxProvisionedPackage -Online | Where-Object { $_.PackageName -like $pattern } | Remove-AppxProvisionedPackage -Online -AllUsers -ErrorAction SilentlyContinue;',
+        '}'
+      ];
+      embedTextFile('RemovePackage.ps1', removePkgLines.join('\r\n'));
+      specializeScript.invokeFile('C:\\Windows\\Setup\\Scripts\\RemovePackage.ps1');
+    }
+
+    if (getBool('RemoveCopilot', false)) {
+      userOnceScript.append("Get-AppxPackage -Name 'Microsoft.Windows.Ai.Copilot.Provider' | Remove-AppxPackage;");
+      defaultUserScript.append('reg.exe add "HKU\\DefaultUser\\Software\\Policies\\Microsoft\\Windows\\WindowsCopilot" /v TurnOffWindowsCopilot /t REG_DWORD /d 1 /f;');
+    }
+    if (getBool('RemoveXboxApps', false)) {
+      defaultUserScript.append('reg.exe add "HKU\\DefaultUser\\Software\\Microsoft\\Windows\\CurrentVersion\\GameDVR" /v AppCaptureEnabled /t REG_DWORD /d 0 /f;');
+    }
+    if (getBool('RemoveTeams', false)) {
+      specializeScript.append('reg.exe add "HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Communications" /v ConfigureChatAutoInstall /t REG_DWORD /d 0 /f;');
+    }
+    if (getBool('RemoveOneDrive', false)) {
+      specializeScript.append([
+        '@(',
+        "  'C:\\Users\\Default\\AppData\\Roaming\\Microsoft\\Windows\\Start Menu\\Programs\\OneDrive.lnk';",
+        "  'C:\\Windows\\System32\\OneDriveSetup.exe';",
+        "  'C:\\Windows\\SysWOW64\\OneDriveSetup.exe';",
+        ") | Where-Object -FilterScript { [System.IO.File]::Exists( $_ ); } | Remove-Item -Verbose -ErrorAction 'Continue';"
+      ].join('\r\n'));
+      defaultUserScript.append("Remove-ItemProperty -LiteralPath 'Registry::HKU\\DefaultUser\\Software\\Microsoft\\Windows\\CurrentVersion\\Run' -Name 'OneDriveSetup' -Force -ErrorAction 'Continue';");
+    }
+
 
     if (isJapaneseKeyboard) {
       specializeScript.append([
