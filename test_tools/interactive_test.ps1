@@ -75,6 +75,31 @@ function Run-E2E-Engine-Test {
     python (Join-Path $toolsDir "test_e2e_engine.py")
 }
 
+function Run-Feature-Parity-Test {
+    Write-Host "`n機能格差解消＆スマートクォート網羅テストを実行中..." -ForegroundColor Cyan
+    node (Join-Path $toolsDir "test_feature_parity.js")
+}
+
+function Run-Ast-Quote-Verification {
+    Write-Host "`nPowerShell AST 構文解析＆スマートクォート検出を実行中..." -ForegroundColor Cyan
+    $testXml = Join-Path $toolsDir "..\..\tmp\test_generated_autounattend.xml"
+    if (Test-Path $testXml) {
+        powershell -ExecutionPolicy Bypass -File (Join-Path $toolsDir "verify_ast_quotes.ps1") -XmlPath $testXml
+    } else {
+        powershell -ExecutionPolicy Bypass -File (Join-Path $toolsDir "verify_ast_quotes.ps1") -ScriptDir "E:\Windows\Setup\Scripts"
+    }
+}
+
+function Run-Vm-Offline-Verification {
+    Write-Host "`nマウント済みVMディスク（オフライン）自動検収を実行中..." -ForegroundColor Cyan
+    powershell -ExecutionPolicy Bypass -File (Join-Path $toolsDir "verify_vm_offline.ps1") -MountDrive "E:\"
+}
+
+function Run-Apply-Vm-Fix {
+    Write-Host "`nマウント済みVMディスクの DefaultUser.ps1 修正を適用..." -ForegroundColor Cyan
+    powershell -ExecutionPolicy Bypass -File (Join-Path $toolsDir "apply_vm_fix.ps1") -TargetFile "E:\Windows\Setup\Scripts\DefaultUser.ps1"
+}
+
 # メインループ
 while ($true) {
     $serverRunning = Check-Server-Status
@@ -82,14 +107,18 @@ while ($true) {
     $serverStatusColor = if ($serverRunning) { "Green" } else { "DarkGray" }
 
     Write-Host "`n========================================================" -ForegroundColor Magenta
-    Write-Host "  unattend-generator ボタン動作確認 対話型テストツール" -ForegroundColor White
+    Write-Host "  unattend-generator 統合自動検収・対話型テストツール" -ForegroundColor White
     Write-Host "  サーバー稼働状況: $serverStatusText" -ForegroundColor $serverStatusColor
     Write-Host "========================================================" -ForegroundColor Magenta
     Write-Host " 1. ローカルテストサーバー起動 & ブラウザで開く"
     Write-Host " 2. 全ボタン・フォームの一括URL検証テスト"
     Write-Host " 3. 個別ボタンの動作・パラメータ確認"
     Write-Host " 4. XML生成・ダウンロードエンジンの検証テスト"
-    Write-Host " 5. ローカルテストサーバー停止"
+    Write-Host " 5. 機能格差解消＆スマートクォート網羅テスト (Node.js)"
+    Write-Host " 6. PowerShell AST構文解析＆クォート検出 (AST Parser)"
+    Write-Host " 7. VM仮想ディスク オフライン自動検収 (E:\)"
+    Write-Host " 8. VM仮想ディスク DefaultUser.ps1 修正適用"
+    Write-Host " 9. ローカルテストサーバー停止"
     Write-Host " 0. 終了"
     Write-Host "--------------------------------------------------------"
 
@@ -99,7 +128,11 @@ while ($true) {
         "2" { Run-Button-Verification }
         "3" { Run-Individual-Button-Test }
         "4" { Run-E2E-Engine-Test }
-        "5" { Stop-Test-Server }
+        "5" { Run-Feature-Parity-Test }
+        "6" { Run-Ast-Quote-Verification }
+        "7" { Run-Vm-Offline-Verification }
+        "8" { Run-Apply-Vm-Fix }
+        "9" { Stop-Test-Server }
         "0" { 
             Write-Host "テストツールを終了します。" -ForegroundColor Cyan
             exit 0 
