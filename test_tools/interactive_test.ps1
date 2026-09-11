@@ -80,6 +80,12 @@ function Run-Feature-Parity-Test {
     node (Join-Path $toolsDir "test_feature_parity.js")
 }
 
+function Run-Engine-Parity-Test {
+    Write-Host "`nモジュール結合エンジン ビルド＆パリティ検証テストを実行中..." -ForegroundColor Cyan
+    node (Join-Path $toolsDir "..\build\build_engine.js")
+    node (Join-Path $toolsDir "test_engine_parity.js")
+}
+
 function Run-Ast-Quote-Verification {
     Write-Host "`nPowerShell AST 構文解析＆スマートクォート検出を実行中..." -ForegroundColor Cyan
     $testXml = Join-Path $toolsDir "..\..\tmp\test_generated_autounattend.xml"
@@ -118,6 +124,7 @@ while ($true) {
     Write-Host " 6. PowerShell AST構文解析＆クォート検出 (AST Parser)"
     Write-Host " 7. VM仮想ディスク オフライン自動検収 (E:\)"
     Write-Host " 8. VM仮想ディスク DefaultUser.ps1 修正適用"
+    Write-Host " p. モジュール結合エンジン ビルド＆パリティ検証 (Node.js)"
     Write-Host " 9. ローカルテストサーバー停止"
     Write-Host " 0. 終了"
     Write-Host "--------------------------------------------------------"
@@ -132,6 +139,8 @@ while ($true) {
         "6" { Run-Ast-Quote-Verification }
         "7" { Run-Vm-Offline-Verification }
         "8" { Run-Apply-Vm-Fix }
+        "p" { Run-Engine-Parity-Test }
+        "P" { Run-Engine-Parity-Test }
         "9" { Stop-Test-Server }
         "0" { 
             Write-Host "テストツールを終了します。" -ForegroundColor Cyan
