@@ -28,7 +28,9 @@
 
 ## 1. 全体概要とリポジトリ構成
 
-- **Webサイト公開 URL**: `https://ctd-networks-co-ltd.github.io/unattend-generator_ja-JP/`
+- **Webサイト公開 URL**:
+  - **本番環境（最新リリース版）**: `https://ctd-networks-co-ltd.github.io/unattend-generator_ja-JP/`
+  - **プレビュー環境（master最新ビルド版）**: `https://ctd-networks-co-ltd.github.io/unattend-generator_ja-JP/preview/`
 - **GitHub リポジトリ**: `https://github.com/CTD-Networks-CO-LTD/unattend-generator_ja-JP`
 - **アーキテクチャの要点**:
   - 本リポジトリは、Windows 無人応答ファイル（`autounattend.xml`）生成ツール（元リポジトリ: `cschneegans/unattend-generator`）をフォークし、**日本語キーボード（106/109 キー配列、`kbd106.dll`、`PCAT_106KEY`）や IME、日本のロケール・タイムゾーンに最適化した日本語特化版**です。
@@ -51,7 +53,8 @@ sequenceDiagram
     participant Repo as GitHub リポジトリ<br/>(CTD-Networks-CO-LTD/unattend-generator_ja-JP)
     participant GHA_Net as GitHub Actions<br/>(.github/workflows/dotnet.yml)
     participant GHA_Pages as GitHub Actions<br/>(.github/workflows/deploy-pages.yml)
-    participant Pages as GitHub Pages ホスティング<br/>(docs/)
+    participant Pages_Preview as GitHub Pages (プレビュー環境)<br/>(/preview/)
+    participant Pages_Prod as GitHub Pages (本番環境)<br/>(ルート /)
 
     Note over Dev, Local: 1. 日本語環境向けのコード改修・リソース定義
     Dev->>Local: modifier/*.cs (Locales, Specialize等) を改修
@@ -61,28 +64,34 @@ sequenceDiagram
     Dev->>Local: docs/unattend_engine.js に C# ロジック・日本語設定を反映
     Dev->>Local: build/combine.ps1 を実行 (任意: HTML セクション統合検証)
 
-    Note over Local, Repo: 2. ソースコードのコミット & プッシュ
-    Dev->>Local: git add . & git commit & git push origin main
-    Local->>Repo: push イベント (main / master ブランチ)
+    Note over Local, Repo: 2. ソースコードのコミット & PR マージ (master)
+    Dev->>Local: git commit & git push
+    Local->>Repo: master ブランチへのマージ / push
 
     par .NET ビルド・単体テストパイプライン
         Repo->>GHA_Net: トリガー発火 (push / PR)
         GHA_Net->>GHA_Net: actions/checkout@v6
         GHA_Net->>GHA_Net: actions/setup-dotnet@v5 (NET 10.x)
         GHA_Net->>GHA_Net: dotnet restore
-        GHA_Net->>GHA_Net: dotnet build --no-restore<br/>(UnattendGenerator.csproj: modifier/*.cs と resource/* を DLL 埋め込み)
+        GHA_Net->>GHA_Net: dotnet build --no-restore
         GHA_Net->>GHA_Net: dotnet test --no-build
-        GHA_Net->>GHA_Net: actions/upload-artifact@v7 (テスト結果・成果物保存)
-    and GitHub Pages デプロイパイプライン
-        Repo->>GHA_Pages: トリガー発火 (paths: docs/**, workflow_dispatch)
-        GHA_Pages->>GHA_Pages: actions/checkout@v4
-        GHA_Pages->>GHA_Pages: actions/configure-pages@v5
-        GHA_Pages->>GHA_Pages: actions/upload-pages-artifact@v3 (path: './docs')
-        GHA_Pages->>Pages: actions/deploy-pages@v4
-        Pages-->>GHA_Pages: デプロイ完了 (Status: 200 OK)
+    and GitHub Pages デプロイパイプライン (master push 時)
+        Repo->>GHA_Pages: トリガー発火 (push: master, paths: docs/**)
+        GHA_Pages->>GHA_Pages: actions/checkout@v4 (fetch-depth: 0)
+        GHA_Pages->>GHA_Pages: master の docs を _site/preview/ へステージング
+        GHA_Pages->>GHA_Pages: 最新リリースタグの docs を _site/ (ルート) へ配置・維持
+        GHA_Pages->>Pages_Preview: actions/deploy-pages@v4
+        Note over Pages_Preview: master の最新プレビューサイト公開<br/>https://ctd-networks-co-ltd.github.io/unattend-generator_ja-JP/preview/
+        Note over Pages_Prod: 本番環境は既存の安定リリース版が維持される
     end
 
-    Note over Pages: 3. 静的 Web サイトの公開完了<br/>https://ctd-networks-co-ltd.github.io/unattend-generator_ja-JP/
+    Note over Dev, Repo: 3. GitHub リリース公開 (Release published)
+    Dev->>Repo: GitHub Releases から master を latest としてリリース公開
+    Repo->>GHA_Pages: トリガー発火 (release: published)
+    GHA_Pages->>GHA_Pages: actions/checkout@v4
+    GHA_Pages->>GHA_Pages: 最新 docs を _site/ (ルート) および _site/preview/ の両方へステージング
+    GHA_Pages->>Pages_Prod: actions/deploy-pages@v4
+    Note over Pages_Prod: 本番サイトが最新リリース版へ更新・公開完了<br/>https://ctd-networks-co-ltd.github.io/unattend-generator_ja-JP/
 ```
 
 
@@ -111,7 +120,7 @@ sequenceDiagram
 | ワークフロー定義 | 種別 | トリガー条件 | 実行内容・役割 |
 | :--- | :--- | :--- | :--- |
 | **`.github/workflows/dotnet.yml`**<br/>*(オリジナル由来 / CI)* | CI<br/>(継続的インテグレーション) | `main` / `master` への push、Pull Request | **C# Core エンジンの整合性保証**: .NET 10 環境をセットアップし、`resource/*` を DLL に埋め込んで `UnattendGenerator.csproj` をビルド（`dotnet build`）。単体テスト（`dotnet test`）を実行し、コア生成ロジックの品質を担保 |
-| **`.github/workflows/deploy-pages.yml`**<br/>*(Fork独自 / CD)* | CD<br/>(継続的デプロイ) | `docs/**` パスの変更 push、手動実行 (`workflow_dispatch`) | **GitHub Pages への静的ホスティング自動反映**: `actions/upload-pages-artifact@v3` で `docs/` ディレクトリ全体をパッケージ化し、`actions/deploy-pages@v4` で静的ホスティングサーバーに直接反映 |
+| **`.github/workflows/deploy-pages.yml`**<br/>*(Fork独自 / CD)* | CD<br/>(継続的デプロイ) | `docs/**` パスの変更 push、GitHub リリース公開 (`release: published`)、手動実行 (`workflow_dispatch`) | **GitHub Pages プレビュー／本番環境への自動配信**:<br/>- **master マージ時**: 最新の `docs/` を `/preview/` へ配置しプレビュー環境を更新。本番ルート（`/`）には Git 上の最新リリースタグの `docs/` を抽出・配置して安定版を維持。<br/>- **リリース公開時**: master ブランチの最新 `docs/` を本番ルート（`/`）および `/preview/` の両方へ本番公開反映。<br/>`actions/upload-pages-artifact@v3` で `_site/` をパッケージ化し、`actions/deploy-pages@v4` でデプロイ |
 
 ---
 
