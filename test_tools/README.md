@@ -9,6 +9,7 @@
 | ファイル名 | 役割 |
 | :--- | :--- |
 | `interactive_test.ps1` | 統合自動検収・対話式テストランナー（メニュー選択式CLI） |
+| `test_engine_parity.js` | モジュール分割エンジンとベースラインの完全一致検証（全9ケース Byte-exact 検証） |
 | `test_feature_parity.js` | C# / JS 機能格差解消＆スマートクォート網羅自動テスト (Node.js) |
 | `verify_ast_quotes.ps1` | PowerShell AST パーサーによるスクリプト構文解析＆スマートクォート検出ツール |
 | `verify_vm_offline.ps1` | マウント済みVM仮想ディスク（オフライン）自動検収ツール |
