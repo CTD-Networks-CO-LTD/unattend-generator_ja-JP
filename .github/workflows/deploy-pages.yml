@@ -8,7 +8,20 @@ on:
     paths:
       - 'docs/**'
       - '.github/workflows/deploy-pages.yml'
+  release:
+    types: [published]
   workflow_dispatch:
+    inputs:
+      target:
+        description: 'デプロイ対象の指定 (auto / preview / release / both)'
+        required: false
+        default: 'auto'
+        type: choice
+        options:
+          - auto
+          - preview
+          - release
+          - both
 
 permissions:
   contents: read
@@ -28,15 +41,103 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
 
+      - name: Build / Stage Pages Content
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVENT_NAME: ${{ github.event_name }}
+          IS_PRERELEASE: ${{ github.event.release.prerelease }}
+          DISPATCH_TARGET: ${{ inputs.target }}
+        run: |
+          set -euo pipefail
+          mkdir -p _site
+          mkdir -p _site/preview
+
+          echo "=== Deploy Condition Check ==="
+          echo "Event Name: $EVENT_NAME"
+
+          DEPLOY_MODE="preview"
+
+          if [ "$EVENT_NAME" = "release" ]; then
+            if [ "$IS_PRERELEASE" != "true" ]; then
+              DEPLOY_MODE="release"
+            else
+              echo "Pre-release detected. Deploying only to preview."
+              DEPLOY_MODE="preview"
+            fi
+          elif [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+            if [ "$DISPATCH_TARGET" = "release" ]; then
+              DEPLOY_MODE="release"
+            elif [ "$DISPATCH_TARGET" = "both" ]; then
+              DEPLOY_MODE="both"
+            elif [ "$DISPATCH_TARGET" = "preview" ]; then
+              DEPLOY_MODE="preview"
+            else
+              if git describe --exact-match --tags HEAD 2>/dev/null; then
+                DEPLOY_MODE="release"
+              else
+                DEPLOY_MODE="preview"
+              fi
+            fi
+          elif [ "$EVENT_NAME" = "push" ]; then
+            DEPLOY_MODE="preview"
+          fi
+
+          echo "Determined DEPLOY_MODE: $DEPLOY_MODE"
+
+          if [ "$DEPLOY_MODE" = "release" ] || [ "$DEPLOY_MODE" = "both" ]; then
+            echo "Publishing release version to root (/)..."
+            cp -r ./docs/* ./_site/
+            echo "Updating preview (/preview/) with release version..."
+            cp -r ./docs/* ./_site/preview/
+          else
+            # master マージ時: プレビュー更新 & ルートは最新リリースを維持
+            echo "Building preview version from current master to /preview/..."
+            cp -r ./docs/* ./_site/preview/
+
+            echo "Finding latest release tag for root (/)..."
+            LATEST_TAG=""
+            if command -v gh &> /dev/null; then
+              LATEST_TAG=$(gh release view --json tagName -q .tagName 2>/dev/null || echo "")
+            fi
+            if [ -z "$LATEST_TAG" ]; then
+              LATEST_TAG=$(git describe --tags --abbrev=0 $(git rev-list --tags --max-count=1) 2>/dev/null || echo "")
+            fi
+
+            echo "Identified Latest Release Tag: $LATEST_TAG"
+
+            if [ -n "$LATEST_TAG" ]; then
+              echo "Extracting docs from tag $LATEST_TAG for root site..."
+              mkdir -p ./_tag_docs
+              git archive "$LATEST_TAG" docs | tar -x -C ./_tag_docs/
+              if [ -d "./_tag_docs/docs" ]; then
+                cp -r ./_tag_docs/docs/* ./_site/
+                echo "Successfully staged release $LATEST_TAG to root (/)."
+              else
+                echo "Warning: docs folder not found in tag $LATEST_TAG. Falling back to current docs."
+                cp -r ./docs/* ./_site/
+              fi
+            else
+              echo "Notice: No release tag found in repository. Using current docs for root."
+              cp -r ./docs/* ./_site/
+            fi
+          fi
+
+          echo "=== Content Staging Complete ==="
+          ls -la _site
+          ls -la _site/preview
+
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: './docs'
+          path: './_site'
 
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+
