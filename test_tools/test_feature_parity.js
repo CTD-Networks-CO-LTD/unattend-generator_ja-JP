@@ -119,6 +119,17 @@ function runTests() {
   const xmlNoFastStartup = engine.generateAutounattendXml(fdNoFastStartup);
   assert(!xmlNoFastStartup.includes('HiberbootEnabled'), 'DisableFastStartup 未指定時には HiberbootEnabled 設定が含まれないこと');
 
+  // --- テストケース 6: Build/Commit 要素のリポジトリ URL およびコミットハッシュ検証 ---
+  console.log('\n--- Test 6: Build/Commit 要素のリポジトリ URL およびコミットハッシュ検証 ---');
+  const fdCommit = new MockFormData({
+    ShowFileExtensions: 'true'
+  });
+  const xmlCommit = engine.generateAutounattendXml(fdCommit);
+  assert(xmlCommit.includes('<Build>'), 'Extensions 内に <Build> 要素が出力されていること');
+  assert(xmlCommit.includes('<Commit>'), '<Build> 内に <Commit> 要素が出力されていること');
+  assert(xmlCommit.includes('https://github.com/CTD-Networks-CO-LTD/unattend-generator_ja-JP/commit/'), 'GitHubUrl が本リポジトリ (CTD-Networks-CO-LTD/unattend-generator_ja-JP) を指していること');
+  assert(!xmlCommit.includes('https://github.com/cschneegans/unattend-generator/commit/'), 'フォーク元 (cschneegans) の URL が残っていないこと');
+
   console.log('\n====================================================');
   console.log(` テスト結果: ${passed} 項目合格 / ${failed} 項目失敗`);
   console.log('====================================================\n');

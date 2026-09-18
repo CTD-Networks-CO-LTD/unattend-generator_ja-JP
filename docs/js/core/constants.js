@@ -53,12 +53,16 @@ var SET_COMPUTER_NAME_PS1 = [
     "} *>&1 | Out-String -Width 1KB -Stream >> 'C:\\Windows\\Setup\\Scripts\\SetComputerName.log';"
   ].join('\r\n');
 
-var COMMIT_HASH = 'f1ce9a9d75259173f0a3f2ef8c84230c731986d9';
+var REPO_URL = 'https://github.com/CTD-Networks-CO-LTD/unattend-generator_ja-JP';
+var COMMIT_URL_BASE = REPO_URL + '/commit/';
+var COMMIT_HASH = '2085df00b5325c31b6a48c37c6866c745a0a1212';
 
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
     EXTRACT_SCRIPTS_PS1: EXTRACT_SCRIPTS_PS1,
     SET_COMPUTER_NAME_PS1: SET_COMPUTER_NAME_PS1,
+    REPO_URL: REPO_URL,
+    COMMIT_URL_BASE: COMMIT_URL_BASE,
     COMMIT_HASH: COMMIT_HASH
   };
 }

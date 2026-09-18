@@ -88,12 +88,16 @@ var SET_COMPUTER_NAME_PS1 = [
     "} *>&1 | Out-String -Width 1KB -Stream >> 'C:\\Windows\\Setup\\Scripts\\SetComputerName.log';"
   ].join('\r\n');
 
-var COMMIT_HASH = 'f1ce9a9d75259173f0a3f2ef8c84230c731986d9';
+var REPO_URL = 'https://github.com/CTD-Networks-CO-LTD/unattend-generator_ja-JP';
+var COMMIT_URL_BASE = REPO_URL + '/commit/';
+var COMMIT_HASH = '2085df00b5325c31b6a48c37c6866c745a0a1212';
 
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
     EXTRACT_SCRIPTS_PS1: EXTRACT_SCRIPTS_PS1,
     SET_COMPUTER_NAME_PS1: SET_COMPUTER_NAME_PS1,
+    REPO_URL: REPO_URL,
+    COMMIT_URL_BASE: COMMIT_URL_BASE,
     COMMIT_HASH: COMMIT_HASH
   };
 }
@@ -401,7 +405,7 @@ function GenerationContext(formData) {
 
   this.embeddedFiles = [];
   this.hasExtractScript = false;
-  this.commitHash = 'f1ce9a9d75259173f0a3f2ef8c84230c731986d9';
+  this.commitHash = typeof COMMIT_HASH !== 'undefined' ? COMMIT_HASH : 'addaa8bf5f63f17ae03c3aa3db0daca892860676';
 
   // Shared state populated and consumed across modifiers
   this.arch = this.getVal('ProcessorArchitecture', 'amd64');
@@ -1099,8 +1103,9 @@ BuildModifier.prototype.process = function (root) {
 
     var buildElem = extensionsElem.addChild(new XmlNode('Build'));
     var commitElem = buildElem.addChild(new XmlNode('Commit'));
+    var urlBase = (typeof COMMIT_URL_BASE !== 'undefined' ? COMMIT_URL_BASE : 'https://github.com/CTD-Networks-CO-LTD/unattend-generator_ja-JP/commit/');
     commitElem.addSimpleElement('Hash', ctx.commitHash);
-    commitElem.addSimpleElement('GitHubUrl', 'https://github.com/cschneegans/unattend-generator/commit/' + ctx.commitHash);
+    commitElem.addSimpleElement('GitHubUrl', urlBase + ctx.commitHash);
 
     if (ctx.hasExtractScript) {
       var extractScriptElem = extensionsElem.addChild(new XmlNode('ExtractScript'));
@@ -1367,8 +1372,9 @@ function generateAutounattendXml(formData) {
 
       var buildElem = extensionsElem.addChild(new XmlNode('Build'));
       var commitElem = buildElem.addChild(new XmlNode('Commit'));
+      var urlBase = (typeof COMMIT_URL_BASE !== 'undefined' ? COMMIT_URL_BASE : 'https://github.com/CTD-Networks-CO-LTD/unattend-generator_ja-JP/commit/');
       commitElem.addSimpleElement('Hash', context.commitHash);
-      commitElem.addSimpleElement('GitHubUrl', 'https://github.com/cschneegans/unattend-generator/commit/' + context.commitHash);
+      commitElem.addSimpleElement('GitHubUrl', urlBase + context.commitHash);
 
       if (context.hasExtractScript) {
         var extractScriptElem = extensionsElem.addChild(new XmlNode('ExtractScript'));

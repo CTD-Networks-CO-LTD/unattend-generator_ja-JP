@@ -41,7 +41,7 @@ function GenerationContext(formData) {
 
   this.embeddedFiles = [];
   this.hasExtractScript = false;
-  this.commitHash = 'f1ce9a9d75259173f0a3f2ef8c84230c731986d9';
+  this.commitHash = typeof COMMIT_HASH !== 'undefined' ? COMMIT_HASH : 'addaa8bf5f63f17ae03c3aa3db0daca892860676';
 
   // Shared state populated and consumed across modifiers
   this.arch = this.getVal('ProcessorArchitecture', 'amd64');

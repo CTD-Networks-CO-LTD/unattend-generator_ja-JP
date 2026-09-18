@@ -64,6 +64,10 @@ jobs:
           mkdir -p _site
           mkdir -p _src_clean
 
+          # 0. 最新コミットハッシュを注入してエンジンを再バンドル
+          echo "Building unattend engine bundle with latest commit hash..."
+          COMMIT_HASH="${{ github.sha }}" node build/build_engine.js
+
           # 1. 現在のブランチの docs/ から preview ディレクトリを除外して _src_clean にステージング
           echo "Staging clean sources from current branch (excluding preview/)..."
           cp -r ./docs/* _src_clean/
