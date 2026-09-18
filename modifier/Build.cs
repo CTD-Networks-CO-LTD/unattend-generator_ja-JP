@@ -24,7 +24,7 @@ class BuildModifier(ModifierContext context) : Modifier(context)
         UseShellExecute = false,
         CreateNoWindow = true
       };
-      using var proc = Process.Start(psi);
+      using var proc = System.Diagnostics.Process.Start(psi);
       if (proc != null)
       {
         string output = proc.StandardOutput.ReadToEnd().Trim();
