@@ -697,6 +697,12 @@
                 tableContainer.innerHTML = sectionsHtml.join('\n');
             }
 
+            if (typeof updateHeaderCommitTime === 'function') {
+                updateHeaderCommitTime();
+            } else if (typeof UnattendEngine !== 'undefined' && typeof UnattendEngine.updateHeaderCommitTime === 'function') {
+                UnattendEngine.updateHeaderCommitTime();
+            }
+
             ready();
         } catch (err) {
             console.error('Error loading sections dynamically:', err)

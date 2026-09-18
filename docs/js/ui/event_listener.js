@@ -252,5 +252,64 @@ function initEngine() {
 
   // 4. Restore initial form state from URL query if present
   restoreFromUrlQuery();
+
+  // 5. Update header relative commit time
+  updateHeaderCommitTime();
 }
+
+/**
+ * Format relative time from commit ISO date string
+ */
+function formatRelativeTime(dateInput, nowInput) {
+  if (!dateInput) return '';
+  var commitDate = (dateInput instanceof Date) ? dateInput : new Date(dateInput);
+  if (isNaN(commitDate.getTime())) return '';
+  var now = nowInput ? ((nowInput instanceof Date) ? nowInput : new Date(nowInput)) : new Date();
+  var diffMs = now.getTime() - commitDate.getTime();
+  if (isNaN(diffMs) || diffMs < 0) {
+    diffMs = 0;
+  }
+  var diffSec = Math.floor(diffMs / 1000);
+  if (diffSec < 60) {
+    return 'just now';
+  }
+  var diffMin = Math.floor(diffSec / 60);
+  if (diffMin < 60) {
+    return diffMin === 1 ? 'updated 1 minute ago' : 'updated ' + diffMin + ' minutes ago';
+  }
+  var diffHours = Math.floor(diffMin / 60);
+  if (diffHours < 24) {
+    return diffHours === 1 ? 'updated 1 hour ago' : 'updated ' + diffHours + ' hours ago';
+  }
+  var diffDays = Math.floor(diffHours / 24);
+  if (diffDays < 30) {
+    return diffDays === 1 ? 'updated 1 day ago' : 'updated ' + diffDays + ' days ago';
+  }
+  var diffMonths = Math.floor(diffDays / 30);
+  if (diffDays < 365) {
+    return diffMonths === 1 ? 'updated 1 month ago' : 'updated ' + diffMonths + ' months ago';
+  }
+  var diffYears = Math.floor(diffDays / 365);
+  return diffYears === 1 ? 'updated 1 year ago' : 'updated ' + diffYears + ' years ago';
+}
+
+/**
+ * Update the header commit relative time text in DOM
+ */
+function updateHeaderCommitTime() {
+  if (typeof document === 'undefined') return;
+  var elem = document.getElementById('header-commit-time');
+  if (!elem) return;
+  var dateStr = elem.getAttribute('data-commit-date');
+  if (!dateStr && typeof COMMIT_DATE !== 'undefined') {
+    dateStr = COMMIT_DATE;
+  }
+  if (dateStr) {
+    var relText = formatRelativeTime(dateStr);
+    if (relText) {
+      elem.textContent = relText;
+    }
+  }
+}
+
 

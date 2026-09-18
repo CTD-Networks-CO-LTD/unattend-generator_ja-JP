@@ -23,7 +23,9 @@ var unattendEngine = {
   applyXmlDomToForm: applyXmlDomToForm,
   overrideFormFromXmlDom: overrideFormFromXmlDom,
   importXmlFile: importXmlFile,
-  restoreFromUrlQuery: restoreFromUrlQuery
+  restoreFromUrlQuery: restoreFromUrlQuery,
+  formatRelativeTime: formatRelativeTime,
+  updateHeaderCommitTime: updateHeaderCommitTime
 };
 
 if (typeof module !== 'undefined' && module.exports) {
