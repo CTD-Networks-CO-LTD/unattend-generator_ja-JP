@@ -130,6 +130,61 @@ function runTests() {
   assert(xmlCommit.includes('https://github.com/CTD-Networks-CO-LTD/unattend-generator_ja-JP/commit/'), 'GitHubUrl が本リポジトリ (CTD-Networks-CO-LTD/unattend-generator_ja-JP) を指していること');
   assert(!xmlCommit.includes('https://github.com/cschneegans/unattend-generator/commit/'), 'フォーク元 (cschneegans) の URL が残っていないこと');
 
+  // --- テストケース 7: ヘッダーのコミット情報・リリース情報および動的相対時間の検証 ---
+  console.log('\n--- Test 7: ヘッダーのコミット情報・リリース情報および動的相対時間の検証 ---');
+  const headerHtmlPath = path.join(__dirname, '..', 'docs', 'sections', 'header.html');
+  assert(fs.existsSync(headerHtmlPath), 'docs/sections/header.html が存在すること');
+  const headerHtml = fs.readFileSync(headerHtmlPath, 'utf8');
+
+  // 説明文
+  assert(headerHtml.includes('This service lets you create'), 'header.html に説明文が含まれていること');
+  assert(headerHtml.includes('class="Centered"'), 'header.html に class="Centered" 段落が含まれていること');
+
+  // 自リポジトリURLの指向確認
+  assert(headerHtml.includes('https://github.com/CTD-Networks-CO-LTD/unattend-generator_ja-JP'), 'header.html の GitHub リンクが自リポジトリを指していること');
+  assert(!headerHtml.includes('https://github.com/cschneegans/unattend-generator'), 'header.html にフォーク元 (cschneegans) の URL が残っていないこと');
+
+  // Release および Commit リンク
+  assert(headerHtml.includes('id="header-release-link"'), 'header.html に Release リンク (id="header-release-link") が含まれていること');
+  assert(headerHtml.includes('/releases/tag/'), 'header.html の Release リンクが tag URL を指していること');
+  assert(headerHtml.includes('id="header-commit-link"'), 'header.html に Commit リンク (id="header-commit-link") が含まれていること');
+  assert(headerHtml.includes('/commit/'), 'header.html の Commit リンクが commit URL を指していること');
+  assert(headerHtml.includes('id="header-commit-time"'), 'header.html に Commit 時間表示要素 (id="header-commit-time") が含まれていること');
+  assert(headerHtml.includes('data-commit-date='), 'header.html の Commit 時間要素に data-commit-date 属性が付与されていること');
+
+  // 除外項目が含まれていないこと
+  assert(!headerHtml.includes('/windows/unattend-generator/usage/'), 'header.html に不要リンク Usage が含まれていないこと');
+  assert(!headerHtml.includes('/windows/unattend-generator/samples/'), 'header.html に不要リンク Samples が含まれていないこと');
+  assert(!headerHtml.includes('paypal.me'), 'header.html に不要リンク PayPal が含まれていないこと');
+  assert(!headerHtml.includes('buymeacoffee.com'), 'header.html に不要リンク Buy Me a Coffee が含まれていないこと');
+
+  // 動的相対時間計算ロジックの検証
+  assert(typeof engine.formatRelativeTime === 'function', 'engine.formatRelativeTime 関数が公開されていること');
+  const baseNow = new Date('2026-09-19T12:00:00Z');
+  const dJustNow = new Date(baseNow.getTime() - 30 * 1000);
+  const d1Min = new Date(baseNow.getTime() - 65 * 1000);
+  const d5Min = new Date(baseNow.getTime() - 5 * 60 * 1000);
+  const d1Hour = new Date(baseNow.getTime() - 70 * 60 * 1000);
+  const d3Hours = new Date(baseNow.getTime() - 3 * 3600 * 1000);
+  const d1Day = new Date(baseNow.getTime() - 25 * 3600 * 1000);
+  const d5Days = new Date(baseNow.getTime() - 5 * 86400 * 1000);
+  const d1Month = new Date(baseNow.getTime() - 35 * 86400 * 1000);
+  const d3Months = new Date(baseNow.getTime() - 100 * 86400 * 1000);
+  const d1Year = new Date(baseNow.getTime() - 400 * 86400 * 1000);
+  const d2Years = new Date(baseNow.getTime() - 800 * 86400 * 1000);
+
+  assert(engine.formatRelativeTime(dJustNow, baseNow) === 'just now', '30秒前が "just now" とフォーマットされること');
+  assert(engine.formatRelativeTime(d1Min, baseNow) === 'updated 1 minute ago', '1分前が "updated 1 minute ago" とフォーマットされること');
+  assert(engine.formatRelativeTime(d5Min, baseNow) === 'updated 5 minutes ago', '5分前が "updated 5 minutes ago" とフォーマットされること');
+  assert(engine.formatRelativeTime(d1Hour, baseNow) === 'updated 1 hour ago', '1時間前が "updated 1 hour ago" とフォーマットされること');
+  assert(engine.formatRelativeTime(d3Hours, baseNow) === 'updated 3 hours ago', '3時間前が "updated 3 hours ago" とフォーマットされること');
+  assert(engine.formatRelativeTime(d1Day, baseNow) === 'updated 1 day ago', '1日前が "updated 1 day ago" とフォーマットされること');
+  assert(engine.formatRelativeTime(d5Days, baseNow) === 'updated 5 days ago', '5日前が "updated 5 days ago" とフォーマットされること');
+  assert(engine.formatRelativeTime(d1Month, baseNow) === 'updated 1 month ago', '1ヶ月前が "updated 1 month ago" とフォーマットされること');
+  assert(engine.formatRelativeTime(d3Months, baseNow) === 'updated 3 months ago', '3ヶ月前が "updated 3 months ago" とフォーマットされること');
+  assert(engine.formatRelativeTime(d1Year, baseNow) === 'updated 1 year ago', '1年前が "updated 1 year ago" とフォーマットされること');
+  assert(engine.formatRelativeTime(d2Years, baseNow) === 'updated 2 years ago', '2年前が "updated 2 years ago" とフォーマットされること');
+
   console.log('\n====================================================');
   console.log(` テスト結果: ${passed} 項目合格 / ${failed} 項目失敗`);
   console.log('====================================================\n');

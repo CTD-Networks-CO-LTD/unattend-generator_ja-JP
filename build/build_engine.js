@@ -11,6 +11,8 @@ const docsJs = path.join(repoRoot, 'docs', 'js');
 const targetPath = path.join(repoRoot, 'docs', 'unattend_engine.js');
 const constantsPath = path.join(docsJs, 'core', 'constants.js');
 const baselinePath = path.join(repoRoot, 'test_tools', 'baseline_unattend_engine.js');
+const headerPath = path.join(repoRoot, 'docs', 'sections', 'header.html');
+
 
 // 1. Determine commit hash
 let commitHash = process.env.COMMIT_HASH || process.env.GITHUB_SHA || '';
@@ -45,10 +47,48 @@ if (!repoUrl) {
 }
 repoUrl = repoUrl.replace(/\/+$/, '');
 const commitUrlBase = repoUrl + '/commit/';
+// 3. Determine release tag and release URL
+let releaseTag = process.env.RELEASE_TAG || '';
+if (!releaseTag) {
+  try {
+    const tagOutput = execSync('git tag -l "v*" --sort=-v:refname', { cwd: repoRoot, encoding: 'utf8' }).trim();
+    const tags = tagOutput.split(/\r?\n/).map(t => t.trim()).filter(Boolean);
+    if (tags.length > 0) {
+      releaseTag = tags[0];
+    }
+  } catch (e) {}
+}
+if (!releaseTag) {
+  try {
+    releaseTag = execSync('git describe --tags --abbrev=0', { cwd: repoRoot, encoding: 'utf8' }).trim();
+  } catch (e) {}
+}
+if (!releaseTag) {
+  releaseTag = 'v1.3.0_20260918';
+}
+const releaseUrl = releaseTag ? (repoUrl + '/releases/tag/' + releaseTag) : (repoUrl + '/releases');
+
+// 4. Determine commit date
+let commitDate = process.env.COMMIT_DATE || '';
+if (!commitDate) {
+  try {
+    commitDate = execSync('git log -1 --format=%cI', { cwd: repoRoot, encoding: 'utf8' }).trim();
+  } catch (e) {}
+}
+if (!commitDate) {
+  commitDate = '2026-09-18T16:53:54+09:00';
+}
+
+const shortHash = commitHash ? commitHash.substring(0, 7) : 'e7197cb';
+const commitUrl = commitUrlBase + (commitHash || shortHash);
+
 
 console.log('Build Environment:');
 console.log('  Repo URL    : ' + repoUrl);
 console.log('  Commit Hash : ' + (commitHash || '(unchanged)'));
+
+console.log('  Release Tag : ' + releaseTag);
+console.log('  Commit Date : ' + commitDate);
 
 // 3. Synchronize docs/js/core/constants.js
 if (fs.existsSync(constantsPath)) {
@@ -69,6 +109,23 @@ if (fs.existsSync(constantsPath)) {
       "var COMMIT_HASH = '" + commitHash + "';"
     );
   }
+  if (releaseTag) {
+    constantsContent = constantsContent.replace(
+      /var RELEASE_TAG = '[^']*';/,
+      "var RELEASE_TAG = '" + releaseTag + "';"
+    );
+    constantsContent = constantsContent.replace(
+      /var RELEASE_URL = [^;]*;/,
+      "var RELEASE_URL = '" + releaseUrl + "';"
+    );
+  }
+  if (commitDate) {
+    constantsContent = constantsContent.replace(
+      /var COMMIT_DATE = '[^']*';/,
+      "var COMMIT_DATE = '" + commitDate + "';"
+    );
+  }
+
   fs.writeFileSync(constantsPath, constantsContent, 'utf8');
   console.log('  -> Synchronized ' + constantsPath);
 }
@@ -91,6 +148,37 @@ if (fs.existsSync(baselinePath)) {
   fs.writeFileSync(baselinePath, baselineContent, 'utf8');
   console.log('  -> Synchronized ' + baselinePath);
 }
+// 5. Synchronize docs/sections/header.html
+if (fs.existsSync(headerPath)) {
+  let headerContent = fs.readFileSync(headerPath, 'utf8');
+  if (repoUrl) {
+    headerContent = headerContent.replace(
+      /<a href="https:\/\/github\.com\/[^"]+">GitHub<\/a>/,
+      '<a href="' + repoUrl + '">GitHub</a>'
+    );
+  }
+  if (releaseTag && releaseUrl) {
+    headerContent = headerContent.replace(
+      /<a id="header-release-link" href="[^"]*">[^<]*<\/a>/,
+      '<a id="header-release-link" href="' + releaseUrl + '">' + releaseTag + '</a>'
+    );
+  }
+  if (shortHash && commitUrl) {
+    headerContent = headerContent.replace(
+      /<a id="header-commit-link" href="[^"]*">[^<]*<\/a>/,
+      '<a id="header-commit-link" href="' + commitUrl + '">' + shortHash + '</a>'
+    );
+  }
+  if (commitDate) {
+    headerContent = headerContent.replace(
+      /<span id="header-commit-time" data-commit-date="[^"]*">/,
+      '<span id="header-commit-time" data-commit-date="' + commitDate + '">'
+    );
+  }
+  fs.writeFileSync(headerPath, headerContent, 'utf8');
+  console.log('  -> Synchronized ' + headerPath);
+}
+
 
 console.log('Bundling Unattend Engine modules from ' + docsJs + '...');
 
