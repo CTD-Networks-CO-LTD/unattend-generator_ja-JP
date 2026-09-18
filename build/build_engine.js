@@ -4,10 +4,93 @@
  */
 const fs = require('fs');
 const path = require('path');
+const { execSync } = require('child_process');
 
 const repoRoot = path.resolve(__dirname, '..');
 const docsJs = path.join(repoRoot, 'docs', 'js');
 const targetPath = path.join(repoRoot, 'docs', 'unattend_engine.js');
+const constantsPath = path.join(docsJs, 'core', 'constants.js');
+const baselinePath = path.join(repoRoot, 'test_tools', 'baseline_unattend_engine.js');
+
+// 1. Determine commit hash
+let commitHash = process.env.COMMIT_HASH || process.env.GITHUB_SHA || '';
+if (!commitHash) {
+  try {
+    commitHash = execSync('git rev-parse HEAD', { cwd: repoRoot, encoding: 'utf8' }).trim();
+  } catch (e) {
+    console.warn('Warning: Could not get commit hash from git:', e.message);
+  }
+}
+
+// 2. Determine repository URL
+let repoUrl = process.env.REPO_URL || '';
+if (!repoUrl) {
+  try {
+    let rawUrl = execSync('git config --get remote.origin.url', { cwd: repoRoot, encoding: 'utf8' }).trim();
+    if (rawUrl) {
+      if (rawUrl.startsWith('git@github.com:')) {
+        rawUrl = 'https://github.com/' + rawUrl.substring('git@github.com:'.length);
+      }
+      if (rawUrl.endsWith('.git')) {
+        rawUrl = rawUrl.substring(0, rawUrl.length - 4);
+      }
+      repoUrl = rawUrl;
+    }
+  } catch (e) {
+    // ignore
+  }
+}
+if (!repoUrl) {
+  repoUrl = 'https://github.com/CTD-Networks-CO-LTD/unattend-generator_ja-JP';
+}
+repoUrl = repoUrl.replace(/\/+$/, '');
+const commitUrlBase = repoUrl + '/commit/';
+
+console.log('Build Environment:');
+console.log('  Repo URL    : ' + repoUrl);
+console.log('  Commit Hash : ' + (commitHash || '(unchanged)'));
+
+// 3. Synchronize docs/js/core/constants.js
+if (fs.existsSync(constantsPath)) {
+  let constantsContent = fs.readFileSync(constantsPath, 'utf8');
+  if (repoUrl) {
+    constantsContent = constantsContent.replace(
+      /var REPO_URL = '[^']*';/,
+      "var REPO_URL = '" + repoUrl + "';"
+    );
+    constantsContent = constantsContent.replace(
+      /var COMMIT_URL_BASE = [^;]*;/,
+      "var COMMIT_URL_BASE = REPO_URL + '/commit/';"
+    );
+  }
+  if (commitHash) {
+    constantsContent = constantsContent.replace(
+      /var COMMIT_HASH = '[^']*';/,
+      "var COMMIT_HASH = '" + commitHash + "';"
+    );
+  }
+  fs.writeFileSync(constantsPath, constantsContent, 'utf8');
+  console.log('  -> Synchronized ' + constantsPath);
+}
+
+// 4. Synchronize test_tools/baseline_unattend_engine.js
+if (fs.existsSync(baselinePath)) {
+  let baselineContent = fs.readFileSync(baselinePath, 'utf8');
+  if (commitHash) {
+    baselineContent = baselineContent.replace(
+      /var commitHash = '[^']*';/,
+      "var commitHash = '" + commitHash + "';"
+    );
+  }
+  if (repoUrl) {
+    baselineContent = baselineContent.replace(
+      /https:\/\/github\.com\/[^/]+\/[^/]+\/commit\//g,
+      commitUrlBase
+    );
+  }
+  fs.writeFileSync(baselinePath, baselineContent, 'utf8');
+  console.log('  -> Synchronized ' + baselinePath);
+}
 
 console.log('Bundling Unattend Engine modules from ' + docsJs + '...');
 

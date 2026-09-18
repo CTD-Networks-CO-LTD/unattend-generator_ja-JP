@@ -9,6 +9,72 @@ $ErrorActionPreference = "Stop"
 $repoRoot = (Resolve-Path "$PSScriptRoot/..").Path
 $docsJs = Join-Path $repoRoot "docs/js"
 $targetPath = [System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot $OutputFile))
+$constantsPath = Join-Path $docsJs "core/constants.js"
+$baselinePath = Join-Path $repoRoot "test_tools/baseline_unattend_engine.js"
+
+# 1. Determine commit hash
+$commitHash = $env:COMMIT_HASH
+if (-not $commitHash) { $commitHash = $env:GITHUB_SHA }
+if (-not $commitHash) {
+  try {
+    $commitHash = (git -C $repoRoot rev-parse HEAD 2>$null).Trim()
+  } catch {}
+}
+
+# 2. Determine repository URL
+$repoUrl = $env:REPO_URL
+if (-not $repoUrl) {
+  try {
+    $rawUrl = (git -C $repoRoot config --get remote.origin.url 2>$null).Trim()
+    if ($rawUrl) {
+      if ($rawUrl.StartsWith("git@github.com:")) {
+        $rawUrl = "https://github.com/" + $rawUrl.Substring("git@github.com:".Length)
+      }
+      if ($rawUrl.EndsWith(".git")) {
+        $rawUrl = $rawUrl.Substring(0, $rawUrl.Length - 4)
+      }
+      $repoUrl = $rawUrl
+    }
+  } catch {}
+}
+if (-not $repoUrl) {
+  $repoUrl = "https://github.com/CTD-Networks-CO-LTD/unattend-generator_ja-JP"
+}
+$repoUrl = $repoUrl.TrimEnd('/')
+$commitUrlBase = "$repoUrl/commit/"
+
+Write-Host "Build Environment:"
+Write-Host "  Repo URL    : $repoUrl"
+Write-Host "  Commit Hash : $(if ($commitHash) { $commitHash } else { '(unchanged)' })"
+
+# 3. Synchronize docs/js/core/constants.js
+if (Test-Path $constantsPath) {
+  $cText = [System.IO.File]::ReadAllText($constantsPath, [System.Text.Encoding]::UTF8)
+  if ($repoUrl) {
+    $cText = $cText -replace "var REPO_URL = '[^']*';", "var REPO_URL = '$repoUrl';"
+    $cText = $cText -replace "var COMMIT_URL_BASE = [^;]*;", "var COMMIT_URL_BASE = REPO_URL + '/commit/';"
+  }
+  if ($commitHash) {
+    $cText = $cText -replace "var COMMIT_HASH = '[^']*';", "var COMMIT_HASH = '$commitHash';"
+  }
+  $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
+  [System.IO.File]::WriteAllText($constantsPath, $cText, $utf8NoBom)
+  Write-Host "  -> Synchronized $constantsPath"
+}
+
+# 4. Synchronize test_tools/baseline_unattend_engine.js
+if (Test-Path $baselinePath) {
+  $bText = [System.IO.File]::ReadAllText($baselinePath, [System.Text.Encoding]::UTF8)
+  if ($commitHash) {
+    $bText = $bText -replace "var commitHash = '[^']*';", "var commitHash = '$commitHash';"
+  }
+  if ($repoUrl) {
+    $bText = $bText -replace "https://github\.com/[^/]+/[^/]+/commit/", $commitUrlBase
+  }
+  $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
+  [System.IO.File]::WriteAllText($baselinePath, $bText, $utf8NoBom)
+  Write-Host "  -> Synchronized $baselinePath"
+}
 
 Write-Host "Bundling Unattend Engine modules from $docsJs..."
 

@@ -14,8 +14,9 @@ BuildModifier.prototype.process = function (root) {
 
     var buildElem = extensionsElem.addChild(new XmlNode('Build'));
     var commitElem = buildElem.addChild(new XmlNode('Commit'));
+    var urlBase = (typeof COMMIT_URL_BASE !== 'undefined' ? COMMIT_URL_BASE : 'https://github.com/CTD-Networks-CO-LTD/unattend-generator_ja-JP/commit/');
     commitElem.addSimpleElement('Hash', ctx.commitHash);
-    commitElem.addSimpleElement('GitHubUrl', 'https://github.com/cschneegans/unattend-generator/commit/' + ctx.commitHash);
+    commitElem.addSimpleElement('GitHubUrl', urlBase + ctx.commitHash);
 
     if (ctx.hasExtractScript) {
       var extractScriptElem = extensionsElem.addChild(new XmlNode('ExtractScript'));

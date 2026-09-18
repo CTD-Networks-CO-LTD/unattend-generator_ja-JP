@@ -343,7 +343,7 @@
       return val === 'true' || val === 'on' || val === '1';
     };
 
-    var commitHash = 'f1ce9a9d75259173f0a3f2ef8c84230c731986d9';
+    var commitHash = '2085df00b5325c31b6a48c37c6866c745a0a1212';
 
     // Script sequences
     var specializeScript = new PowerShellSequence('Running scripts to customize your Windows installation.', 'C:\\Windows\\Setup\\Scripts\\Specialize.log');
@@ -963,7 +963,7 @@
       var buildElem = extensionsElem.addChild(new XmlNode('Build'));
       var commitElem = buildElem.addChild(new XmlNode('Commit'));
       commitElem.addSimpleElement('Hash', commitHash);
-      commitElem.addSimpleElement('GitHubUrl', 'https://github.com/cschneegans/unattend-generator/commit/' + commitHash);
+      commitElem.addSimpleElement('GitHubUrl', 'https://github.com/CTD-Networks-CO-LTD/unattend-generator_ja-JP/commit/' + commitHash);
 
       if (hasExtractScript) {
         var extractScriptElem = extensionsElem.addChild(new XmlNode('ExtractScript'));
