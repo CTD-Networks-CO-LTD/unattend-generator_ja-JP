@@ -116,6 +116,14 @@ const testCases = [
       BypassCPUCheck: 'true',
       ExpressSettings: 'DisableAll'
     }
+  },
+  {
+    name: 'Case 10: Fast Startup disabled',
+    params: {
+      DisableFastStartup: 'true',
+      DisableWidgets: 'true',
+      DisableAppSuggestions: 'true'
+    }
   }
 ];
 

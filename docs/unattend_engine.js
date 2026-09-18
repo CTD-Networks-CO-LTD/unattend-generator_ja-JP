@@ -803,6 +803,9 @@ OptimizationsModifier.prototype.process = function () {
     if (ctx.getBool('HideTaskViewButton', false)) {
       defaultUserScript.append('reg.exe add "HKU\\DefaultUser\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced" /v ShowTaskViewButton /t REG_DWORD /d 0 /f;');
     }
+    if (ctx.getBool('DisableFastStartup', false)) {
+      specializeScript.append('reg.exe add "HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Power" /v HiberbootEnabled /t REG_DWORD /d 0 /f;');
+    }
     if (ctx.getBool('DisableWidgets', false)) {
       specializeScript.append('reg.exe add "HKLM\\SOFTWARE\\Policies\\Microsoft\\Dsh" /v AllowNewsAndInterests /t REG_DWORD /d 0 /f;');
     }
