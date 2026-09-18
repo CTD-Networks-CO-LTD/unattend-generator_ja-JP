@@ -106,6 +106,19 @@ function runTests() {
   const xmlClean = engine.generateAutounattendXml(fdClean);
   assert(!xmlClean.includes('RemovePackage.ps1'), 'Bloatware未指定時は RemovePackage.ps1 が生成されないこと');
 
+  // --- テストケース 5: DisableFastStartup 機能の確認 ---
+  console.log('\n--- Test 5: DisableFastStartup（高速スタートアップ無効化）の移植確認 ---');
+  const fdFastStartup = new MockFormData({
+    DisableFastStartup: 'true'
+  });
+  const xmlFastStartup = engine.generateAutounattendXml(fdFastStartup);
+  const fastStartupCmd = 'reg.exe add "HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Power" /v HiberbootEnabled /t REG_DWORD /d 0 /f;';
+  assert(xmlFastStartup.includes(fastStartupCmd), 'DisableFastStartup 指定時に Specialize.ps1 に HiberbootEnabled 無効化コマンドが含まれていること');
+
+  const fdNoFastStartup = new MockFormData({});
+  const xmlNoFastStartup = engine.generateAutounattendXml(fdNoFastStartup);
+  assert(!xmlNoFastStartup.includes('HiberbootEnabled'), 'DisableFastStartup 未指定時には HiberbootEnabled 設定が含まれないこと');
+
   console.log('\n====================================================');
   console.log(` テスト結果: ${passed} 項目合格 / ${failed} 項目失敗`);
   console.log('====================================================\n');
