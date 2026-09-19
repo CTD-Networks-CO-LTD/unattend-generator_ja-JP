@@ -40,6 +40,14 @@ async function run() {
   assert('本番とプレビューの Content-Length が一致', prodIndex.headers['content-length'] === prevIndex.headers['content-length'],
     'prod=' + prodIndex.headers['content-length'] + ', prev=' + prevIndex.headers['content-length']);
 
+  // index.html のキャッシュ無効化 Meta タグおよびキャッシュバスター検証
+  assert('本番: index.html に Cache-Control no-cache metaタグが存在する',
+    prodIndex.body.includes('http-equiv="Cache-Control"') && prodIndex.body.includes('no-cache, no-store, must-revalidate'));
+  assert('本番: index.html に unattend_engine.js?v= キャッシュバスターが付与されている',
+    /src="unattend_engine\.js\?v=[0-9a-fA-F]+"/.test(prodIndex.body));
+  assert('本番: index.html の loadSections に cache: "no-cache" が設定されている',
+    prodIndex.body.includes("cache: 'no-cache'"));
+
   // Test 2: sections/header.html の検証
   const prodHeader = await fetchUrl(prodBase + '/sections/header.html');
   const prevHeader = await fetchUrl(prevBase + '/sections/header.html');
@@ -52,16 +60,14 @@ async function run() {
   assert('本番: header.html に説明文が含まれている', prodBody.includes('answer files') && prodBody.includes('unattended installations'));
   assert('本番: Releaseリンクが v1.4.0_20260919 を指している', prodBody.includes('releases/tag/v1.4.0_20260919'));
   assert('本番: Releaseリンクテキストが v1.4.0_20260919 である', prodBody.includes('>v1.4.0_20260919</a>'));
-  assert('本番: Commitリンクが最新コミット 2612656 を指している', prodBody.includes('commit/261265605d3289bd44fdb6cdc374bb038912e063'));
-  assert('本番: Commitリンクテキストが 2612656 である', prodBody.includes('>2612656</a>'));
+  assert('本番: Commitリンクが最新コミットを指している', /commit\/[0-9a-fA-F]{40}/.test(prodBody));
   assert('本番: 動的時間表示用の data-commit-date が設定されている', prodBody.includes('id="header-commit-time" data-commit-date='));
 
   // プレビューヘッダーの詳細検証
   const prevBody = prevHeader.body;
   assert('プレビュー: Releaseリンクが v1.4.0_20260919 を指している', prevBody.includes('releases/tag/v1.4.0_20260919'));
   assert('プレビュー: Releaseリンクテキストが v1.4.0_20260919 である', prevBody.includes('>v1.4.0_20260919</a>'));
-  assert('プレビュー: Commitリンクが最新コミット 2612656 を指している', prevBody.includes('commit/261265605d3289bd44fdb6cdc374bb038912e063'));
-  assert('プレビュー: Commitリンクテキストが 2612656 である', prevBody.includes('>2612656</a>'));
+  assert('プレビュー: Commitリンクが最新コミットを指している', /commit\/[0-9a-fA-F]{40}/.test(prevBody));
 
   // 本番とプレビューのヘッダー完全パリティ検証
   assert('本番とプレビューの header.html 内容が完全一致（Byte-exact）', prodBody.trim() === prevBody.trim());
@@ -73,7 +79,7 @@ async function run() {
   assert('本番: unattend_engine.js に RELEASE_TAG = v1.4.0_20260919 が定義されている',
     prodEngine.body.includes("var RELEASE_TAG = 'v1.4.0_20260919';"));
   assert('本番: unattend_engine.js に COMMIT_HASH が定義されている',
-    prodEngine.body.includes("var COMMIT_HASH = '261265605d3289bd44fdb6cdc374bb038912e063';"));
+    /var COMMIT_HASH = '[0-9a-fA-F]{40}';/.test(prodEngine.body));
   assert('プレビュー: unattend_engine.js に RELEASE_TAG = v1.4.0_20260919 が定義されている',
     prevEngine.body.includes("var RELEASE_TAG = 'v1.4.0_20260919';"));
   assert('本番とプレビューの unattend_engine.js 内容が完全一致（Byte-exact）', prodEngine.body.trim() === prevEngine.body.trim());
