@@ -32,13 +32,33 @@ permissions:
   contents: read
   pages: write
   id-token: write
+  actions: write
 
 concurrency:
   group: "pages"
   cancel-in-progress: false
 
 jobs:
+  # release イベント時は同一コミット SHA に対する GitHub Pages バックエンドのサイレントスキップを回避するため、
+  # workflow_dispatch を自動発火（トランポリン）させて本番リリースデプロイを実行する。
+  trigger-dispatch:
+    if: github.event_name == 'release'
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+    steps:
+      - name: Trigger deployment via workflow_dispatch
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG_NAME: ${{ github.event.release.tag_name }}
+          REPO: ${{ github.repository }}
+        run: |
+          echo "Release published: $TAG_NAME. Triggering workflow_dispatch for release deployment..."
+          gh workflow run deploy-pages.yml --repo "$REPO" -f target=release --ref "${{ github.event.repository.default_branch || 'master' }}"
+
+  # 実際のビルド＆デプロイは push または workflow_dispatch で実行
   deploy:
+    if: github.event_name != 'release'
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
@@ -48,6 +68,10 @@ jobs:
         uses: actions/checkout@v6
         with:
           fetch-depth: 0
+
+      - name: Ensure all tags are fetched
+        run: |
+          git fetch --tags --force
 
       - name: Setup Node.js 24
         uses: actions/setup-node@v4
@@ -74,15 +98,26 @@ jobs:
           mkdir -p _site
           mkdir -p _src_clean
 
+          # 最新リリースタグの特定
+          LATEST_TAG=""
+          LATEST_TAG=$(git tag -l "v*" --sort=-v:refname | head -n 1 || echo "")
+          if [ -z "$LATEST_TAG" ]; then
+            LATEST_TAG=$(git describe --tags --abbrev=0 $(git rev-list --tags --max-count=1) 2>/dev/null || echo "")
+          fi
+          if [ -z "$LATEST_TAG" ] && command -v gh &> /dev/null; then
+            LATEST_TAG=$(gh release view --json tagName -q .tagName 2>/dev/null || echo "")
+          fi
+          echo "Identified Latest Release Tag: $LATEST_TAG"
+
           # 0. Modifier 同期・整合性チェック
           echo "Running Modifier synchronization check..."
           node build/sync_modifiers.js --check
 
-          # 1. 最新コミットハッシュを注入してエンジンを再バンドル
-          echo "Building unattend engine bundle with latest commit hash..."
-          COMMIT_HASH="${{ github.sha }}" node build/build_engine.js
+          # 1. 最新コミットハッシュおよびリリースタグを注入してエンジンを再バンドル
+          echo "Building unattend engine bundle with latest commit hash and release tag..."
+          COMMIT_HASH="${{ github.sha }}" RELEASE_TAG="$LATEST_TAG" node build/build_engine.js
 
-          # 2. パリティテストの自動実行（プレビュー配信前の品質保証）
+          # 2. パリティテストの自動実行（配信前の品質保証）
           echo "Running engine parity tests..."
           node test_tools/test_engine_parity.js
           echo "Running feature parity tests..."
@@ -96,14 +131,7 @@ jobs:
           # 4. デプロイモードの判定
           DEPLOY_MODE="preview"
 
-          if [ "$EVENT_NAME" = "release" ]; then
-            if [ "$IS_PRERELEASE" != "true" ]; then
-              DEPLOY_MODE="release"
-            else
-              echo "Pre-release detected. Deploying only to preview."
-              DEPLOY_MODE="preview"
-            fi
-          elif [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
             if [ "$DISPATCH_TARGET" = "release" ]; then
               DEPLOY_MODE="release"
             elif [ "$DISPATCH_TARGET" = "both" ]; then
@@ -111,6 +139,7 @@ jobs:
             elif [ "$DISPATCH_TARGET" = "preview" ]; then
               DEPLOY_MODE="preview"
             else
+              # target=auto の場合: HEAD がタグと完全一致していれば release、それ以外は preview
               if git describe --exact-match --tags HEAD 2>/dev/null; then
                 DEPLOY_MODE="release"
               else
@@ -118,8 +147,14 @@ jobs:
               fi
             fi
           elif [ "$EVENT_NAME" = "push" ]; then
-            # main / master ブランチのマージ・プッシュ時: preview のみ更新
-            DEPLOY_MODE="preview"
+            # HEAD にリリースタグが付与されている場合は release モードとして扱う
+            HEAD_TAG=$(git tag -l "v*" --points-at HEAD | head -n 1 || echo "")
+            if [ -n "$HEAD_TAG" ]; then
+              echo "HEAD is tagged with $HEAD_TAG. Promoting push deployment to release mode."
+              DEPLOY_MODE="release"
+            else
+              DEPLOY_MODE="preview"
+            fi
           fi
 
           echo "Determined DEPLOY_MODE: $DEPLOY_MODE"
@@ -135,20 +170,7 @@ jobs:
           else
             echo "--- Preview Deployment (main / master merge) ---"
             # ルート (/) には最新の安定リリースタグを展開し、本番提供中サイトを保護・維持
-            echo "Finding latest stable release tag for root site (/)..."
-            LATEST_TAG=""
-            # 優先度1: git tag によるセマンティックタグのソート
-            LATEST_TAG=$(git tag -l "v*" --sort=-v:refname | head -n 1 || echo "")
-            # 優先度2: git describe による直近タグ
-            if [ -z "$LATEST_TAG" ]; then
-              LATEST_TAG=$(git describe --tags --abbrev=0 $(git rev-list --tags --max-count=1) 2>/dev/null || echo "")
-            fi
-            # 優先度3: GitHub CLI
-            if [ -z "$LATEST_TAG" ] && command -v gh &> /dev/null; then
-              LATEST_TAG=$(gh release view --json tagName -q .tagName 2>/dev/null || echo "")
-            fi
-
-            echo "Identified Latest Release Tag: $LATEST_TAG"
+            echo "Staging stable release tag ($LATEST_TAG) for root site (/)..."
 
             if [ -n "$LATEST_TAG" ]; then
               echo "Extracting docs from tag $LATEST_TAG for root site (/)..."
@@ -158,6 +180,11 @@ jobs:
                 mkdir -p _tag_clean
                 cp -r ./_tag_docs/docs/* _tag_clean/
                 rm -rf _tag_clean/preview
+                # タグ展開成果物のヘッダー内の release リンクが古い表記の場合、該当タグ名に更新
+                if [ -f "_tag_clean/sections/header.html" ]; then
+                  sed -i -E "s|releases/tag/[^\"]*|releases/tag/${LATEST_TAG}|g" _tag_clean/sections/header.html || true
+                  sed -i -E "s|id=\"header-release-link\">[^<]*<|id=\"header-release-link\">${LATEST_TAG}<|g" _tag_clean/sections/header.html || true
+                fi
                 cp -r _tag_clean/* _site/
                 echo "Successfully staged stable release $LATEST_TAG to root (/)."
               else
