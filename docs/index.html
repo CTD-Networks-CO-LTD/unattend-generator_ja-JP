@@ -4,7 +4,10 @@
   <title>Generate autounattend.xml files for Windows&#xA0;11</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta http-equiv="Content-Language" content="en" />
-  <link rel="stylesheet" href="style.css" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+  <link rel="stylesheet" href="style.css?v=89c7380" />
       <link rel="icon" type="image/png" href="favicon.png" />
   <script type="text/javascript">'use strict';
 {
@@ -681,10 +684,12 @@
         ];
 
         try {
+            const cacheBust = (typeof COMMIT_HASH !== 'undefined' && COMMIT_HASH) ? ('?v=' + COMMIT_HASH.substring(0, 7)) : ('?t=' + Date.now());
+            const fetchOpts = { cache: 'no-cache' };
             const [headerHtml, presetsHtml, ...sectionsHtml] = await Promise.all([
-                fetch('sections/header.html').then(r => { if (!r.ok) throw new Error('header.html load failed'); return r.text(); }),
-                fetch('sections/presets.html').then(r => { if (!r.ok) throw new Error('presets.html load failed'); return r.text(); }),
-                ...sectionFiles.map(f => fetch('sections/' + f).then(r => { if (!r.ok) throw new Error(f + ' load failed'); return r.text(); }))
+                fetch('sections/header.html' + cacheBust, fetchOpts).then(r => { if (!r.ok) throw new Error('header.html load failed'); return r.text(); }),
+                fetch('sections/presets.html' + cacheBust, fetchOpts).then(r => { if (!r.ok) throw new Error('presets.html load failed'); return r.text(); }),
+                ...sectionFiles.map(f => fetch('sections/' + f + cacheBust, fetchOpts).then(r => { if (!r.ok) throw new Error(f + ' load failed'); return r.text(); }))
             ]);
 
             const headerContainer = document.getElementById('app-header');
@@ -1173,8 +1178,8 @@ td.Submits button {
     })();
   </script>
   <script type="text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
-  <script type="text/javascript" src="unattend_config.js"></script>
-  <script type="text/javascript" src="unattend_engine.js"></script>
+  <script type="text/javascript" src="unattend_config.js?v=89c7380"></script>
+  <script type="text/javascript" src="unattend_engine.js?v=89c7380"></script>
 </head>
 <body>
   <div id="app-header" data-src="sections/header.html"></div>

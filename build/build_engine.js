@@ -184,6 +184,47 @@ if (fs.existsSync(headerPath)) {
   console.log('  -> Synchronized ' + headerPath);
 }
 
+// 6. Synchronize cache-busting version in docs/index.html
+const indexPath = path.join(repoRoot, 'docs', 'index.html');
+if (fs.existsSync(indexPath)) {
+  let indexContent = fs.readFileSync(indexPath, 'utf8');
+  if (shortHash) {
+    indexContent = indexContent.replace(
+      /<link rel="stylesheet" href="style\.css(\?v=[^"]*)?" \/>/,
+      '<link rel="stylesheet" href="style.css?v=' + shortHash + '" />'
+    );
+    indexContent = indexContent.replace(
+      /<script type="text\/javascript" src="unattend_config\.js(\?v=[^"]*)?"><\/script>/,
+      '<script type="text/javascript" src="unattend_config.js?v=' + shortHash + '"></script>'
+    );
+    indexContent = indexContent.replace(
+      /<script type="text\/javascript" src="unattend_engine\.js(\?v=[^"]*)?"><\/script>/,
+      '<script type="text/javascript" src="unattend_engine.js?v=' + shortHash + '"></script>'
+    );
+    fs.writeFileSync(indexPath, indexContent, 'utf8');
+    console.log('  -> Synchronized cache busting in ' + indexPath);
+  }
+}
+
+// 7. Synchronize cache-busting version in docs/404.html
+const notFoundPath = path.join(repoRoot, 'docs', '404.html');
+if (fs.existsSync(notFoundPath)) {
+  let notFoundContent = fs.readFileSync(notFoundPath, 'utf8');
+  if (shortHash) {
+    notFoundContent = notFoundContent.replace(
+      /<script type=text\/javascript src=\.\/unattend_config\.js(\?v=[^>]*)?><\/script>/,
+      '<script type=text/javascript src=./unattend_config.js?v=' + shortHash + '></script>'
+    );
+    notFoundContent = notFoundContent.replace(
+      /<script type=text\/javascript src=\.\/unattend_engine\.js(\?v=[^>]*)?><\/script>/,
+      '<script type=text/javascript src=./unattend_engine.js?v=' + shortHash + '></script>'
+    );
+    fs.writeFileSync(notFoundPath, notFoundContent, 'utf8');
+    console.log('  -> Synchronized cache busting in ' + notFoundPath);
+  }
+}
+
+
 
 console.log('Bundling Unattend Engine modules from ' + docsJs + '...');
 
