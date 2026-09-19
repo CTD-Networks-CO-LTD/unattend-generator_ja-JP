@@ -1,0 +1,160 @@
+<tr>
+        <th>User accounts:</th>
+        <td>
+          <div class="IndentContainer">
+            <label class="radio">
+              <input type="radio" name="UserAccountMode" value="Unattended" checked="checked" />
+              <span>Let Windows Setup create the following local (“offline”) accounts:</span>
+            </label>
+            <fieldset>
+              <table>
+  <tr>
+    <th>Account name</th>
+    <th>Display name</th>
+    <th>Password</th>
+    <th>Group</th>
+  </tr>
+  <tr>
+    <td>
+      <input type="text" name="AccountName0" value="Admin" maxlength="20" />
+    </td>
+    <td>
+      <input type="text" name="AccountDisplayName0" value="" maxlength="256" />
+    </td>
+    <td>
+      <input type="text" name="AccountPassword0" value="" />
+    </td>
+    <td>
+      <select name="AccountGroup0">
+        <option value="Administrators" selected="selected">Administrators</option>
+        <option value="Users">Users</option>
+      </select>
+    </td>
+  </tr>
+  <tr>
+    <td>
+      <input type="text" name="AccountName1" value="User" maxlength="20" />
+    </td>
+    <td>
+      <input type="text" name="AccountDisplayName1" value="" maxlength="256" />
+    </td>
+    <td>
+      <input type="text" name="AccountPassword1" value="" />
+    </td>
+    <td>
+      <select name="AccountGroup1">
+        <option value="Administrators">Administrators</option>
+        <option value="Users" selected="selected">Users</option>
+      </select>
+    </td>
+  </tr>
+  <tr>
+    <td>
+      <input type="text" name="AccountName2" value="" maxlength="20" />
+    </td>
+    <td>
+      <input type="text" name="AccountDisplayName2" value="" maxlength="256" />
+    </td>
+    <td>
+      <input type="text" name="AccountPassword2" value="" />
+    </td>
+    <td>
+      <select name="AccountGroup2">
+        <option value="Administrators">Administrators</option>
+        <option value="Users" selected="selected">Users</option>
+      </select>
+    </td>
+  </tr>
+  <tr>
+    <td>
+      <input type="text" name="AccountName3" value="" maxlength="20" />
+    </td>
+    <td>
+      <input type="text" name="AccountDisplayName3" value="" maxlength="256" />
+    </td>
+    <td>
+      <input type="text" name="AccountPassword3" value="" />
+    </td>
+    <td>
+      <select name="AccountGroup3">
+        <option value="Administrators">Administrators</option>
+        <option value="Users" selected="selected">Users</option>
+      </select>
+    </td>
+  </tr>
+  <tr>
+    <td>
+      <input type="text" name="AccountName4" value="" maxlength="20" />
+    </td>
+    <td>
+      <input type="text" name="AccountDisplayName4" value="" maxlength="256" />
+    </td>
+    <td>
+      <input type="text" name="AccountPassword4" value="" />
+    </td>
+    <td>
+      <select name="AccountGroup4">
+        <option value="Administrators">Administrators</option>
+        <option value="Users" selected="selected">Users</option>
+      </select>
+    </td>
+  </tr>
+</table>
+
+              <p>Leave <strong>Display name</strong> empty unless you want it to be different from <strong>Account name</strong>.</p>
+
+              <fieldset class="has-legend">
+                <legend>First logon</legend>
+                <div class="AfterLegend">Several settings will only be applied when an administrator logs on for the first time. You should therefore let Windows log you on to an administrator account once – this does not affect subsequent logons. Choose which account to use for this:</div>
+
+                <div class="IndentContainer">
+                  <label class="radio">
+                    <input type="radio" name="AutoLogonMode" value="Own" checked="checked" />
+                    <span>Logon to the first administrator account created above</span>
+                  </label>
+                </div>
+
+                <div class="IndentContainer">
+                  <label class="radio">
+                    <input type="radio" name="AutoLogonMode" value="Builtin" />
+                    <span>Activate built-in account <q>Administrator</q>, logon to this account and set its password to:</span>
+                  </label>
+                  <fieldset>
+                    <input type="text" name="BuiltinAdministratorPassword" value="" />
+                  </fieldset>
+                </div>
+
+                <div class="IndentContainer">
+                  <label class="radio">
+                    <input type="radio" name="AutoLogonMode" value="None" />
+                    <span>Do not logon</span>
+                  </label>
+                  <div>The installation ends with the sign-in screen being shown. Not recommended.</div>
+                </div>
+              </fieldset>
+
+              <div class="IndentContainer">
+                <label class="radio">
+                  <input type="checkbox" name="ObscurePasswords" value="true" />
+                  <span>Obscure all account passwords in your <code class="nowrap">autounattend.xml</code> file with Base64</span>
+                </label>
+              </div>
+
+            </fieldset>
+          </div>
+
+          <div class="IndentContainer">
+            <label class="radio">
+              <input type="radio" name="UserAccountMode" value="Interactive" />
+              <span>Add a Microsoft (“online”) user account interactively during Windows&#xA0;Setup</span>
+            </label>
+          </div>
+
+          <div class="IndentContainer">
+            <label class="radio">
+              <input type="radio" name="UserAccountMode" value="InteractiveLocal" />
+              <span>Add a local (“offline”) user account interactively during Windows&#xA0;Setup</span>
+            </label>
+          </div>
+        </td>
+      </tr>

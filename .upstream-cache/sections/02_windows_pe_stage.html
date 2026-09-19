@@ -1,0 +1,583 @@
+      <tr>
+        <th>Windows&#xA0;PE stage:</th>
+        <td>
+
+          <div class="IndentContainer">
+            <label class="radio">
+              <input type="radio" name="PEMode" value="Default" checked="checked" />
+              <span>Run the Windows&#xA0;PE stage interactively</span>
+            </label>
+            <div>Windows Setup will ask you how to partition your disk and where to install Windows. Choose this when your disk already has partitions that you want to keep.</div>
+
+            <fieldset class="has-legend">
+              <legend>Windows edition to install</legend>
+
+              <div class="IndentContainer">
+                <label class="radio">
+                  <input type="radio" name="WindowsEditionMode" value="Interactive" checked="checked" />
+                  <span>Enter a product key interactively during Windows Setup</span>
+                </label>
+              </div>
+
+              <div class="IndentContainer">
+                <label class="radio">
+                  <input type="radio" name="WindowsEditionMode" value="Generic" />
+                  <span>Use a <strong>generic</strong> product key to install this edition of Windows:</span>
+                </label>
+                <fieldset>
+                  <select translate="no" class="notranslate" name="WindowsEdition">
+  <option translate="no" class="notranslate" value="education">Education</option>
+  <option translate="no" class="notranslate" value="education_n">Education N</option>
+  <option translate="no" class="notranslate" value="enterprise">Enterprise</option>
+  <option translate="no" class="notranslate" value="enterprise_n">Enterprise N</option>
+  <option translate="no" class="notranslate" value="home">Home</option>
+  <option translate="no" class="notranslate" value="home_n">Home N</option>
+  <option translate="no" class="notranslate" value="home_single">Home Single Language</option>
+  <option translate="no" class="notranslate" value="pro" selected="selected">Pro</option>
+  <option translate="no" class="notranslate" value="pro_education">Pro Education</option>
+  <option translate="no" class="notranslate" value="pro_education_n">Pro Education N</option>
+  <option translate="no" class="notranslate" value="pro_workstations">Pro for Workstations</option>
+  <option translate="no" class="notranslate" value="pro_n">Pro N</option>
+  <option translate="no" class="notranslate" value="pro_workstations_n">Pro N for Workstations</option>
+</select>
+                </fieldset>
+                <div>Such a key can be used to install Windows, but will not activate it. You can change the product key later.</div>
+              </div>
+
+              <div class="IndentContainer">
+                <label class="radio">
+                  <input type="radio" name="WindowsEditionMode" value="Custom" />
+                  <span>Enter another product key:</span>
+                </label>
+                <fieldset>
+                  <input type="text" name="ProductKey" value="VK7JG-NPHTM-C97JM-9MPGT-3V66T" maxlength="29" required="required" class="ProductKey" pattern="^([a-zA-Z0-9]{5}-){4}[a-zA-Z0-9]{5}$" size="35" />
+                </fieldset>
+                <div>This key will also be used to activate Windows.</div>
+              </div>
+
+              <div class="IndentContainer">
+                <label class="radio">
+                  <input type="radio" name="WindowsEditionMode" value="Firmware" />
+                  <span>Use product key stored in BIOS/UEFI firmware</span>
+                </label>
+                <div>Choose this if your computer came pre-installed with Windows and you want to reuse that license.</div>
+              </div>
+
+            </fieldset>
+          </div>
+
+          <div class="IndentContainer">
+            <label class="radio">
+              <input type="radio" name="PEMode" value="Generated" />
+              <span>Generate a .cmd script to handle the Windows&#xA0;PE stage:</span>
+            </label>
+
+            <fieldset>
+              <div class="IndentContainer">
+                <label class="checkbox">
+                  <input type="checkbox" name="Disable8Dot3Names" value="true" />
+                  <span class="Recommended">Disable 8.3 file names</span>
+                </label>
+                <div>This removes all existing <a href="https://schneegans.de/windows/no-8.3/" hreflang="en">short file names</a> such as <code translate="no" class="notranslate">PROGRA~1</code> and disables the creation of new ones.</div>
+              </div>
+
+              <div class="IndentContainer">
+                <label class="checkbox">
+                  <input type="checkbox" name="DisableDefender" value="true" />
+                  <span>Disable Windows Defender</span>
+                </label>
+                <div>Windows Defender services will be disabled during the Windows&#xA0;PE stage and thus prevented from ever running.</div>
+              </div>
+
+              <div class="IndentContainer">
+                <label class="checkbox">
+                  <input type="checkbox" name="PauseBeforeFormatting" value="true" />
+                  <span>Pause before disk is partitioned and formatted</span>
+                </label>
+              </div>
+
+              <div class="IndentContainer">
+                <label class="checkbox">
+                  <input type="checkbox" name="PauseBeforeReboot" value="true" />
+                  <span>Pause before Windows Setup reboots at the end of the Windows&#xA0;PE stage</span>
+                </label>
+              </div>
+
+              <div class="IndentContainer">
+                <label class="checkbox">
+                  <input type="checkbox" name="CompactOs" value="true" />
+                  <span>Apply Windows image in compact mode</span>
+                </label>
+              </div>
+
+              <div class="IndentContainer">
+                <label class="checkbox">
+                  <input type="checkbox" name="SkipIntegrityCheck" value="true" />
+                  <span>Skip integrity check when appyling image</span>
+                </label>
+                <div>This will omit the parameters <code translate="no" class="notranslate">/CheckIntegrity /Verify</code>, which might speed up the imaging operation.</div>
+              </div>
+
+              <fieldset class="has-legend">
+                <legend>Windows image to install</legend>
+
+                <div class="IndentContainer">
+                  <label class="radio">
+                    <input type="radio" name="InstallFromMode" value="Edition" checked="checked" />
+                    <span>Select image for this <strong>edition</strong>:</span>
+                  </label>
+                  <fieldset>
+                    <select translate="no" class="notranslate" name="InstallFromEdition">
+  <option translate="no" class="notranslate" value="education">Education</option>
+  <option translate="no" class="notranslate" value="education_n">Education N</option>
+  <option translate="no" class="notranslate" value="enterprise">Enterprise</option>
+  <option translate="no" class="notranslate" value="enterprise_n">Enterprise N</option>
+  <option translate="no" class="notranslate" value="home">Home</option>
+  <option translate="no" class="notranslate" value="home_n">Home N</option>
+  <option translate="no" class="notranslate" value="home_single">Home Single Language</option>
+  <option translate="no" class="notranslate" value="pro" selected="selected">Pro</option>
+  <option translate="no" class="notranslate" value="pro_education">Pro Education</option>
+  <option translate="no" class="notranslate" value="pro_education_n">Pro Education N</option>
+  <option translate="no" class="notranslate" value="pro_workstations">Pro for Workstations</option>
+  <option translate="no" class="notranslate" value="pro_n">Pro N</option>
+  <option translate="no" class="notranslate" value="pro_workstations_n">Pro N for Workstations</option>
+</select>
+                  </fieldset>
+                </div>
+
+                <div class="IndentContainer">
+                  <label class="radio">
+                    <input type="radio" name="InstallFromMode" value="Name" />
+                    <span>Select image with this <strong>name</strong>:</span>
+                  </label>
+                  <fieldset>
+                    <input type="text" name="InstallFromName" value="Windows 11 Pro" required="required" size="50" />
+                  </fieldset>
+                  <div>Run <code translate="no" class="notranslate">dism.exe /Get-WimInfo /WimFile:"…\install.wim"</code> or <code translate="no" class="notranslate">Get-WindowsImage -ImagePath "…\install.wim"</code> in PowerShell to learn the name and index of an image inside a .wim file.</div>
+                </div>
+
+                <div class="IndentContainer">
+                  <label class="radio">
+                    <input type="radio" name="InstallFromMode" value="Index" />
+                    <span>Select image with this <strong>index</strong>:</span>
+                  </label>
+                  <fieldset>
+                    <input type="number" name="InstallFromIndex" value="1" min="1" required="required" />
+                  </fieldset>
+                </div>
+
+                <div class="IndentContainer">
+                  <label class="radio">
+                    <input type="radio" name="InstallFromMode" value="Interactive" />
+                    <span>Select image interactively during Windows Setup</span>
+                  </label>
+                  <div>This will show a list of available images, and you select the image to install by typing in its index.</div>
+                </div>
+
+              </fieldset>
+
+              <fieldset class="has-legend">
+                <legend>Partitioning and formatting</legend>
+
+                <div class="IndentContainer">
+                  <label class="radio">
+                    <input type="radio" name="PartitionMode" value="Unattended" checked="checked" />
+                    <span>Let Windows Setup wipe, partition and format your hard drive using these settings:</span>
+                  </label>
+                  <fieldset>
+
+                    <fieldset class="has-legend">
+                      <legend>Select target disk</legend>
+                      <span>The hard drive is disk <input type="number" name="TargetDisk" value="0" min="0" required="required" /> (0-based).</span>
+                    </fieldset>
+
+                    <fieldset class="has-legend">
+                      <legend>Choose partition layout</legend>
+
+                      <div class="IndentContainer">
+                        <label class="radio">
+                          <input type="radio" name="PartitionLayout" value="Automatic" checked="checked" />
+                          <span>Automatic</span>
+                        </label>
+                        <fieldset>This will attempt to detect the firmware type (BIOS or UEFI) and select the partition layout (MBR or GPT) accordingly.</fieldset>
+                      </div>
+
+                      <div class="IndentContainer">
+                        <label class="radio">
+                          <input type="radio" name="PartitionLayout" value="GPT" />
+                          <span>GPT</span>
+                        </label>
+                        <fieldset>The <a href="https://docs.microsoft.com/en-us/windows-hardware/manufacture/desktop/configure-uefigpt-based-hard-drive-partitions">GPT partition layout</a> must be used for UEFI systems.</fieldset>
+                      </div>
+
+                      <div class="IndentContainer">
+                        <label class="radio">
+                          <input type="radio" name="PartitionLayout" value="MBR" />
+                          <span>MBR</span>
+                        </label>
+                        <fieldset>The <a href="https://docs.microsoft.com/en-us/windows-hardware/manufacture/desktop/configure-biosmbr-based-hard-drive-partitions">MBR-based partition layout</a> must be used for legacy BIOS systems.</fieldset>
+                      </div>
+                    </fieldset>
+
+                    <fieldset class="has-legend">
+                      <legend>Configure system partition</legend>
+                      <span>Set the size of the system partition to <input type="number" name="SystemSize" value="300" min="100" required="required" />&#xA0;MB.</span>
+                      <div>This partition is used to boot your computer. On GPT drives, this is known as the <strong>EFI System Partition</strong> (ESP).</div>
+                    </fieldset>
+
+                    <fieldset class="has-legend">
+                      <legend>Choose how to install Windows&#xA0;RE</legend>
+
+                      <div class="IndentContainer">
+                        <label class="radio">
+                          <input type="radio" name="RecoveryMode" value="Partition" checked="checked" />
+                          <span>Install on recovery partition</span>
+                        </label>
+                        <fieldset>Create a separate partition with a size of <input type="number" name="RecoverySize" value="1000" min="300" required="required" />&#xA0;MB and install Windows&#xA0;RE to it.</fieldset>
+                      </div>
+
+                      <div class="IndentContainer">
+                        <label class="radio">
+                          <input type="radio" name="RecoveryMode" value="None" />
+                          <span>Remove Windows&#xA0;RE</span>
+                        </label>
+                        <div>Windows&#xA0;RE will not be available, and no recovery partition will be created.</div>
+                      </div>
+                    </fieldset>
+                  </fieldset>
+                </div>
+
+                <div class="IndentContainer">
+                  <label class="radio">
+                    <input type="radio" name="PartitionMode" value="Custom" />
+                    <span>Use a custom <code translate="no" class="notranslate">diskpart</code> script to configure your disk(s):</span>
+                  </label>
+                  <fieldset>
+                    <textarea translate="no" class="notranslate" rows="18" name="DiskpartScript" data-required="true" spellcheck="false" wrap="off">SELECT DISK=0
+CLEAN
+CONVERT GPT
+CREATE PARTITION EFI SIZE=300
+FORMAT QUICK FS=FAT32 LABEL="System"
+ASSIGN LETTER=S
+CREATE PARTITION MSR SIZE=16
+CREATE PARTITION PRIMARY
+SHRINK MINIMUM=1000
+FORMAT QUICK FS=NTFS LABEL="Windows"
+ASSIGN LETTER=W
+CREATE PARTITION PRIMARY
+FORMAT QUICK FS=NTFS LABEL="Recovery"
+ASSIGN LETTER=R
+SET ID="de94bba4-06d1-4d40-a16a-bfd50179d6ac"
+GPT ATTRIBUTES=0x8000000000000001</textarea>
+                    <div>Drive letter assignments in the script (e.g. <code translate="no" class="notranslate" class="nowrap">ASSIGN LETTER=W</code>) solely affect the Windows&#xA0;PE stage of Windows Setup. These assignments do not persist to the new installation, which will <em>always</em> assign the <code translate="no" class="notranslate">C:</code> drive letter to the Windows partition.</div>
+                  </fieldset>
+                </div>
+
+                <div class="IndentContainer">
+                  <label class="radio">
+                    <input type="radio" name="PartitionMode" value="Interactive" />
+                    <span>Run <code translate="no" class="notranslate">diskpart</code> interactively during Windows Setup</span>
+                  </label>
+                  <div>You will have to enter the commands to partition and format your disks. There is no graphical user interface.</div>
+                </div>
+
+              </fieldset>
+
+              <fieldset class="has-legend">
+                <legend>Verify disk numbers</legend>
+                <div class="AfterLegend">When you let Windows Setup wipe and partition your disks, there is a risk they were assigned unexpected index numbers. For example, on some computers, <strong>disk&#xA0;0</strong> might refer to a USB flash drive instead of the primary hard drive. To make sure that Windows Setup targets the intended disk, you can make assertions about that disk. If these assertions are not met, Windows Setup will halt to avoid data loss.</div>
+
+                <div class="IndentContainer">
+                  <label class="radio">
+                    <input type="radio" name="DiskAssertionMode" value="Generated" checked="checked" />
+                    <span>Make these assertions about the target disk:</span>
+                  </label>
+                  <fieldset>
+
+                    <div class="IndentContainer">
+                      <label class="checkbox">
+                        <input type="checkbox" disabled="disabled" checked="checked" />
+                        <span>Assert that the target disk has a capacity between <input type="number" name="AssertMinSize" value="100" min="0" /> and <input type="number" name="AssertMaxSize" value="4000" min="0" />&#xA0;GiB.</span>
+                      </label>
+                    </div>
+
+                    <div class="IndentContainer">
+                      <label class="checkbox">
+                        <input type="checkbox" name="AssertNoPartitions" value="true" checked="checked" />
+                        <span>Assert that there are no partitions on the target disk</span>
+                      </label>
+                    </div>
+
+                    <div class="IndentContainer">
+                      <label class="checkbox">
+                        <input type="checkbox" name="AssertInterfaceType" value="true" />
+                        <span>Assert that the target disk is connected to a SATA, SCSI, SAS or NVMe controller</span>
+                      </label>
+                    </div>
+
+                    <div class="IndentContainer">
+                      <label class="checkbox">
+                        <input type="checkbox" name="AssertMediaType" value="true" />
+                        <span>Assert that the target disk reports its media type as <em>Fixed hard disk</em> to the operating system</span>
+                      </label>
+                    </div>
+
+                  </fieldset>
+                </div>
+
+                <div class="IndentContainer">
+                  <label class="radio">
+                    <input type="radio" name="DiskAssertionMode" value="Script" />
+                    <span>Provide your own .vbs script to check disk numbers:</span>
+                  </label>
+                  <fieldset>
+                    <textarea translate="no" class="notranslate" rows="29" name="DiskAssertionScript" data-required="true" spellcheck="false" wrap="off">Function Fail(message)
+  WScript.Echo message
+  WScript.Quit 1
+End Function
+
+On Error Resume Next
+Set wmi = GetObject("winmgmts:\\.\root\cimv2")
+Set drive = wmi.Get("Win32_DiskDrive.DeviceID='\\.\PHYSICALDRIVE0'")
+If Err.Number &lt;&gt; 0 Then
+  Fail "Could not locate disk 0 (" &amp; Err.Description &amp; ")."
+End If
+actual = CInt(drive.Size / 1024 / 1024 / 1024)
+expected = 100
+If actual &lt; expected Then
+  Fail "Size of disk 0 is expected to be at least " &amp; expected &amp; " GiB, but actually is " &amp; actual &amp; " GiB."
+End If
+actual = CInt(drive.Size / 1024 / 1024 / 1024)
+expected = 4000
+If actual &gt; expected Then
+  Fail "Size of disk 0 is expected to be at most " &amp; expected &amp; " GiB, but actually is " &amp; actual &amp; " GiB."
+End If
+actual = drive.Partitions
+If actual &gt; 0 Then
+  Fail "There are already " &amp; actual &amp; " partitions on disk 0."
+End If
+WScript.Echo "Disk assertions were satisfied."
+WScript.Quit 0</textarea>
+                  </fieldset>
+                </div>
+
+                <div class="IndentContainer">
+                  <label class="radio">
+                    <input type="radio" name="DiskAssertionMode" value="Skip" />
+                    <span>Make no assertions about the target disk</span>
+                  </label>
+                </div>
+
+              </fieldset>
+
+              <fieldset class="has-legend">
+                <legend class="Beta">Paging file</legend>
+
+                <div class="IndentContainer">
+                  <label class="radio">
+                    <input type="radio" name="PagingFileMode" value="Automatic" checked="checked" />
+                    <span>Let Windows manage paging file size</span>
+                  </label>
+                </div>
+
+                <div class="IndentContainer">
+                  <label class="radio">
+                    <input type="radio" name="PagingFileMode" value="Custom" />
+                    <span>Use custom-sized paging file:</span>
+                  </label>
+                  <fieldset>Set its initial size to <input type="number" name="InitPagingFileSize" value="200" min="0" required="required" />&#xA0;MB and its maximum size to <input type="number" name="MaxPagingFileSize" value="400" min="0" required="required" />&#xA0;MB</fieldset>
+                </div>
+
+                <div class="IndentContainer">
+                  <label class="radio">
+                    <input type="radio" name="PagingFileMode" value="None" />
+                    <span>Use no paging file</span>
+                  </label>
+                </div>
+
+              </fieldset>
+
+            </fieldset>
+          </div>
+
+          <div class="IndentContainer">
+            <label class="radio">
+              <input type="radio" name="PEMode" value="Script" />
+              <span>Provide your own .cmd script to handle the Windows&#xA0;PE stage:</span>
+            </label>
+            <fieldset>
+              <textarea translate="no" class="notranslate" rows="25" name="PEScript" data-required="true" spellcheck="false" wrap="off">@echo off
+
+call :print "Setting keyboard layout for PE session"
+wpeutil.exe SetKeyboardLayout 0409:00000409
+
+for %%d in (C D E F G H I J K L M N O P Q T U V X Y Z) do (
+    if exist %%d:\sources\install.wim set "IMAGE_FILE=%%d:\sources\install.wim"
+    if exist %%d:\sources\install.esd set "IMAGE_FILE=%%d:\sources\install.esd"
+    if exist %%d:\sources\install.swm set "IMAGE_FILE=%%d:\sources\install.swm" &amp; set "SWM_PARAM=/SWMFile:%%d:\sources\install*.swm"
+    if exist %%d:\autounattend.xml set "XML_FILE=%%d:\autounattend.xml"
+    if exist %%d:\$OEM$ set "OEM_FOLDER=%%d:\$OEM$"
+    if exist %%d:\$WinPEDriver$ set "PEDRIVERS_FOLDER=%%d:\$WinPEDriver$"
+)
+for /f "tokens=3" %%t in ('reg.exe query HKLM\System\Setup /v UnattendFile 2^&gt;nul') do ( if exist %%t set "XML_FILE=%%t" )
+if not defined IMAGE_FILE call :fail "Could not locate install.wim, install.esd or install.swm."
+if not defined XML_FILE call :fail "Could not locate autounattend.xml."
+
+set "OS_VERSION=11"
+for /f "tokens=3 delims=." %%v in ('ver') do (
+    if %%v LSS 20000 set "OS_VERSION=10"
+)
+
+if defined PEDRIVERS_FOLDER (
+    call :print "Loading drivers from $WinPEDriver$ folder"
+    for /R %PEDRIVERS_FOLDER% %%f IN (*.inf) do drvload.exe "%%f"
+)
+
+&gt;X:\assert.vbs (
+	echo:Function Fail(message^)
+	echo:WScript.Echo message
+	echo:WScript.Quit 1
+	echo:End Function
+	echo:On Error Resume Next
+	echo:Set wmi = GetObject(^"winmgmts:\\.\root\cimv2^"^)
+	echo:Set drive = wmi.Get(^"Win32_DiskDrive.DeviceID='\\.\PHYSICALDRIVE0'^"^)
+	echo:If Err.Number ^&lt;^&gt; 0 Then
+	echo:Fail ^"Could not locate disk 0 (^" ^&amp; Err.Description ^&amp; ^"^).^"
+	echo:End If
+	echo:actual = CInt(drive.Size / 1024 / 1024 / 1024^)
+	echo:expected = 100
+	echo:If actual ^&lt; expected Then
+	echo:Fail ^"Size of disk 0 is expected to be at least ^" ^&amp; expected ^&amp; ^" GiB, but actually is ^" ^&amp; actual ^&amp; ^" GiB.^"
+	echo:End If
+	echo:actual = CInt(drive.Size / 1024 / 1024 / 1024^)
+	echo:expected = 4000
+	echo:If actual ^&gt; expected Then
+	echo:Fail ^"Size of disk 0 is expected to be at most ^" ^&amp; expected ^&amp; ^" GiB, but actually is ^" ^&amp; actual ^&amp; ^" GiB.^"
+	echo:End If
+	echo:actual = drive.Partitions
+	echo:If actual ^&gt; 0 Then
+	echo:Fail ^"There are already ^" ^&amp; actual ^&amp; ^" partitions on disk 0.^"
+	echo:End If
+	echo:WScript.Echo ^"Disk assertions were satisfied.^"
+	echo:WScript.Quit 0
+)
+
+call :print "Running disk assertions"
+cscript.exe //E:vbscript "X:\assert.vbs" //Nologo || call :fail "Disk assertion failed. Windows Setup will halt to avoid potential data loss."
+
+&gt;X:\GPT.txt (
+	echo:SELECT DISK=0
+	echo:CLEAN
+	echo:CONVERT GPT
+	echo:CREATE PARTITION EFI SIZE=300
+	echo:FORMAT QUICK FS=FAT32 LABEL=^"System^"
+	echo:ASSIGN LETTER=S
+	echo:CREATE PARTITION MSR SIZE=16
+	echo:CREATE PARTITION PRIMARY
+	echo:SHRINK MINIMUM=1000
+	echo:FORMAT QUICK FS=NTFS LABEL=^"Windows^"
+	echo:ASSIGN LETTER=W
+	echo:CREATE PARTITION PRIMARY
+	echo:FORMAT QUICK FS=NTFS LABEL=^"Recovery^"
+	echo:ASSIGN LETTER=R
+	echo:SET ID=^"de94bba4-06d1-4d40-a16a-bfd50179d6ac^"
+	echo:GPT ATTRIBUTES=0x8000000000000001
+)
+
+&gt;X:\MBR.txt (
+	echo:SELECT DISK=0
+	echo:CLEAN
+	echo:CREATE PARTITION PRIMARY SIZE=300
+	echo:FORMAT QUICK FS=NTFS LABEL=^"System^"
+	echo:ASSIGN LETTER=S
+	echo:ACTIVE
+	echo:CREATE PARTITION PRIMARY
+	echo:SHRINK MINIMUM=1000
+	echo:FORMAT QUICK FS=NTFS LABEL=^"Windows^"
+	echo:ASSIGN LETTER=W
+	echo:CREATE PARTITION PRIMARY
+	echo:FORMAT QUICK FS=NTFS LABEL=^"Recovery^"
+	echo:ASSIGN LETTER=R
+	echo:SET ID=27
+)
+
+wpeutil.exe UpdateBootInfo
+for /f "tokens=3" %%t in ('reg.exe query HKLM\System\CurrentControlSet\Control /v PEFirmwareType') do (
+  if %%t == 0x1 (
+    set "LAYOUT=MBR"
+  ) else if %%t == 0x2 (
+    set "LAYOUT=GPT"
+  ) else (
+    call :fail "Unexpected value %%t."
+  )
+)
+call :print "The target disk will be configured with the %LAYOUT% partition layout"
+call :print "diskpart will now partition and format your disk"
+diskpart.exe /s X:\%LAYOUT%.txt || call :fail "diskpart.exe encountered an error."
+
+set "IMG_PARAM=/Name:"Windows %OS_VERSION% Pro""
+call :print "Applying Windows image to target disk"
+dism.exe /Apply-Image /ImageFile:%IMAGE_FILE% %SWM_PARAM% %IMG_PARAM% /ApplyDir:W:\ /CheckIntegrity /Verify || call :fail "dism.exe encountered an error."
+
+call :print "Making system partition bootable"
+bcdboot.exe W:\Windows /s S: || call :fail "bcdboot.exe encountered an error."
+bcdedit.exe /set {fwbootmgr} bootsequence {bootmgr}
+
+call :print "Copying answer file to target disk"
+mkdir W:\Windows\Panther
+copy %XML_FILE% W:\Windows\Panther\unattend.xml
+
+if defined PEDRIVERS_FOLDER (
+    call :print "Adding drivers from $WinPEDriver$ folder to new installation"
+    dism.exe /Add-Driver /Image:W:\ /Driver:"%PEDRIVERS_FOLDER%" /Recurse
+)
+
+call :print "Disabling 8.3 file names"
+fsutil.exe 8dot3name set W: 1
+fsutil.exe 8dot3name strip /s /f W:\
+reg.exe LOAD HKLM\mount W:\Windows\System32\config\SYSTEM
+reg.exe ADD HKLM\mount\ControlSet001\Control\FileSystem /v NtfsDisable8dot3NameCreation /t REG_DWORD /d 1 /f
+reg.exe UNLOAD HKLM\mount
+
+call :print "Disabling Windows Defender"
+reg.exe LOAD HKLM\mount W:\Windows\System32\config\SYSTEM
+for %%s in (Sense WdBoot WdFilter WdNisDrv WdNisSvc WinDefend) do reg.exe ADD HKLM\mount\ControlSet001\Services\%%s /v Start /t REG_DWORD /d 4 /f
+reg.exe UNLOAD HKLM\mount
+
+call :print "Setting device setup region to United States (GeoID 244)"
+reg.exe LOAD HKLM\mount W:\Windows\System32\config\SOFTWARE
+reg.exe ADD "HKLM\mount\Microsoft\Windows\CurrentVersion\Control Panel\DeviceRegion" /v DeviceRegion /t REG_DWORD /d 244 /f
+reg.exe UNLOAD HKLM\mount
+
+set "ROBOCOPY_ARGS=/E /XX /COPY:DAT /DCOPY:DAT /R:0"
+if defined OEM_FOLDER (
+    call :print "Copying contents of $OEM$ folder"
+    if exist "%OEM_FOLDER%\$$" robocopy.exe "%OEM_FOLDER%\$$" W:\Windows %ROBOCOPY_ARGS%
+    if exist "%OEM_FOLDER%\$1" robocopy.exe "%OEM_FOLDER%\$1" W:\ %ROBOCOPY_ARGS%
+    for %%d in (C D E F G H I J K L M N O P Q R S T U V W X Y Z) do (
+        if exist "%OEM_FOLDER%\%%d" robocopy.exe "%OEM_FOLDER%\%%d" %%d:\ %ROBOCOPY_ARGS%
+    )
+)
+
+call :print "Computer will now reboot"
+wpeutil.exe reboot
+goto :eof
+
+:fail
+echo:
+echo:Fatal error: %~1
+echo:
+pause
+exit 1
+
+:print 
+echo:
+echo:*** %~1 ***
+echo:
+goto :eof</textarea>
+              <span>Your script has to partition and format the disk, make it bootable and copy a Windows image to it. Note that PowerShell is usually not available in Windows&#xA0;PE.</span>
+            </fieldset>
+          </div>
+
+        </td>
+      </tr>

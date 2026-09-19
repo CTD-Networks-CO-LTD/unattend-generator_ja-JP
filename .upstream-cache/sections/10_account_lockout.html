@@ -1,0 +1,30 @@
+<tr>
+        <th>Account Lockout policy:</th>
+        <td>
+
+          <div class="IndentContainer">
+            <label class="radio">
+              <input type="radio" name="LockoutMode" value="Default" checked="checked" />
+              <span>Use default policy</span>
+            </label>
+            <div>By default, Windows will lock out an account after <strong>10 failed logon attempts</strong> (<q>threshold</q>) within <strong>10 minutes</strong> (<q>window</q>). After <strong>10 minutes</strong> (<q>duration</q>), the account is unlocked automatically.</div>
+          </div>
+
+          <div class="IndentContainer">
+            <label class="radio">
+              <input type="radio" name="LockoutMode" value="Disabled" />
+              <span>Disable policy</span>
+            </label>
+            <div class="Exclamation">Disabling Account Lockout might leave your computer vulnerable to brute-force attacks.</div>
+          </div>
+
+          <div class="IndentContainer">
+            <label class="radio">
+              <input type="radio" name="LockoutMode" value="Custom" />
+              <span>Use custom policy:</span>
+            </label>
+            <fieldset>Lock out an account after <input type="number" name="LockoutThreshold" value="10" min="0" max="999" required="required" /> failed logon attempts within <input type="number" name="LockoutWindow" value="10" min="1" max="99999" required="required" /> minutes. After <input type="number" name="LockoutDuration" value="10" min="1" max="99999" required="required" /> minutes, unlock the account automatically.</fieldset>
+          </div>
+
+        </td>
+      </tr>

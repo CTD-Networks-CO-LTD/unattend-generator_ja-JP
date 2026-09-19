@@ -1,0 +1,11 @@
+<tr>
+        <th>Processor architectures:</th>
+        <td>
+          <select name="ProcessorArchitecture" required="required" multiple="multiple">
+  <option value="x86" title="x86">Intel / AMD 32-bit</option>
+  <option value="amd64" title="amd64" selected="selected">Intel / AMD 64-bit</option>
+  <option value="arm64" title="arm64">Windows on Arm64</option>
+</select>
+          <p class="Description">When you select multiple processor architectures, a single <code class="nowrap">autounattend.xml</code> file will be created that is applicable to all of these architectures.</p>
+        </td>
+      </tr>

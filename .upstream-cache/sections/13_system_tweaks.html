@@ -1,0 +1,210 @@
+<tr>
+        <th>System tweaks:</th>
+        <td>
+
+          <div class="IndentContainer">
+            <label class="checkbox">
+              <input type="checkbox" name="DisableWindowsUpdate" value="true" />
+              <span>Disable Windows&#xA0;Update</span>
+            </label>
+            <fieldset>This will create a scheduled task (named <code>PauseWindowsUpdate</code>) that pauses updates for one week again and again. If you want to run Windows&#xA0;Update for once, click <em>Resume updates</em> in Settings. If you want to enable Windows&#xA0;Update permanently, disable or delete that task.</fieldset>
+          </div>
+
+          <div class="IndentContainer">
+            <label class="checkbox">
+              <input type="checkbox" name="DisableUac" value="true" />
+              <span>Disable User&#xA0;Account&#xA0;Control (UAC)</span>
+            </label>
+            <div class="Exclamation">Not recommended to be used with a Microsoft (“online”) user account as Windows Hello PIN dialogs might appear <a href="https://github.com/cschneegans/unattend-generator/discussions/271">minimized or hidden</a>.</div>
+            <div class="Exclamation">You should disable UAC only for <strong>testing environments</strong> or when you intend to use <strong>separate administrator and user accounts</strong>.</div>
+          </div>
+
+          <div class="IndentContainer">
+            <label class="checkbox">
+              <input type="checkbox" name="DisableSac" value="true" />
+              <span>Disable Smart&#xA0;App&#xA0;Control</span>
+            </label>
+            <div>This turns Smart&#xA0;App&#xA0;Control off in Windows 11. Note that you will not be able to turn it back on.</div>
+          </div>
+
+          <div class="IndentContainer">
+            <label class="checkbox">
+              <input type="checkbox" name="DisableSmartScreen" value="true" />
+              <span>Disable SmartScreen in Windows and Edge</span>
+            </label>
+          </div>
+
+          <div class="IndentContainer">
+            <label class="checkbox">
+              <input type="checkbox" name="DisableFastStartup" value="true" />
+              <span>Disable Fast Startup</span>
+            </label>
+          </div>
+
+          <div class="IndentContainer">
+            <label class="checkbox">
+              <input type="checkbox" name="DisableSystemRestore" value="true" />
+              <span>Disable System Protection&#x2009;/&#x2009;System Restore</span>
+            </label>
+            <div>Windows will not create restore points for drive <code class="nowrap">C:</code> and thus use less disk space.</div>
+          </div>
+
+          <div class="IndentContainer">
+            <label class="checkbox">
+              <input type="checkbox" name="EnableLongPaths" value="true" />
+              <span>Enable long paths</span>
+            </label>
+            <div>This sets the <a href="https://learn.microsoft.com/en-us/windows/win32/fileio/maximum-file-path-limitation#enable-long-paths-in-windows-10-version-1607-and-later">LongPathsEnabled</a> registry value, which enables several programs (including PowerShell, 7-Zip and TreeSize) to use long paths with up to 32,767 characters without resorting to the <code class="nowrap">\\?\</code> prefix.</div>
+          </div>
+
+          <div class="IndentContainer">
+            <label class="checkbox">
+              <input type="checkbox" name="EnableRemoteDesktop" value="true" />
+              <span>Enable Remote Desktop services (RDP)</span>
+            </label>
+          </div>
+
+          <div class="IndentContainer">
+            <label class="checkbox">
+              <input type="checkbox" name="HardenSystemDriveAcl" value="true" />
+              <span>Harden ACLs</span>
+            </label>
+            <div>This removes write permissions on <code>C:\</code> for the <em>Authenticated Users</em> group. In particular, this prevents unprivileged users from creating bogus folders such as <code class="nowrap">C:\Windows </code>.</div>
+          </div>
+
+          <div class="IndentContainer">
+            <label class="checkbox">
+              <input type="checkbox" name="DeleteJunctions" value="true" />
+              <span>Delete hidden junction points</span>
+            </label>
+            <div>This will delete several hidden junction points, such as <code>C:\<wbr />Documents and Settings</code> or <code>C:\<wbr />Users\<wbr />Default\<wbr />My Documents</code>. These were intended to improve compatibility with older software, but also can be quite confusing.</div>
+          </div>
+
+          <div class="IndentContainer">
+            <label class="checkbox">
+              <input type="checkbox" name="AllowPowerShellScripts" value="true" />
+              <span>Allow execution of PowerShell script files</span>
+            </label>
+            <div>This runs the command <code><span class="nowrap">Set-ExecutionPolicy</span> <span class="nowrap">-ExecutionPolicy</span> 'RemoteSigned'</code>, which allows the execution of unsigned <code>.ps1</code> files.</div>
+          </div>
+
+          <div class="IndentContainer">
+            <label class="checkbox">
+              <input type="checkbox" name="DisableLastAccess" value="true" />
+              <span>Do not update Last Access Time stamp</span>
+            </label>
+            <div>This runs the command <code>fsutil.exe behavior set <span class="nowrap">disableLastAccess 1</span></code>, which can improve file system performance.</div>
+          </div>
+
+          <div class="IndentContainer">
+            <label class="checkbox">
+              <input type="checkbox" name="PreventAutomaticReboot" value="true" />
+              <span>Prevent Windows&#xA0;Update from rebooting your computer</span>
+            </label>
+            <div>This creates a scheduled task that periodically moves your <a href="https://www.elevenforum.com/t/set-active-hours-for-windows-update-in-windows-11.3436/">active hours</a>, tricking Windows into thinking your device is in use all the time.</div>
+          </div>
+
+          <div class="IndentContainer">
+            <label class="checkbox">
+              <input type="checkbox" name="TurnOffSystemSounds" value="true" />
+              <span>Turn off system sounds</span>
+            </label>
+            <div>This changes the sound scheme from <em>Windows Default</em> to <em>No sounds</em> for all users.</div>
+          </div>
+
+          <div class="IndentContainer">
+            <label class="checkbox">
+              <input type="checkbox" name="DisableAppSuggestions" value="true" />
+              <span>Disable app suggestions&#x2009;/&#x2009;Content Delivery Manager</span>
+            </label>
+            <div>This sets <a href="https://skanthak.homepage.t-online.de/ten.html#eighth">several registry values</a> that prevent the silent download and installation of <a href="https://www.tenforums.com/tutorials/68217-turn-off-automatic-installation-suggested-apps-windows-10-a.html">suggested apps</a>. Note that as a side effect this will also disable the <em>Manage devices</em> button in the <em>Mobile devices</em> section in Settings. If this bothers you, <a href="https://www.reddit.com/r/techsupport/comments/1d073rg/comment/lpdqfhw/">change the value</a> of <code>DisableWindowsConsumerFeatures</code> to <code>0</code>.</div>
+          </div>
+
+          <div class="IndentContainer">
+            <label class="checkbox">
+              <input type="checkbox" name="PreventDeviceEncryption" value="true" />
+              <span>Prevent device encryption</span>
+            </label>
+            <div>Windows&#xA0;11 would otherwise enable <a href="https://learn.microsoft.com/en-us/windows/security/operating-system-security/data-protection/bitlocker/#device-encryption">BitLocker encryption automatically</a>.</div>
+          </div>
+
+          <div class="IndentContainer">
+            <label class="checkbox">
+              <input type="checkbox" name="HideEdgeFre" value="true" />
+              <span>Hide Edge <em>First Run Experience</em></span>
+            </label>
+            <div>This will skip the annoying dialogs when Edge is run for the first time.</div>
+          </div>
+
+          <div class="IndentContainer">
+            <label class="checkbox">
+              <input type="checkbox" name="DisableEdgeStartupBoost" value="true" />
+              <span>Disable Edge <em>Startup Boost</em> and <em>Background mode</em></span>
+            </label>
+            <div>This will stop Edge from running in the background all the time.</div>
+          </div>
+
+          <div class="IndentContainer">
+            <label class="checkbox">
+              <input type="checkbox" name="MakeEdgeUninstallable" value="true" />
+              <span class="Beta">Make Edge uninstallable</span>
+            </label>
+            <div>This will modify the <code>C:\<wbr />Windows\<wbr />System32\<wbr />IntegratedServices<wbr />RegionPolicy<wbr />Set.json</code> file such that Edge can be uninstalled even outside the European Economic Area.</div>
+            <div class="Exclamation">This settings tends to cause problems with Windows Update. Use at your own risk!</div>
+          </div>
+
+          <div class="IndentContainer">
+            <label class="checkbox">
+              <input type="checkbox" name="DisablePointerPrecision" value="true" />
+              <span>Disable the <em>Enhance Pointer Precision</em> mouse setting</span>
+            </label>
+            <div>This may be useful for players of first-person shooters.</div>
+          </div>
+
+          <div class="IndentContainer">
+            <label class="checkbox">
+              <input type="checkbox" name="DeleteWindowsOld" value="true" />
+              <span>Delete empty <code class="nowrap">C:\Windows.old</code> folder</span>
+            </label>
+          </div>
+
+          <div class="IndentContainer">
+            <label class="checkbox">
+              <input type="checkbox" name="DisableAutomaticRestartSignOn" value="true" />
+              <span>Disable automatic sign-on of last user after a restart</span>
+            </label>
+            <div>By default, Windows automatically signs on the last user after a restart and then locks their session. This offers very little benefits compared to signing on manually and will often lead to a confusing warning: <q>Someone else is still using this PC. If you restart now, they could lose unsaved work.</q></div>
+          </div>
+
+          <div class="IndentContainer">
+            <label class="checkbox">
+              <input type="checkbox" name="DisableWpbt" value="true" />
+              <span>Disable Windows Platform Binary Table (WPBT) execution</span>
+            </label>
+          </div>
+
+          <div class="IndentContainer">
+            <label class="checkbox">
+              <input type="checkbox" name="PreventDeviceApps" value="true" />
+              <span>Prevent download and installation of applications associated with certain hardware devices</span>
+            </label>
+            <div>LG monitors have recently <a href="https://www.youtube.com/watch?v=Q9uefFYe6bM">come under scrutiny</a> for automatically installing unwanted software.</div>
+          </div>
+
+          <div class="IndentContainer">
+            <label class="checkbox">
+              <input type="checkbox" name="ProcessAudit" value="true" />
+              <span>Audit process creation events</span>
+            </label>
+            <fieldset>
+              <span>Each time a new process is created, Windows writes an event to the <em>Security</em> log. This is a <a href="/windows/process-audit/" hreflang="en">powerful tool for troubleshooting</a>.</span>
+              <div class="IndentContainer">
+                <label class="checkbox">
+                  <input type="checkbox" name="ProcessAuditCommandLine" value="true" />
+                  <span>Include command line in log events</span>
+                </label>
+              </div>
+            </fieldset>
+          </div>
+        </td>
+      </tr>

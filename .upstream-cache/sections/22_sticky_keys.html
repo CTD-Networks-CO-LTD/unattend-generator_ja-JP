@@ -1,0 +1,55 @@
+<tr>
+        <th>Sticky keys:</th>
+        <td>
+          <div class="IndentContainer">
+            <label class="radio">
+              <input type="radio" name="StickyKeysMode" value="Default" checked="checked" />
+              <span>Use default Sticky keys settings</span>
+            </label>
+          </div>
+
+          <div class="IndentContainer">
+            <label class="radio">
+              <input type="radio" name="StickyKeysMode" value="Disabled" />
+              <span>Disable Sticky keys altogether</span>
+            </label>
+          </div>
+
+          <div class="IndentContainer">
+            <label class="radio">
+              <input type="radio" name="StickyKeysMode" value="Custom" />
+              <span>Configure Sticky keys as follows:</span>
+            </label>
+            <fieldset>
+              <div class="StickyKeys CheckboxList">
+  <label class="checkbox">
+    <input name="StickyKeysHotKeyActive" type="checkbox" value="true" />
+    <span>Press the Shift key 5 times to turn Sticky keys on or off</span>
+  </label>
+  <label class="checkbox">
+    <input name="StickyKeysHotKeySound" type="checkbox" value="true" />
+    <span>Play a siren sound when Sticky keys are turned on or off by using the Shift key</span>
+  </label>
+  <label class="checkbox">
+    <input name="StickyKeysIndicator" type="checkbox" value="true" />
+    <span>Show the Sticky keys icon on the taskbar</span>
+  </label>
+  <label class="checkbox">
+    <input name="StickyKeysAudibleFeedback" type="checkbox" value="true" />
+    <span>Play a sound when shortcut keys are pressed and released</span>
+  </label>
+  <label class="checkbox">
+    <input name="StickyKeysTriState" type="checkbox" value="true" />
+    <span>Lock shortcut keys when pressed twice in a row</span>
+  </label>
+  <label class="checkbox">
+    <input name="StickyKeysTwoKeysOff" type="checkbox" value="true" />
+    <span>Turn off Sticky keys when two keys are pressed at the same time</span>
+  </label>
+</div>
+            </fieldset>
+          </div>
+
+          <div>This will affect all users and also the login screen.</div>
+        </td>
+      </tr>

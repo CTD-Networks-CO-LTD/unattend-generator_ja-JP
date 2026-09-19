@@ -1,0 +1,101 @@
+<tr>
+        <th>WLAN&#x2009;/&#x2009;Wi-Fi setup:</th>
+        <td>
+          <div class="IndentContainer">
+            <label class="radio">
+              <input type="radio" name="WifiMode" value="Interactive" checked="checked" />
+              <span>Configure Wi-Fi interactively during Windows&#xA0;Setup</span>
+            </label>
+          </div>
+
+          <div class="IndentContainer">
+            <label class="radio">
+              <input type="radio" name="WifiMode" value="Skip" />
+              <span>Skip Wi-Fi configuration</span>
+            </label>
+            <div>Choose this if you have a wired connection to the internet.</div>
+          </div>
+
+          <div class="IndentContainer">
+            <label class="radio">
+              <input type="radio" name="WifiMode" value="Unattended" />
+              <span>Configure Wi-Fi using these settings:</span>
+            </label>
+            <fieldset>
+
+              <div class="InputTable">
+
+                <div class="InputTableItem">
+                  <label>
+                    <span>Network name (SSID):</span>
+                    <input type="text" name="WifiName" value="" minlength="1" maxlength="32" data-required="true" />
+                  </label>
+                </div>
+
+                <div class="InputTableItem">
+                  <label>
+                    <span>Connect even if not broadcasting:</span>
+                    <input type="checkbox" name="WifiNonBroadcast" value="true" />
+                  </label>
+                </div>
+
+                <div class="InputTableItem">
+                  <label>
+                    <span>Authentication:</span>
+                    <select name="WifiAuthentication">
+  <option value="Open" selected="selected">Open</option>
+  <option value="WPA2PSK">WPA2-Personal AES</option>
+  <option value="WPA3SAE">WPA3-Personal AES</option>
+</select>
+                  </label>
+                </div>
+
+                <div class="InputTableItem">
+                  <label>
+                    <span>Password:</span>
+                    <input type="text" name="WifiPassword" value="00000000" maxlength="63" size="40" />
+                  </label>
+                </div>
+              </div>
+
+            </fieldset>
+            <div class="Exclamation">If Windows does not support your Wi-Fi adapter out-of-the-box, you need to add the appropriate driver files to the <a href="/windows/unattend-generator/usage/#winpedriverfolder" hreflang="en"><code>$WinPEDriver$</code> folder</a> on your installation medium.</div>
+          </div>
+
+          <div class="IndentContainer">
+            <label class="radio">
+              <input type="radio" name="WifiMode" value="FromProfile" />
+              <span>Configure Wi-Fi using an XML file created by <code>netsh.exe wlan export profile key=clear</code> on another computer:</span>
+            </label>
+            <fieldset>
+              <textarea rows="29" name="WifiProfileXml" data-required="true" spellcheck="false" wrap="off">&lt;WLANProfile xmlns="http://www.microsoft.com/networking/WLAN/profile/v1"&gt;
+  &lt;name&gt;WLAN-123456&lt;/name&gt;
+  &lt;SSIDConfig&gt;
+    &lt;SSID&gt;
+      &lt;hex&gt;574C414E2D313233343536&lt;/hex&gt;
+      &lt;name&gt;WLAN-123456&lt;/name&gt;
+    &lt;/SSID&gt;
+    &lt;nonBroadcast&gt;true&lt;/nonBroadcast&gt;
+  &lt;/SSIDConfig&gt;
+  &lt;connectionType&gt;ESS&lt;/connectionType&gt;
+  &lt;connectionMode&gt;auto&lt;/connectionMode&gt;
+  &lt;MSM&gt;
+    &lt;security&gt;
+      &lt;authEncryption&gt;
+        &lt;authentication&gt;WPA3SAE&lt;/authentication&gt;
+        &lt;encryption&gt;AES&lt;/encryption&gt;
+        &lt;useOneX&gt;false&lt;/useOneX&gt;
+        &lt;transitionMode xmlns="http://www.microsoft.com/networking/WLAN/profile/v4"&gt;true&lt;/transitionMode&gt;
+      &lt;/authEncryption&gt;
+      &lt;sharedKey&gt;
+        &lt;keyType&gt;passPhrase&lt;/keyType&gt;
+        &lt;protected&gt;false&lt;/protected&gt;
+        &lt;keyMaterial&gt;password&lt;/keyMaterial&gt;
+      &lt;/sharedKey&gt;
+    &lt;/security&gt;
+  &lt;/MSM&gt;
+&lt;/WLANProfile&gt;</textarea>
+            </fieldset>
+          </div>
+        </td>
+      </tr>

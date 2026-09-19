@@ -1,0 +1,35 @@
+<tr>
+        <th>Computer name:</th>
+        <td>
+
+          <div class="IndentContainer">
+            <label class="radio">
+              <input type="radio" name="ComputerNameMode" value="Random" checked="checked" />
+              <span>Let Windows generate a random computer name like <code class="nowrap">DESKTOP-ZFAH8Z2</code></span>
+            </label>
+          </div>
+
+          <div class="IndentContainer">
+            <label class="radio">
+              <input type="radio" name="ComputerNameMode" value="Custom" />
+              <span>Choose a computer name yourself:</span>
+            </label>
+            <fieldset>
+              <input type="text" name="ComputerName" value="" minlength="1" maxlength="15" data-required="true" />
+            </fieldset>
+          </div>
+
+          <div class="IndentContainer">
+            <label class="radio">
+              <input type="radio" name="ComputerNameMode" value="Script" />
+              <span>Provide a Windows PowerShell script to set the computer name dynamically:</span>
+            </label>
+            <fieldset>
+              <textarea rows="5" name="ComputerNameScript" data-required="true" spellcheck="false" wrap="off">return 'DESKTOP-{0:D3}' -f ( Get-Random -Minimum 0 -Maximum 999 );</textarea>
+
+              <span>Your script will be evaluated during Windows Setup. The script must return a single string, which must be a <a href="https://learn.microsoft.com/en-us/windows-hardware/customize/desktop/unattend/microsoft-windows-shell-setup-computername">valid computer name</a>. Use a script such as <code>return Read-Host -Prompt 'Enter computer name';</code> to create an interactive prompt.</span>
+            </fieldset>
+          </div>
+
+        </td>
+      </tr>
