@@ -71,22 +71,74 @@ jobs:
             echo "upstream_commit=none" >> $GITHUB_OUTPUT
           fi
 
-      - name: Update Cache Baseline on PR branch
+      - name: Create or Update Sync Branch and Pull Request
         if: steps.sync.outputs.has_changes == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          UPSTREAM_COMMIT: ${{ steps.sync.outputs.upstream_commit }}
+          BRANCH_NAME: sync/upstream-${{ steps.date.outputs.date }}
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch || 'master' }}
         run: |
-          echo "Updating .upstream-cache with latest upstream sections..."
+          set -euo pipefail
+
+          echo "=== Staging Upstream Cache Changes ==="
           node build/sync_upstream_site.js --update-cache
 
-      - name: Create Pull Request
-        if: steps.sync.outputs.has_changes == 'true'
-        uses: peter-evans/create-pull-request@v6
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          commit-message: "feat: sync upstream UI structure (${{ steps.sync.outputs.upstream_commit }})"
-          branch: sync/upstream-${{ steps.date.outputs.date }}
-          base: ${{ github.event.repository.default_branch || 'master' }}
-          title: "🚀 本家サイトの更新を検知 (${{ steps.sync.outputs.upstream_commit }})"
-          body-path: diff_report.md
-          labels: |
-            upstream-sync
-            automated-pr
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          # 既存ブランチがあれば切り替え、なければ新規作成
+          git checkout -B "$BRANCH_NAME"
+          git add .upstream-cache/
+
+          if git diff --staged --quiet; then
+            echo "No changes to commit in .upstream-cache."
+          else
+            git commit -m "feat: sync upstream UI structure ($UPSTREAM_COMMIT)"
+            echo "Pushing branch $BRANCH_NAME..."
+            git push origin "$BRANCH_NAME" --force
+          fi
+
+          PR_TITLE="🚀 本家サイトの更新を検知 ($UPSTREAM_COMMIT)"
+          COMPARE_URL="https://github.com/${{ github.repository }}/compare/${DEFAULT_BRANCH}...${BRANCH_NAME}?expand=1"
+
+          # PR作成を試行（権限があれば自動起票、制限されている場合はフォールバック）
+          PR_URL=""
+          if command -v gh &> /dev/null; then
+            set +e
+            PR_OUTPUT=$(gh pr create \
+              --base "$DEFAULT_BRANCH" \
+              --head "$BRANCH_NAME" \
+              --title "$PR_TITLE" \
+              --body-file diff_report.md \
+              --label "upstream-sync,automated-pr" 2>&1)
+            EXIT_CODE=$?
+            set -e
+
+            if [ $EXIT_CODE -eq 0 ]; then
+              PR_URL="$PR_OUTPUT"
+              echo "Pull request created successfully: $PR_URL"
+            else
+              echo "Notice: gh pr create returned non-zero ($EXIT_CODE): $PR_OUTPUT"
+            fi
+          fi
+
+          # GitHub Actions Job Summary への出力
+          echo "## 🚀 本家サイトの更新を検知しました (本家コミット: \`$UPSTREAM_COMMIT\`)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          if [ -n "$PR_URL" ]; then
+            echo "✅ **Pull Request を自動起票しました**: $PR_URL" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "ℹ️ **同期用ブランチをプッシュしました**: \`$BRANCH_NAME\`" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "> **Note**: リポジトリ設定（Workflow permissions）により GITHUB_TOKEN からの PR 自動起票が制限されているため、以下のリンクからワンクリックで Pull Request を作成できます：" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "👉 [**ここをクリックして Pull Request を作成・確認**]($COMPARE_URL)" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+          cat diff_report.md >> $GITHUB_STEP_SUMMARY
+
+          echo "=== Upstream Sync Step Completed Successfully ==="
+
