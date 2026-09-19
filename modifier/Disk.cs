@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
+using System.Xml;
 
 namespace Schneegans.Unattend;
 
@@ -146,21 +147,22 @@ class DiskModifier(ModifierContext context) : Modifier(context)
       }
     }
 
-    switch (Configuration.PESettings)
+    List<string> lines = Configuration.PESettings switch
     {
-      case ScriptPESetttings peSettings:
-        WritePeScript(Util.SplitLines(peSettings.Script));
-        break;
-
-      case GeneratePESettings peSettings:
-        WritePeScript(GetPEScript(Configuration, peSettings, Generator));
-        break;
-
-      case DefaultPESettings:
-        break;
-
-      default:
-        throw new NotSupportedException();
+      ScriptPESetttings script => Util.SplitLines(script.Script),
+      GeneratePESettings generate => GetPEScript(Configuration, generate, Generator),
+      DefaultPESettings => [],
+      _ => throw new NotSupportedException(),
+    };
+    XmlNode copy = Document.SelectSingleNodeOrThrow("//s:PEScriptCopy", NamespaceManager);
+    if (lines.Count > 0)
+    {
+      WritePeScript(lines);
+      copy.AppendChild(Document.CreateTextNode(Util.Indent(lines.JoinLines())));
+    }
+    else
+    {
+      copy.RemoveSelf();
     }
   }
 
@@ -350,7 +352,7 @@ class DiskModifier(ModifierContext context) : Modifier(context)
         writer.WriteLine($">{script.Path} (");
         foreach (string line in EchoProcessor.Process(script.Lines, script.Escape))
         {
-          writer.WriteLine($"\t{line}");
+          writer.WriteLine($"    {line}");
         }
         writer.WriteLine(")");
         writer.WriteLine();
@@ -511,6 +513,22 @@ class DiskModifier(ModifierContext context) : Modifier(context)
           """);
       }
 
+      writer.WriteLine("""
+        wpeutil.exe UpdateBootInfo
+        for /f "tokens=3" %%t in ('reg.exe query HKLM\System\CurrentControlSet\Control /v PEFirmwareType') do (
+            if %%t == 0x1 (
+                set "LAYOUT=MBR"
+                set "FIRMWARE=BIOS"
+            ) else if %%t == 0x2 (
+                set "LAYOUT=GPT"
+                set "FIRMWARE=UEFI"
+            ) else (
+                call :fail "Unexpected PEFirmwareType value %%t."
+            )
+        )
+        call :print "The computer is booted in %FIRMWARE% mode, hence the target disk must be configured with the %LAYOUT% partition layout"
+        """);
+
       switch (pe.PartitionSettings)
       {
         case CustomPartitionSettings settings:
@@ -528,20 +546,6 @@ class DiskModifier(ModifierContext context) : Modifier(context)
             {
               IncludeDiskpartScript(new EmbeddedScript($@"X:\{layout}.txt", GetDiskpartScript(settings with { PartitionLayout = layout }), Escape: false));
             }
-
-            writer.WriteLine("""
-              wpeutil.exe UpdateBootInfo
-              for /f "tokens=3" %%t in ('reg.exe query HKLM\System\CurrentControlSet\Control /v PEFirmwareType') do (
-                if %%t == 0x1 (
-                  set "LAYOUT=MBR"
-                ) else if %%t == 0x2 (
-                  set "LAYOUT=GPT"
-                ) else (
-                  call :fail "Unexpected value %%t."
-                )
-              )
-              call :print "The target disk will be configured with the %LAYOUT% partition layout"
-              """);
             Execute(@"X:\%LAYOUT%.txt", message);
           }
           else
@@ -605,7 +609,9 @@ class DiskModifier(ModifierContext context) : Modifier(context)
 
       call :print "Making system partition bootable"
       bcdboot.exe {{DriveLetters.Windows}}:\Windows /s {{DriveLetters.System}}: || call :fail "bcdboot.exe encountered an error."
-      bcdedit.exe /set {fwbootmgr} bootsequence {bootmgr} || call :fail "bcdedit.exe encountered an error."
+      if %LAYOUT% == GPT (
+          bcdedit.exe /set {fwbootmgr} bootsequence {bootmgr} || call :fail "bcdedit.exe encountered an error."
+      )
 
       """);
 
@@ -667,10 +673,10 @@ class DiskModifier(ModifierContext context) : Modifier(context)
     {
       writer.WriteLine($"""
         if defined VIRTIO_DRIVE (
-          call :print "Adding VirtIO drivers to new installation"
-          dism.exe /Add-Driver /Image:{DriveLetters.Windows}:\ /Driver:"%VIRTIO_DRIVE%\vioscsi\w%OS_VERSION%\%PROCESSOR_ARCHITECTURE%\vioscsi.inf"
-          dism.exe /Add-Driver /Image:{DriveLetters.Windows}:\ /Driver:"%VIRTIO_DRIVE%\viostor\w%OS_VERSION%\%PROCESSOR_ARCHITECTURE%\viostor.inf"
-          dism.exe /Add-Driver /Image:{DriveLetters.Windows}:\ /Driver:"%VIRTIO_DRIVE%\NetKVM\w%OS_VERSION%\%PROCESSOR_ARCHITECTURE%\netkvm.inf"
+            call :print "Adding VirtIO drivers to new installation"
+            dism.exe /Add-Driver /Image:{DriveLetters.Windows}:\ /Driver:"%VIRTIO_DRIVE%\vioscsi\w%OS_VERSION%\%PROCESSOR_ARCHITECTURE%\vioscsi.inf"
+            dism.exe /Add-Driver /Image:{DriveLetters.Windows}:\ /Driver:"%VIRTIO_DRIVE%\viostor\w%OS_VERSION%\%PROCESSOR_ARCHITECTURE%\viostor.inf"
+            dism.exe /Add-Driver /Image:{DriveLetters.Windows}:\ /Driver:"%VIRTIO_DRIVE%\NetKVM\w%OS_VERSION%\%PROCESSOR_ARCHITECTURE%\netkvm.inf"
         )
 
         """);
@@ -680,7 +686,7 @@ class DiskModifier(ModifierContext context) : Modifier(context)
       if (configuration.TimeZoneSettings is ExplicitTimeZoneSettings settings)
       {
         writer.WriteLine($"""
-          call :print "Setting time zone" 
+          call :print "Setting time zone"
           dism.exe /Image:{DriveLetters.Windows}:\ /Set-TimeZone:"{settings.TimeZone.Id}"
 
           """);
@@ -793,7 +799,7 @@ class DiskModifier(ModifierContext context) : Modifier(context)
       pause
       exit 1
 
-      :print 
+      :print
       echo:
       echo:*** %~1 ***
       echo:
