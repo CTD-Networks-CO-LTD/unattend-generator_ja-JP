@@ -523,9 +523,18 @@
                 }
             };
             {
-                whenEdited(document.querySelector('textarea[name="DiskAssertionScript"]'), (event) => {
-                    validateLineLength(event, 'vbscript');
-                });
+                const diskAssertionScript = document.querySelector('textarea[name="DiskAssertionScript"]');
+                if (diskAssertionScript) {
+                    whenEdited(diskAssertionScript, (event) => {
+                        validateLineLength(event, 'vbscript');
+                    });
+                }
+                const targetDiskScript = document.querySelector('textarea[name="TargetDiskScript"]');
+                if (targetDiskScript) {
+                    whenEdited(targetDiskScript, (event) => {
+                        validateLineLength(event, 'vbscript');
+                    });
+                }
             }
             {
                 whenEdited(document.querySelector('textarea[name="PEScript"]'), (event) => {
@@ -596,19 +605,21 @@
         {
             const partitionInteractive = document.querySelector('input[name="PartitionMode"][value="Interactive"]');
             const assertionSkip = document.querySelector('input[name="DiskAssertionMode"][value="Skip"]');
-            const assertionLabel = assertionSkip.nextElementSibling.textContent;
-            whenChanged(document.querySelectorAll('input[name="DiskAssertionMode"], input[name="PartitionMode"]'), (event) => {
-                {
-                    if (partitionInteractive.checked) {
-                        if (!assertionSkip.checked) {
-                            return invalid(partitionInteractive, `Cannot use disk assertion script when diskpart is run interactively. Select ${quote(assertionLabel)} below.`, event);
+            if (partitionInteractive && assertionSkip) {
+                const assertionLabel = assertionSkip.nextElementSibling ? assertionSkip.nextElementSibling.textContent : '';
+                whenChanged(document.querySelectorAll('input[name="DiskAssertionMode"], input[name="PartitionMode"]'), (event) => {
+                    {
+                        if (partitionInteractive.checked) {
+                            if (!assertionSkip.checked) {
+                                return invalid(partitionInteractive, `Cannot use disk assertion script when diskpart is run interactively. Select ${quote(assertionLabel)} below.`, event);
+                            }
                         }
                     }
-                }
-                {
-                    return valid(partitionInteractive);
-                }
-            });
+                    {
+                        return valid(partitionInteractive);
+                    }
+                });
+            }
         }
         {
             change(document.querySelectorAll('input, textarea, select'));
@@ -720,19 +731,25 @@
         loadSections();
     }
     function valid(element) {
-        element.setCustomValidity('');
+        if (element) {
+            element.setCustomValidity('');
+        }
     }
     function invalid(element, message, event) {
+        if (!element) return;
         element.setCustomValidity(message);
-        if (event.target === element) {
+        if (event && event.target === element) {
             if (event.isTrusted) {
                 element.reportValidity();
             }
         }
     }
     function change(elements) {
+        if (!elements) return;
         function each(element) {
-            element.dispatchEvent(new Event('change'));
+            if (element) {
+                element.dispatchEvent(new Event('change'));
+            }
         }
         if ('forEach' in elements) {
             for (const element of elements) {
@@ -753,7 +770,9 @@
         whenEvent(['click'], elements, callback);
     }
     function whenEvent(types, elements, callback) {
+        if (!elements) return;
         function each(element) {
+            if (!element) return;
             for (const type of types) {
                 element.addEventListener(type, callback);
             }

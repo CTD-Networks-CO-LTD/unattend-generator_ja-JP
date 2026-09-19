@@ -81,18 +81,18 @@ jobs:
         run: |
           set -euo pipefail
 
-          echo "=== Staging Upstream Cache Changes ==="
-          node build/sync_upstream_site.js --update-cache
+          echo "=== Staging Upstream Cache and Docs Sections Changes ==="
+          node build/sync_upstream_site.js --update-cache --update-docs
 
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
           # 既存ブランチがあれば切り替え、なければ新規作成
           git checkout -B "$BRANCH_NAME"
-          git add .upstream-cache/
+          git add .upstream-cache/ docs/sections/
 
           if git diff --staged --quiet; then
-            echo "No changes to commit in .upstream-cache."
+            echo "No changes to commit in .upstream-cache or docs/sections."
           else
             git commit -m "feat: sync upstream UI structure ($UPSTREAM_COMMIT)"
             echo "Pushing branch $BRANCH_NAME..."
