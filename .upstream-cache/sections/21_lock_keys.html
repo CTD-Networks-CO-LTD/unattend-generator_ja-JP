@@ -1,0 +1,74 @@
+<tr>
+        <th>Lock key settings:</th>
+        <td>
+          <div class="IndentContainer">
+            <label class="radio">
+              <input type="radio" name="LockKeysMode" value="Skip" checked="checked" />
+              <span>Use default lock key states and behaviors</span>
+            </label>
+          </div>
+
+          <div class="IndentContainer">
+            <label class="radio">
+              <input type="radio" name="LockKeysMode" value="Configure" />
+              <span>Configure the initial state and behavior of lock keys as follows:</span>
+            </label>
+            <fieldset>
+              <table>
+  <tr>
+    <th>Key</th>
+    <th>Initial state</th>
+    <th>When pressed</th>
+  </tr>
+  <tr>
+    <td>Caps Lock</td>
+    <td>
+      <select name="CapsLockInitial">
+        <option value="Off" selected="selected">Off</option>
+        <option value="On">On</option>
+      </select>
+    </td>
+    <td>
+      <select name="CapsLockBehavior">
+        <option value="Toggle" selected="selected">Toggle state</option>
+        <option value="Ignore">Ignore keystroke</option>
+      </select>
+    </td>
+  </tr>
+  <tr>
+    <td>Num Lock</td>
+    <td>
+      <select name="NumLockInitial">
+        <option value="Off" selected="selected">Off</option>
+        <option value="On">On</option>
+      </select>
+    </td>
+    <td>
+      <select name="NumLockBehavior">
+        <option value="Toggle" selected="selected">Toggle state</option>
+        <option value="Ignore">Ignore keystroke</option>
+      </select>
+    </td>
+  </tr>
+  <tr>
+    <td>Scroll Lock</td>
+    <td>
+      <select name="ScrollLockInitial">
+        <option value="Off" selected="selected">Off</option>
+        <option value="On">On</option>
+      </select>
+    </td>
+    <td>
+      <select name="ScrollLockBehavior">
+        <option value="Toggle" selected="selected">Toggle state</option>
+        <option value="Ignore">Ignore keystroke</option>
+      </select>
+    </td>
+  </tr>
+</table>
+            </fieldset>
+          </div>
+
+          <div>This will affect all users and also the login screen.</div>
+        </td>
+      </tr>

@@ -1,0 +1,92 @@
+name: Sync Upstream UI Structure
+
+on:
+  # ① upstream の C# 更新を取り込んで main/master にマージ・プッシュされた時
+  push:
+    branches:
+      - main
+      - master
+    paths:
+      - '**/*.cs'
+      - '**/*.csproj'
+      - 'UnattendGenerator/**'
+      - 'modifier/**'
+
+  # ② 手動実行
+  workflow_dispatch:
+    inputs:
+      force_pr:
+        description: '差分の有無に関わらずPR起票テストを行う'
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: "sync-upstream"
+  cancel-in-progress: false
+
+jobs:
+  check-and-sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Get current date
+        id: date
+        run: echo "date=$(date +'%Y%m%d')" >> $GITHUB_OUTPUT
+
+      - name: Run Upstream UI Sync & Diff Check
+        id: sync
+        env:
+          FORCE_PR: ${{ inputs.force_pr || 'false' }}
+        run: |
+          set -euo pipefail
+          echo "Running build/sync_upstream_site.js..."
+
+          EXTRA_ARGS=""
+          if [ "$FORCE_PR" = "true" ]; then
+            EXTRA_ARGS="--force-report"
+          fi
+
+          node build/sync_upstream_site.js --report diff_report.md $EXTRA_ARGS || true
+
+          if [ -f "diff_report.md" ]; then
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+            UPSTREAM_COMMIT=$(grep -oE '本家コミット: `[^`]+`' diff_report.md | sed -E 's/.*`([^`]+)`.*/\1/' || echo "latest")
+            echo "upstream_commit=$UPSTREAM_COMMIT" >> $GITHUB_OUTPUT
+          else
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+            echo "upstream_commit=none" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Update Cache Baseline on PR branch
+        if: steps.sync.outputs.has_changes == 'true'
+        run: |
+          echo "Updating .upstream-cache with latest upstream sections..."
+          node build/sync_upstream_site.js --update-cache
+
+      - name: Create Pull Request
+        if: steps.sync.outputs.has_changes == 'true'
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "feat: sync upstream UI structure (${{ steps.sync.outputs.upstream_commit }})"
+          branch: sync/upstream-${{ steps.date.outputs.date }}
+          base: ${{ github.event.repository.default_branch || 'master' }}
+          title: "🚀 本家サイトの更新を検知 (${{ steps.sync.outputs.upstream_commit }})"
+          body-path: diff_report.md
+          labels: |
+            upstream-sync
+            automated-pr

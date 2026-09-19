@@ -1,0 +1,273 @@
+<tr>
+        <th>Run custom scripts:</th>
+        <td>
+          <p>You may want to take a look at some <a href="/windows/unattend-generator/samples/" hreflang="en">sample scripts</a> first.</p>
+
+          <div class="Scripts">
+            <fieldset class="has-legend">
+              <legend><code>System</code> scripts</legend>
+              <div class="AfterLegend">These scripts will run in the system context, before user accounts are created.</div>
+
+              <ol>
+  <li>
+    <span>Run</span>
+    <textarea rows="5" name="SystemScript0" spellcheck="false" wrap="off"></textarea>
+    <span>as a</span>
+    <select name="SystemScriptType0" data-phase="System">
+      <option value="Cmd" selected="selected">.cmd</option>
+      <option value="Ps1">.ps1</option>
+      <option value="Reg">.reg</option>
+      <option value="Vbs">.vbs</option>
+    </select>
+    <span>file.</span>
+  </li>
+  <li>
+    <span>Run</span>
+    <textarea rows="5" name="SystemScript1" spellcheck="false" wrap="off"></textarea>
+    <span>as a</span>
+    <select name="SystemScriptType1" data-phase="System">
+      <option value="Cmd">.cmd</option>
+      <option value="Ps1" selected="selected">.ps1</option>
+      <option value="Reg">.reg</option>
+      <option value="Vbs">.vbs</option>
+    </select>
+    <span>file.</span>
+  </li>
+  <li>
+    <span>Run</span>
+    <textarea rows="5" name="SystemScript2" spellcheck="false" wrap="off"></textarea>
+    <span>as a</span>
+    <select name="SystemScriptType2" data-phase="System">
+      <option value="Cmd">.cmd</option>
+      <option value="Ps1">.ps1</option>
+      <option value="Reg" selected="selected">.reg</option>
+      <option value="Vbs">.vbs</option>
+    </select>
+    <span>file.</span>
+  </li>
+  <li>
+    <span>Run</span>
+    <textarea rows="5" name="SystemScript3" spellcheck="false" wrap="off"></textarea>
+    <span>as a</span>
+    <select name="SystemScriptType3" data-phase="System">
+      <option value="Cmd">.cmd</option>
+      <option value="Ps1">.ps1</option>
+      <option value="Reg">.reg</option>
+      <option value="Vbs" selected="selected">.vbs</option>
+    </select>
+    <span>file.</span>
+  </li>
+</ol>
+            </fieldset>
+
+            <fieldset class="has-legend">
+              <legend><code>DefaultUser</code> scripts</legend>
+              <div class="AfterLegend">Use these scripts to modify the default user's registry hive. The generated code will automatically mount the <code>C:\<wbr />Users\<wbr />Default\<wbr />NTUSER.DAT</code> hive file, run your scripts and unmount the hive again. <em>DefaultUser scripts</em> will run <strong>after</strong> <em>System scripts</em>, but still <strong>before</strong> user accounts are created. Hence, they will affect all user accounts, including the built-in account <q>Administrator</q>. Access the keys in this hive as follows:</div>
+              <table>
+  <tr>
+    <th>.reg</th>
+    <td>
+      <code>[HKEY_USERS\DefaultUser\…</code>
+    </td>
+  </tr>
+  <tr>
+    <th>.cmd</th>
+    <td>
+      <code>HKU\DefaultUser\…</code>
+    </td>
+  </tr>
+  <tr>
+    <th>.ps1</th>
+    <td>
+      <code>Registry::HKU\DefaultUser\…</code>
+    </td>
+  </tr>
+</table>
+
+              <ol>
+  <li>
+    <span>Run</span>
+    <textarea rows="5" name="DefaultUserScript0" spellcheck="false" wrap="off"></textarea>
+    <span>as a</span>
+    <select name="DefaultUserScriptType0" data-phase="DefaultUser">
+      <option value="Reg" selected="selected">.reg</option>
+      <option value="Cmd">.cmd</option>
+      <option value="Ps1">.ps1</option>
+    </select>
+    <span>file.</span>
+  </li>
+  <li>
+    <span>Run</span>
+    <textarea rows="5" name="DefaultUserScript1" spellcheck="false" wrap="off"></textarea>
+    <span>as a</span>
+    <select name="DefaultUserScriptType1" data-phase="DefaultUser">
+      <option value="Reg">.reg</option>
+      <option value="Cmd" selected="selected">.cmd</option>
+      <option value="Ps1">.ps1</option>
+    </select>
+    <span>file.</span>
+  </li>
+  <li>
+    <span>Run</span>
+    <textarea rows="5" name="DefaultUserScript2" spellcheck="false" wrap="off"></textarea>
+    <span>as a</span>
+    <select name="DefaultUserScriptType2" data-phase="DefaultUser">
+      <option value="Reg">.reg</option>
+      <option value="Cmd">.cmd</option>
+      <option value="Ps1" selected="selected">.ps1</option>
+    </select>
+    <span>file.</span>
+  </li>
+</ol>
+            </fieldset>
+
+            <fieldset class="has-legend">
+              <legend><code>FirstLogon</code> scripts</legend>
+              <div class="AfterLegend">These scripts will run when the first user logs on after Windows has been installed. The first user to log on is typically an administrator. In this case, these scripts will run with elevated privileges.</div>
+              <ol>
+  <li>
+    <span>Run</span>
+    <textarea rows="5" name="FirstLogonScript0" spellcheck="false" wrap="off"></textarea>
+    <span>as a</span>
+    <select name="FirstLogonScriptType0" data-phase="FirstLogon">
+      <option value="Cmd" selected="selected">.cmd</option>
+      <option value="Ps1">.ps1</option>
+      <option value="Reg">.reg</option>
+      <option value="Vbs">.vbs</option>
+    </select>
+    <span>file.</span>
+  </li>
+  <li>
+    <span>Run</span>
+    <textarea rows="5" name="FirstLogonScript1" spellcheck="false" wrap="off"></textarea>
+    <span>as a</span>
+    <select name="FirstLogonScriptType1" data-phase="FirstLogon">
+      <option value="Cmd">.cmd</option>
+      <option value="Ps1" selected="selected">.ps1</option>
+      <option value="Reg">.reg</option>
+      <option value="Vbs">.vbs</option>
+    </select>
+    <span>file.</span>
+  </li>
+  <li>
+    <span>Run</span>
+    <textarea rows="5" name="FirstLogonScript2" spellcheck="false" wrap="off"></textarea>
+    <span>as a</span>
+    <select name="FirstLogonScriptType2" data-phase="FirstLogon">
+      <option value="Cmd">.cmd</option>
+      <option value="Ps1">.ps1</option>
+      <option value="Reg" selected="selected">.reg</option>
+      <option value="Vbs">.vbs</option>
+    </select>
+    <span>file.</span>
+  </li>
+  <li>
+    <span>Run</span>
+    <textarea rows="5" name="FirstLogonScript3" spellcheck="false" wrap="off"></textarea>
+    <span>as a</span>
+    <select name="FirstLogonScriptType3" data-phase="FirstLogon">
+      <option value="Cmd">.cmd</option>
+      <option value="Ps1">.ps1</option>
+      <option value="Reg">.reg</option>
+      <option value="Vbs" selected="selected">.vbs</option>
+    </select>
+    <span>file.</span>
+  </li>
+</ol>
+            </fieldset>
+
+            <fieldset class="has-legend">
+              <legend><code>UserOnce</code> scripts</legend>
+              <div class="AfterLegend">These scripts will run whenever a user logs on for the first time.</div>
+              <ol>
+  <li>
+    <span>Run</span>
+    <textarea rows="5" name="UserOnceScript0" spellcheck="false" wrap="off"></textarea>
+    <span>as a</span>
+    <select name="UserOnceScriptType0" data-phase="UserOnce">
+      <option value="Cmd" selected="selected">.cmd</option>
+      <option value="Ps1">.ps1</option>
+      <option value="Reg">.reg</option>
+      <option value="Vbs">.vbs</option>
+    </select>
+    <span>file.</span>
+  </li>
+  <li>
+    <span>Run</span>
+    <textarea rows="5" name="UserOnceScript1" spellcheck="false" wrap="off"></textarea>
+    <span>as a</span>
+    <select name="UserOnceScriptType1" data-phase="UserOnce">
+      <option value="Cmd">.cmd</option>
+      <option value="Ps1" selected="selected">.ps1</option>
+      <option value="Reg">.reg</option>
+      <option value="Vbs">.vbs</option>
+    </select>
+    <span>file.</span>
+  </li>
+  <li>
+    <span>Run</span>
+    <textarea rows="5" name="UserOnceScript2" spellcheck="false" wrap="off"></textarea>
+    <span>as a</span>
+    <select name="UserOnceScriptType2" data-phase="UserOnce">
+      <option value="Cmd">.cmd</option>
+      <option value="Ps1">.ps1</option>
+      <option value="Reg" selected="selected">.reg</option>
+      <option value="Vbs">.vbs</option>
+    </select>
+    <span>file.</span>
+  </li>
+  <li>
+    <span>Run</span>
+    <textarea rows="5" name="UserOnceScript3" spellcheck="false" wrap="off"></textarea>
+    <span>as a</span>
+    <select name="UserOnceScriptType3" data-phase="UserOnce">
+      <option value="Cmd">.cmd</option>
+      <option value="Ps1">.ps1</option>
+      <option value="Reg">.reg</option>
+      <option value="Vbs" selected="selected">.vbs</option>
+    </select>
+    <span>file.</span>
+  </li>
+</ol>
+
+              <div class="IndentContainer">
+                <label class="checkbox">
+                  <input type="checkbox" name="RestartExplorer" value="true" />
+                  <span>Restart File&#xA0;Explorer after scripts have run</span>
+                </label>
+                <div>This will restart the <code class="nowrap">explorer.exe</code> process that is responsible for displaying Start&#xA0;menu, taskbar and Desktop. If your scripts in this section make changes to any of these elements, check this box so that they take effect immediately.</div>
+              </div>
+
+            </fieldset>
+
+            <p>Your scripts will be run as follows:</p>
+            <table>
+  <tr>
+    <th>.cmd</th>
+    <td>
+      <code>C:\<wbr />Windows\<wbr />Setup\<wbr />Scripts\<wbr />unattend-01.cmd</code>
+    </td>
+  </tr>
+  <tr>
+    <th>.ps1</th>
+    <td>
+      <code>powershell.exe -WindowStyle "Normal" -ExecutionPolicy "Unrestricted" -NoProfile -File "C:\<wbr />Windows\<wbr />Setup\<wbr />Scripts\<wbr />unattend-02.ps1"</code>
+    </td>
+  </tr>
+  <tr>
+    <th>.reg</th>
+    <td>
+      <code>reg.exe import "C:\<wbr />Windows\<wbr />Setup\<wbr />Scripts\<wbr />unattend-03.reg"</code>
+    </td>
+  </tr>
+  <tr>
+    <th>.vbs</th>
+    <td>
+      <code>cscript.exe //E:vbscript "C:\<wbr />Windows\<wbr />Setup\<wbr />Scripts\<wbr />unattend-04.vbs"</code>
+    </td>
+  </tr>
+</table>
+
+          </div>
+        </td>
+      </tr>

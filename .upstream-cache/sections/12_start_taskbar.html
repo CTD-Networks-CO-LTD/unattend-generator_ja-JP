@@ -1,0 +1,159 @@
+<tr>
+        <th>Start&#xA0;menu and taskbar:</th>
+        <td>
+          <fieldset class="has-legend">
+            <legend>Choose how to display the search box in the taskbar</legend>
+
+            <label class="radio center">
+              <input type="radio" name="TaskbarSearch" value="Box" checked="checked" />
+              <img src="TaskbarSearchBox.png" width="285" height="47" alt="" />
+              <span>Full</span>
+            </label>
+
+            <label class="radio center">
+              <input type="radio" name="TaskbarSearch" value="Label" />
+              <img src="TaskbarSearchLabel.png" width="285" height="47" alt="" />
+              <span>Icon and label</span>
+            </label>
+
+            <label class="radio center">
+              <input type="radio" name="TaskbarSearch" value="Icon" />
+              <img src="TaskbarSearchIcon.png" width="285" height="47" alt="" />
+              <span>Icon</span>
+            </label>
+
+            <label class="radio center">
+              <input type="radio" name="TaskbarSearch" value="Hide" />
+              <img src="TaskbarSearchHide.png" width="285" height="47" alt="" />
+              <span>Hide</span>
+            </label>
+
+          </fieldset>
+
+          <fieldset class="has-legend">
+            <legend>Choose icons to display in the taskbar</legend>
+
+            <div class="IndentContainer">
+              <label class="radio">
+                <input type="radio" name="TaskbarIconsMode" value="Default" checked="checked" />
+                <span>Use default icons</span>
+              </label>
+            </div>
+
+            <div class="IndentContainer">
+              <label class="radio">
+                <input type="radio" name="TaskbarIconsMode" value="Empty" />
+                <span>Remove all icons</span>
+              </label>
+            </div>
+
+            <div class="IndentContainer">
+              <label class="radio">
+                <input type="radio" name="TaskbarIconsMode" value="Custom" />
+                <span>Configure icons using an XML file:</span>
+              </label>
+              <fieldset>
+                <textarea rows="13" name="TaskbarIconsXml" data-required="true" spellcheck="false" wrap="off">&lt;LayoutModificationTemplate xmlns="http://schemas.microsoft.com/Start/2014/LayoutModification" xmlns:defaultlayout="http://schemas.microsoft.com/Start/2014/FullDefaultLayout" xmlns:start="http://schemas.microsoft.com/Start/2014/StartLayout" xmlns:taskbar="http://schemas.microsoft.com/Start/2014/TaskbarLayout" Version="1"&gt;
+  &lt;CustomTaskbarLayoutCollection PinListPlacement="Replace"&gt;
+    &lt;defaultlayout:TaskbarLayout&gt;
+      &lt;taskbar:TaskbarPinList&gt;
+        &lt;taskbar:DesktopApp DesktopApplicationID="Microsoft.Windows.Explorer" /&gt;
+        &lt;taskbar:UWA AppUserModelID="windows.immersivecontrolpanel_cw5n1h2txyewy!microsoft.windows.immersivecontrolpanel" /&gt;
+        &lt;taskbar:DesktopApp DesktopApplicationLinkPath="%APPDATA%\Microsoft\Windows\Start Menu\Programs\Windows PowerShell\Windows PowerShell.lnk" /&gt;
+      &lt;/taskbar:TaskbarPinList&gt;
+    &lt;/defaultlayout:TaskbarLayout&gt;
+  &lt;/CustomTaskbarLayoutCollection&gt;
+&lt;/LayoutModificationTemplate&gt;</textarea>
+                <span>See Microsoft's documentation for <a href="https://learn.microsoft.com/en-us/windows/configuration/taskbar/pinned-apps">more examples</a>.</span>
+              </fieldset>
+            </div>
+
+          </fieldset>
+
+          <div class="IndentContainer">
+            <label class="checkbox">
+              <input type="checkbox" name="DisableWidgets" value="true" />
+              <span>Disable widgets</span>
+            </label>
+            <div>This hides the news and weather widget in the lower-left corner in Windows 11.</div>
+          </div>
+
+          <div class="IndentContainer">
+            <label class="checkbox">
+              <input type="checkbox" name="LeftTaskbar" value="true" />
+              <span>Left-align the taskbar in Windows 11</span>
+            </label>
+          </div>
+
+          <div class="IndentContainer">
+            <label class="checkbox">
+              <input type="checkbox" name="HideTaskViewButton" value="true" />
+              <span>Hide the <em>Task view</em> button from the taskbar</span>
+            </label>
+          </div>
+
+          <div class="IndentContainer">
+            <label class="checkbox">
+              <input type="checkbox" name="ShowAllTrayIcons" value="true" />
+              <span>Always show all tray icons</span>
+            </label>
+            <div>On Windows&#xA0;10, this will simply set the <code>EnableAutoTray</code> registry value. On Windows&#xA0;11, this will create a scheduled task that runs periodically in the background and sets all tray icons visible.</div>
+          </div>
+
+          <div class="IndentContainer">
+            <label class="checkbox">
+              <input type="checkbox" name="DisableBingResults" value="true" />
+              <span>Do not show Bing results when searching in the Start&#xA0;menu or the search box</span>
+            </label>
+          </div>
+
+
+            </div>
+
+          </fieldset>
+
+          <fieldset class="has-legend">
+            <legend>Windows&#xA0;11</legend>
+            <div class="AfterLegend">Configure the pins that are initially shown in the Windows&#xA0;11 Start&#xA0;menu. You can add or remove pins later. On Windows&#xA0;10, this setting is simply ignored.</div>
+
+            <div class="IndentContainer">
+              <label class="radio">
+                <input type="radio" name="StartPinsMode" value="Default" checked="checked" />
+                <span>Use default pins</span>
+              </label>
+              <div class="Exclamation">Avoid this setting if you select apps in the <em>Remove bloatware</em> section below, as Windows&#xA0;11 will deceptively retain their pins in the Start&#xA0;menu.</div>
+            </div>
+
+            <div class="IndentContainer">
+              <label class="radio">
+                <input type="radio" name="StartPinsMode" value="Empty" />
+                <span>Remove all pins</span>
+              </label>
+            </div>
+
+            <div class="IndentContainer">
+              <label class="radio">
+                <input type="radio" name="StartPinsMode" value="Custom" />
+                <span>Configure pins using a JSON file created by PowerShell's <code>Export-StartLayout</code> cmdlet on another Windows&#xA0;11 computer:</span>
+              </label>
+              <fieldset>
+                <textarea rows="15" name="StartPinsJson" data-required="true" spellcheck="false" wrap="off">{
+  "pinnedList": [
+    {
+      "desktopAppLink": "%ALLUSERSPROFILE%\\Microsoft\\Windows\\Start Menu\\Programs\\Microsoft Edge.lnk"
+    },
+    {
+      "desktopAppLink": "%APPDATA%\\Microsoft\\Windows\\Start Menu\\Programs\\File Explorer.lnk"
+    },
+    {
+      "packagedAppId": "windows.immersivecontrolpanel_cw5n1h2txyewy!microsoft.windows.immersivecontrolpanel"
+    }
+  ]
+}</textarea>
+              </fieldset>
+            </div>
+
+          </fieldset>
+
+        </td>
+      </tr>

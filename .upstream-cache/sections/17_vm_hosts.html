@@ -1,0 +1,27 @@
+<tr>
+        <th>VM hosts:</th>
+        <td>
+
+          <fieldset class="has-legend">
+            <legend>Core isolation</legend>
+
+            <div class="IndentContainer">
+              <label class="radio">
+                <input type="radio" name="CoreIsolationMode" value="Enabled" checked="checked" />
+                <span>Keep core isolation enabled if supported</span>
+              </label>
+              <div>To enable virtualization-based security and make use of Windows virtualization features including Hyper-V, WSL2, Docker and Windows Sandbox.</div>
+            </div>
+
+            <div class="IndentContainer">
+              <label class="radio">
+                <input type="radio" name="CoreIsolationMode" value="Disabled" />
+                <span>Disable core isolation</span>
+              </label>
+              <div>To prioritize performance (especially in games) and to allow for third-party virtualization software such as VMware Workstation or VirtualBox.</div>
+            </div>
+
+          </fieldset>
+
+        </td>
+      </tr>

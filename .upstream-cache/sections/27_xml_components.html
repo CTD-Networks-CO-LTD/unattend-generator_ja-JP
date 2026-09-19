@@ -1,0 +1,989 @@
+<tr>
+        <th>XML markup for more components:</th>
+        <td>
+          <p>
+            You can add settings for <a href="https://learn.microsoft.com/en-us/windows-hardware/customize/desktop/unattend/components-b-unattend">all available components</a> to add functionality not yet covered by this generator.
+          </p>
+
+          <p>
+            The generator itself uses some components (displayed with a reddish background below). You may assign your own XML markup to these components, but this will completely replace their generated content, and there is no guarantee that the resulting <code class="nowrap">autounattend.xml</code> file will work as intended.
+          </p>
+
+          <p>Do <strong>not</strong> include <code>settings</code> or <code>component</code> elements with your markup – they will be added automatically.</p>
+
+          <ol class="Components">
+  <li>
+    <span>Insert XML markup</span>
+    <textarea rows="5" name="ComponentContent0" placeholder="&lt;Data&gt;1&lt;/Data&gt;" spellcheck="false" wrap="off"></textarea>
+    <span>to the</span>
+    <select name="Component0">
+      <option value=""></option>
+      <optgroup label="Microsoft-Windows-Audio-AudioCore">
+        <option value="Microsoft-Windows-Audio-AudioCore-specialize" class="">Microsoft-Windows-Audio-AudioCore – specialize</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-Audio-VolumeControl">
+        <option value="Microsoft-Windows-Audio-VolumeControl-specialize" class="">Microsoft-Windows-Audio-VolumeControl – specialize</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-Authentication-AuthUI">
+        <option value="Microsoft-Windows-Authentication-AuthUI-specialize" class="">Microsoft-Windows-Authentication-AuthUI – specialize</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-BLB-WSB-Online-Main">
+        <option value="Microsoft-Windows-BLB-WSB-Online-Main-specialize" class="">Microsoft-Windows-BLB-WSB-Online-Main – specialize</option>
+        <option value="Microsoft-Windows-BLB-WSB-Online-Main-oobeSystem" class="">Microsoft-Windows-BLB-WSB-Online-Main – oobeSystem</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-BrowserService">
+        <option value="Microsoft-Windows-BrowserService-generalize" class="">Microsoft-Windows-BrowserService – generalize</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-CodeIntegrity">
+        <option value="Microsoft-Windows-CodeIntegrity-offlineServicing" class="">Microsoft-Windows-CodeIntegrity – offlineServicing</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-CoreMmRes">
+        <option value="Microsoft-Windows-CoreMmRes-generalize" class="">Microsoft-Windows-CoreMmRes – generalize</option>
+        <option value="Microsoft-Windows-CoreMmRes-specialize" class="">Microsoft-Windows-CoreMmRes – specialize</option>
+        <option value="Microsoft-Windows-CoreMmRes-auditSystem" class="">Microsoft-Windows-CoreMmRes – auditSystem</option>
+        <option value="Microsoft-Windows-CoreMmRes-auditUser" class="">Microsoft-Windows-CoreMmRes – auditUser</option>
+        <option value="Microsoft-Windows-CoreMmRes-oobeSystem" class="">Microsoft-Windows-CoreMmRes – oobeSystem</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-Deployment">
+        <option value="Microsoft-Windows-Deployment-generalize" class="">Microsoft-Windows-Deployment – generalize</option>
+        <option value="Microsoft-Windows-Deployment-specialize" class="UsedInternally">Microsoft-Windows-Deployment – specialize</option>
+        <option value="Microsoft-Windows-Deployment-auditSystem" class="">Microsoft-Windows-Deployment – auditSystem</option>
+        <option value="Microsoft-Windows-Deployment-auditUser" class="">Microsoft-Windows-Deployment – auditUser</option>
+        <option value="Microsoft-Windows-Deployment-oobeSystem" class="">Microsoft-Windows-Deployment – oobeSystem</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-DeviceAccess">
+        <option value="Microsoft-Windows-DeviceAccess-specialize" class="">Microsoft-Windows-DeviceAccess – specialize</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-DeviceGuard-Unattend">
+        <option value="Microsoft-Windows-DeviceGuard-Unattend-offlineServicing" class="">Microsoft-Windows-DeviceGuard-Unattend – offlineServicing</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-Devices-Lights-WinRT">
+        <option value="Microsoft-Windows-Devices-Lights-WinRT-offlineServicing" class="">Microsoft-Windows-Devices-Lights-WinRT – offlineServicing</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-DiagCpl">
+        <option value="Microsoft-Windows-DiagCpl-offlineServicing" class="">Microsoft-Windows-DiagCpl – offlineServicing</option>
+        <option value="Microsoft-Windows-DiagCpl-generalize" class="">Microsoft-Windows-DiagCpl – generalize</option>
+        <option value="Microsoft-Windows-DiagCpl-specialize" class="">Microsoft-Windows-DiagCpl – specialize</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-Disk-Failure-Diagnostic-Module">
+        <option value="Microsoft-Windows-Disk-Failure-Diagnostic-Module-offlineServicing" class="">Microsoft-Windows-Disk-Failure-Diagnostic-Module – offlineServicing</option>
+        <option value="Microsoft-Windows-Disk-Failure-Diagnostic-Module-generalize" class="">Microsoft-Windows-Disk-Failure-Diagnostic-Module – generalize</option>
+        <option value="Microsoft-Windows-Disk-Failure-Diagnostic-Module-specialize" class="">Microsoft-Windows-Disk-Failure-Diagnostic-Module – specialize</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-DNS-Client">
+        <option value="Microsoft-Windows-DNS-Client-specialize" class="">Microsoft-Windows-DNS-Client – specialize</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-Embedded-BootExp">
+        <option value="Microsoft-Windows-Embedded-BootExp-specialize" class="">Microsoft-Windows-Embedded-BootExp – specialize</option>
+        <option value="Microsoft-Windows-Embedded-BootExp-oobeSystem" class="">Microsoft-Windows-Embedded-BootExp – oobeSystem</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-Embedded-EmbeddedLogon">
+        <option value="Microsoft-Windows-Embedded-EmbeddedLogon-offlineServicing" class="">Microsoft-Windows-Embedded-EmbeddedLogon – offlineServicing</option>
+        <option value="Microsoft-Windows-Embedded-EmbeddedLogon-specialize" class="">Microsoft-Windows-Embedded-EmbeddedLogon – specialize</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-Embedded-KeyboardFilterService">
+        <option value="Microsoft-Windows-Embedded-KeyboardFilterService-offlineServicing" class="">Microsoft-Windows-Embedded-KeyboardFilterService – offlineServicing</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-Embedded-ShellLauncher">
+        <option value="Microsoft-Windows-Embedded-ShellLauncher-oobeSystem" class="">Microsoft-Windows-Embedded-ShellLauncher – oobeSystem</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-Embedded-UnifiedWriteFilter">
+        <option value="Microsoft-Windows-Embedded-UnifiedWriteFilter-specialize" class="">Microsoft-Windows-Embedded-UnifiedWriteFilter – specialize</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-EnhancedStorage-Adm">
+        <option value="Microsoft-Windows-EnhancedStorage-Adm-specialize" class="">Microsoft-Windows-EnhancedStorage-Adm – specialize</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-ErrorReportingCore">
+        <option value="Microsoft-Windows-ErrorReportingCore-specialize" class="">Microsoft-Windows-ErrorReportingCore – specialize</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-Fax-Service">
+        <option value="Microsoft-Windows-Fax-Service-specialize" class="">Microsoft-Windows-Fax-Service – specialize</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-GPIOButtons">
+        <option value="Microsoft-Windows-GPIOButtons-offlineServicing" class="">Microsoft-Windows-GPIOButtons – offlineServicing</option>
+        <option value="Microsoft-Windows-GPIOButtons-specialize" class="">Microsoft-Windows-GPIOButtons – specialize</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-HelpAndSupport">
+        <option value="Microsoft-Windows-HelpAndSupport-specialize" class="">Microsoft-Windows-HelpAndSupport – specialize</option>
+        <option value="Microsoft-Windows-HelpAndSupport-oobeSystem" class="">Microsoft-Windows-HelpAndSupport – oobeSystem</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-IE-ClientNetworkProtocolImplementation">
+        <option value="Microsoft-Windows-IE-ClientNetworkProtocolImplementation-oobeSystem" class="">Microsoft-Windows-IE-ClientNetworkProtocolImplementation – oobeSystem</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-IE-ESC">
+        <option value="Microsoft-Windows-IE-ESC-specialize" class="">Microsoft-Windows-IE-ESC – specialize</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-IE-InternetExplorer">
+        <option value="Microsoft-Windows-IE-InternetExplorer-specialize" class="">Microsoft-Windows-IE-InternetExplorer – specialize</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-International-Core">
+        <option value="Microsoft-Windows-International-Core-specialize" class="">Microsoft-Windows-International-Core – specialize</option>
+        <option value="Microsoft-Windows-International-Core-oobeSystem" class="UsedInternally">Microsoft-Windows-International-Core – oobeSystem</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-International-Core-WinPE">
+        <option value="Microsoft-Windows-International-Core-WinPE-windowsPE" class="UsedInternally">Microsoft-Windows-International-Core-WinPE – windowsPE</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-LUA-Settings">
+        <option value="Microsoft-Windows-LUA-Settings-offlineServicing" class="">Microsoft-Windows-LUA-Settings – offlineServicing</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-MapControl-Desktop">
+        <option value="Microsoft-Windows-MapControl-Desktop-specialize" class="">Microsoft-Windows-MapControl-Desktop – specialize</option>
+        <option value="Microsoft-Windows-MapControl-Desktop-oobeSystem" class="">Microsoft-Windows-MapControl-Desktop – oobeSystem</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-MediaPlayer-Core">
+        <option value="Microsoft-Windows-MediaPlayer-Core-offlineServicing" class="">Microsoft-Windows-MediaPlayer-Core – offlineServicing</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-MicrosoftEdgeBrowser">
+        <option value="Microsoft-Windows-MicrosoftEdgeBrowser-specialize" class="">Microsoft-Windows-MicrosoftEdgeBrowser – specialize</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-MobilePC-Sensors-API">
+        <option value="Microsoft-Windows-MobilePC-Sensors-API-specialize" class="">Microsoft-Windows-MobilePC-Sensors-API – specialize</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-NetBT">
+        <option value="Microsoft-Windows-NetBT-specialize" class="">Microsoft-Windows-NetBT – specialize</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-NetworkBridge">
+        <option value="Microsoft-Windows-NetworkBridge-generalize" class="">Microsoft-Windows-NetworkBridge – generalize</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-NetworkLoadBalancing-Core">
+        <option value="Microsoft-Windows-NetworkLoadBalancing-Core-specialize" class="">Microsoft-Windows-NetworkLoadBalancing-Core – specialize</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-OutOfBoxExperience">
+        <option value="Microsoft-Windows-OutOfBoxExperience-generalize" class="">Microsoft-Windows-OutOfBoxExperience – generalize</option>
+        <option value="Microsoft-Windows-OutOfBoxExperience-specialize" class="">Microsoft-Windows-OutOfBoxExperience – specialize</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-PartitionManager">
+        <option value="Microsoft-Windows-PartitionManager-offlineServicing" class="">Microsoft-Windows-PartitionManager – offlineServicing</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-PnpCustomizationsNonWinPE">
+        <option value="Microsoft-Windows-PnpCustomizationsNonWinPE-offlineServicing" class="">Microsoft-Windows-PnpCustomizationsNonWinPE – offlineServicing</option>
+        <option value="Microsoft-Windows-PnpCustomizationsNonWinPE-auditSystem" class="">Microsoft-Windows-PnpCustomizationsNonWinPE – auditSystem</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-PnpCustomizationsWinPE">
+        <option value="Microsoft-Windows-PnpCustomizationsWinPE-windowsPE" class="">Microsoft-Windows-PnpCustomizationsWinPE – windowsPE</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-PnpSysprep">
+        <option value="Microsoft-Windows-PnpSysprep-generalize" class="">Microsoft-Windows-PnpSysprep – generalize</option>
+        <option value="Microsoft-Windows-PnpSysprep-specialize" class="">Microsoft-Windows-PnpSysprep – specialize</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-PowerCPL">
+        <option value="Microsoft-Windows-PowerCPL-generalize" class="">Microsoft-Windows-PowerCPL – generalize</option>
+        <option value="Microsoft-Windows-PowerCPL-specialize" class="">Microsoft-Windows-PowerCPL – specialize</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-Printing-Spooler-Core">
+        <option value="Microsoft-Windows-Printing-Spooler-Core-specialize" class="">Microsoft-Windows-Printing-Spooler-Core – specialize</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-RasServer">
+        <option value="Microsoft-Windows-RasServer-specialize" class="">Microsoft-Windows-RasServer – specialize</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-RemoteAssistance-Exe">
+        <option value="Microsoft-Windows-RemoteAssistance-Exe-specialize" class="">Microsoft-Windows-RemoteAssistance-Exe – specialize</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-SecureStartup-FilterDriver">
+        <option value="Microsoft-Windows-SecureStartup-FilterDriver-offlineServicing" class="">Microsoft-Windows-SecureStartup-FilterDriver – offlineServicing</option>
+        <option value="Microsoft-Windows-SecureStartup-FilterDriver-specialize" class="">Microsoft-Windows-SecureStartup-FilterDriver – specialize</option>
+        <option value="Microsoft-Windows-SecureStartup-FilterDriver-auditSystem" class="">Microsoft-Windows-SecureStartup-FilterDriver – auditSystem</option>
+        <option value="Microsoft-Windows-SecureStartup-FilterDriver-oobeSystem" class="">Microsoft-Windows-SecureStartup-FilterDriver – oobeSystem</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-Security-SPP">
+        <option value="Microsoft-Windows-Security-SPP-generalize" class="">Microsoft-Windows-Security-SPP – generalize</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-Security-SPP-UX">
+        <option value="Microsoft-Windows-Security-SPP-UX-specialize" class="">Microsoft-Windows-Security-SPP-UX – specialize</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-Sensors-Core">
+        <option value="Microsoft-Windows-Sensors-Core-offlineServicing" class="">Microsoft-Windows-Sensors-Core – offlineServicing</option>
+        <option value="Microsoft-Windows-Sensors-Core-specialize" class="">Microsoft-Windows-Sensors-Core – specialize</option>
+        <option value="Microsoft-Windows-Sensors-Core-oobeSystem" class="">Microsoft-Windows-Sensors-Core – oobeSystem</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-ServerManager-SvrMgrNc">
+        <option value="Microsoft-Windows-ServerManager-SvrMgrNc-generalize" class="">Microsoft-Windows-ServerManager-SvrMgrNc – generalize</option>
+        <option value="Microsoft-Windows-ServerManager-SvrMgrNc-specialize" class="">Microsoft-Windows-ServerManager-SvrMgrNc – specialize</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-Setup">
+        <option value="Microsoft-Windows-Setup-windowsPE" class="UsedInternally">Microsoft-Windows-Setup – windowsPE</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-SharedAccess">
+        <option value="Microsoft-Windows-SharedAccess-generalize" class="">Microsoft-Windows-SharedAccess – generalize</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-Shell-Setup">
+        <option value="Microsoft-Windows-Shell-Setup-offlineServicing" class="">Microsoft-Windows-Shell-Setup – offlineServicing</option>
+        <option value="Microsoft-Windows-Shell-Setup-windowsPE" class="">Microsoft-Windows-Shell-Setup – windowsPE</option>
+        <option value="Microsoft-Windows-Shell-Setup-generalize" class="">Microsoft-Windows-Shell-Setup – generalize</option>
+        <option value="Microsoft-Windows-Shell-Setup-specialize" class="UsedInternally">Microsoft-Windows-Shell-Setup – specialize</option>
+        <option value="Microsoft-Windows-Shell-Setup-auditSystem" class="">Microsoft-Windows-Shell-Setup – auditSystem</option>
+        <option value="Microsoft-Windows-Shell-Setup-auditUser" class="">Microsoft-Windows-Shell-Setup – auditUser</option>
+        <option value="Microsoft-Windows-Shell-Setup-oobeSystem" class="UsedInternally">Microsoft-Windows-Shell-Setup – oobeSystem</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-SHWebSVC">
+        <option value="Microsoft-Windows-SHWebSVC-oobeSystem" class="">Microsoft-Windows-SHWebSVC – oobeSystem</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-SMBServer">
+        <option value="Microsoft-Windows-SMBServer-generalize" class="">Microsoft-Windows-SMBServer – generalize</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-SNMP-Agent-Service">
+        <option value="Microsoft-Windows-SNMP-Agent-Service-generalize" class="">Microsoft-Windows-SNMP-Agent-Service – generalize</option>
+        <option value="Microsoft-Windows-SNMP-Agent-Service-specialize" class="">Microsoft-Windows-SNMP-Agent-Service – specialize</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-SQMAPI">
+        <option value="Microsoft-Windows-SQMAPI-specialize" class="">Microsoft-Windows-SQMAPI – specialize</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-STObject">
+        <option value="Microsoft-Windows-STObject-generalize" class="">Microsoft-Windows-STObject – generalize</option>
+        <option value="Microsoft-Windows-STObject-specialize" class="">Microsoft-Windows-STObject – specialize</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-StorPort-RegistrySettings">
+        <option value="Microsoft-Windows-StorPort-RegistrySettings-specialize" class="">Microsoft-Windows-StorPort-RegistrySettings – specialize</option>
+        <option value="Microsoft-Windows-StorPort-RegistrySettings-auditSystem" class="">Microsoft-Windows-StorPort-RegistrySettings – auditSystem</option>
+        <option value="Microsoft-Windows-StorPort-RegistrySettings-auditUser" class="">Microsoft-Windows-StorPort-RegistrySettings – auditUser</option>
+        <option value="Microsoft-Windows-StorPort-RegistrySettings-oobeSystem" class="">Microsoft-Windows-StorPort-RegistrySettings – oobeSystem</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-SystemMaintenanceService">
+        <option value="Microsoft-Windows-SystemMaintenanceService-specialize" class="">Microsoft-Windows-SystemMaintenanceService – specialize</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-SystemRestore-Main">
+        <option value="Microsoft-Windows-SystemRestore-Main-specialize" class="">Microsoft-Windows-SystemRestore-Main – specialize</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-SystemSettingsThreshold">
+        <option value="Microsoft-Windows-SystemSettingsThreshold-generalize" class="">Microsoft-Windows-SystemSettingsThreshold – generalize</option>
+        <option value="Microsoft-Windows-SystemSettingsThreshold-specialize" class="">Microsoft-Windows-SystemSettingsThreshold – specialize</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-TabletPC-Platform-Input-Core">
+        <option value="Microsoft-Windows-TabletPC-Platform-Input-Core-offlineServicing" class="">Microsoft-Windows-TabletPC-Platform-Input-Core – offlineServicing</option>
+        <option value="Microsoft-Windows-TabletPC-Platform-Input-Core-specialize" class="">Microsoft-Windows-TabletPC-Platform-Input-Core – specialize</option>
+        <option value="Microsoft-Windows-TabletPC-Platform-Input-Core-oobeSystem" class="">Microsoft-Windows-TabletPC-Platform-Input-Core – oobeSystem</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-TapiSetup">
+        <option value="Microsoft-Windows-TapiSetup-specialize" class="">Microsoft-Windows-TapiSetup – specialize</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-TCPIP">
+        <option value="Microsoft-Windows-TCPIP-windowsPE" class="">Microsoft-Windows-TCPIP – windowsPE</option>
+        <option value="Microsoft-Windows-TCPIP-specialize" class="">Microsoft-Windows-TCPIP – specialize</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-TerminalServices-CentralPublishing">
+        <option value="Microsoft-Windows-TerminalServices-CentralPublishing-oobeSystem" class="">Microsoft-Windows-TerminalServices-CentralPublishing – oobeSystem</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-TerminalServices-LicenseServer">
+        <option value="Microsoft-Windows-TerminalServices-LicenseServer-oobeSystem" class="">Microsoft-Windows-TerminalServices-LicenseServer – oobeSystem</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-TerminalServices-LocalSessionManager">
+        <option value="Microsoft-Windows-TerminalServices-LocalSessionManager-offlineServicing" class="">Microsoft-Windows-TerminalServices-LocalSessionManager – offlineServicing</option>
+        <option value="Microsoft-Windows-TerminalServices-LocalSessionManager-generalize" class="">Microsoft-Windows-TerminalServices-LocalSessionManager – generalize</option>
+        <option value="Microsoft-Windows-TerminalServices-LocalSessionManager-specialize" class="">Microsoft-Windows-TerminalServices-LocalSessionManager – specialize</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-TerminalServices-Publishing-WMIProvider">
+        <option value="Microsoft-Windows-TerminalServices-Publishing-WMIProvider-offlineServicing" class="">Microsoft-Windows-TerminalServices-Publishing-WMIProvider – offlineServicing</option>
+        <option value="Microsoft-Windows-TerminalServices-Publishing-WMIProvider-generalize" class="">Microsoft-Windows-TerminalServices-Publishing-WMIProvider – generalize</option>
+        <option value="Microsoft-Windows-TerminalServices-Publishing-WMIProvider-specialize" class="">Microsoft-Windows-TerminalServices-Publishing-WMIProvider – specialize</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-TerminalServices-RDP-WinStationExtensions">
+        <option value="Microsoft-Windows-TerminalServices-RDP-WinStationExtensions-generalize" class="">Microsoft-Windows-TerminalServices-RDP-WinStationExtensions – generalize</option>
+        <option value="Microsoft-Windows-TerminalServices-RDP-WinStationExtensions-specialize" class="">Microsoft-Windows-TerminalServices-RDP-WinStationExtensions – specialize</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-TerminalServices-RemoteConnectionManager">
+        <option value="Microsoft-Windows-TerminalServices-RemoteConnectionManager-offlineServicing" class="">Microsoft-Windows-TerminalServices-RemoteConnectionManager – offlineServicing</option>
+        <option value="Microsoft-Windows-TerminalServices-RemoteConnectionManager-generalize" class="">Microsoft-Windows-TerminalServices-RemoteConnectionManager – generalize</option>
+        <option value="Microsoft-Windows-TerminalServices-RemoteConnectionManager-specialize" class="">Microsoft-Windows-TerminalServices-RemoteConnectionManager – specialize</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-Tpm-Tasks">
+        <option value="Microsoft-Windows-Tpm-Tasks-specialize" class="">Microsoft-Windows-Tpm-Tasks – specialize</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-TwinUI">
+        <option value="Microsoft-Windows-TwinUI-offlineServicing" class="">Microsoft-Windows-TwinUI – offlineServicing</option>
+        <option value="Microsoft-Windows-TwinUI-specialize" class="">Microsoft-Windows-TwinUI – specialize</option>
+        <option value="Microsoft-Windows-TwinUI-oobeSystem" class="">Microsoft-Windows-TwinUI – oobeSystem</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-UnattendedJoin">
+        <option value="Microsoft-Windows-UnattendedJoin-offlineServicing" class="">Microsoft-Windows-UnattendedJoin – offlineServicing</option>
+        <option value="Microsoft-Windows-UnattendedJoin-specialize" class="">Microsoft-Windows-UnattendedJoin – specialize</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-WDF-KernelLibrary">
+        <option value="Microsoft-Windows-WDF-KernelLibrary-offlineServicing" class="">Microsoft-Windows-WDF-KernelLibrary – offlineServicing</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-WiFiNetworkManager">
+        <option value="Microsoft-Windows-WiFiNetworkManager-offlineServicing" class="">Microsoft-Windows-WiFiNetworkManager – offlineServicing</option>
+        <option value="Microsoft-Windows-WiFiNetworkManager-specialize" class="">Microsoft-Windows-WiFiNetworkManager – specialize</option>
+        <option value="Microsoft-Windows-WiFiNetworkManager-oobeSystem" class="">Microsoft-Windows-WiFiNetworkManager – oobeSystem</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-WinRE-RecoveryAgent">
+        <option value="Microsoft-Windows-WinRE-RecoveryAgent-oobeSystem" class="">Microsoft-Windows-WinRE-RecoveryAgent – oobeSystem</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-WLANSVC">
+        <option value="Microsoft-Windows-WLANSVC-offlineServicing" class="">Microsoft-Windows-WLANSVC – offlineServicing</option>
+        <option value="Microsoft-Windows-WLANSVC-windowsPE" class="">Microsoft-Windows-WLANSVC – windowsPE</option>
+        <option value="Microsoft-Windows-WLANSVC-specialize" class="">Microsoft-Windows-WLANSVC – specialize</option>
+        <option value="Microsoft-Windows-WLANSVC-oobeSystem" class="">Microsoft-Windows-WLANSVC – oobeSystem</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-WorkstationService">
+        <option value="Microsoft-Windows-WorkstationService-generalize" class="">Microsoft-Windows-WorkstationService – generalize</option>
+        <option value="Microsoft-Windows-WorkstationService-specialize" class="">Microsoft-Windows-WorkstationService – specialize</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-WPD-BusEnumService">
+        <option value="Microsoft-Windows-WPD-BusEnumService-specialize" class="">Microsoft-Windows-WPD-BusEnumService – specialize</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-WWANUI">
+        <option value="Microsoft-Windows-WWANUI-generalize" class="">Microsoft-Windows-WWANUI – generalize</option>
+        <option value="Microsoft-Windows-WWANUI-specialize" class="">Microsoft-Windows-WWANUI – specialize</option>
+      </optgroup>
+      <optgroup label="Networking-MPSSVC-Svc">
+        <option value="Networking-MPSSVC-Svc-specialize" class="">Networking-MPSSVC-Svc – specialize</option>
+      </optgroup>
+      <optgroup label="Security-Malware-Windows-Defender">
+        <option value="Security-Malware-Windows-Defender-offlineServicing" class="">Security-Malware-Windows-Defender – offlineServicing</option>
+        <option value="Security-Malware-Windows-Defender-specialize" class="">Security-Malware-Windows-Defender – specialize</option>
+        <option value="Security-Malware-Windows-Defender-oobeSystem" class="">Security-Malware-Windows-Defender – oobeSystem</option>
+      </optgroup>
+    </select>
+    <span>component.</span>
+  </li>
+  <li>
+    <span>Insert XML markup</span>
+    <textarea rows="5" name="ComponentContent1" placeholder="&lt;Data&gt;2&lt;/Data&gt;" spellcheck="false" wrap="off"></textarea>
+    <span>to the</span>
+    <select name="Component1">
+      <option value=""></option>
+      <optgroup label="Microsoft-Windows-Audio-AudioCore">
+        <option value="Microsoft-Windows-Audio-AudioCore-specialize" class="">Microsoft-Windows-Audio-AudioCore – specialize</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-Audio-VolumeControl">
+        <option value="Microsoft-Windows-Audio-VolumeControl-specialize" class="">Microsoft-Windows-Audio-VolumeControl – specialize</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-Authentication-AuthUI">
+        <option value="Microsoft-Windows-Authentication-AuthUI-specialize" class="">Microsoft-Windows-Authentication-AuthUI – specialize</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-BLB-WSB-Online-Main">
+        <option value="Microsoft-Windows-BLB-WSB-Online-Main-specialize" class="">Microsoft-Windows-BLB-WSB-Online-Main – specialize</option>
+        <option value="Microsoft-Windows-BLB-WSB-Online-Main-oobeSystem" class="">Microsoft-Windows-BLB-WSB-Online-Main – oobeSystem</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-BrowserService">
+        <option value="Microsoft-Windows-BrowserService-generalize" class="">Microsoft-Windows-BrowserService – generalize</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-CodeIntegrity">
+        <option value="Microsoft-Windows-CodeIntegrity-offlineServicing" class="">Microsoft-Windows-CodeIntegrity – offlineServicing</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-CoreMmRes">
+        <option value="Microsoft-Windows-CoreMmRes-generalize" class="">Microsoft-Windows-CoreMmRes – generalize</option>
+        <option value="Microsoft-Windows-CoreMmRes-specialize" class="">Microsoft-Windows-CoreMmRes – specialize</option>
+        <option value="Microsoft-Windows-CoreMmRes-auditSystem" class="">Microsoft-Windows-CoreMmRes – auditSystem</option>
+        <option value="Microsoft-Windows-CoreMmRes-auditUser" class="">Microsoft-Windows-CoreMmRes – auditUser</option>
+        <option value="Microsoft-Windows-CoreMmRes-oobeSystem" class="">Microsoft-Windows-CoreMmRes – oobeSystem</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-Deployment">
+        <option value="Microsoft-Windows-Deployment-generalize" class="">Microsoft-Windows-Deployment – generalize</option>
+        <option value="Microsoft-Windows-Deployment-specialize" class="UsedInternally">Microsoft-Windows-Deployment – specialize</option>
+        <option value="Microsoft-Windows-Deployment-auditSystem" class="">Microsoft-Windows-Deployment – auditSystem</option>
+        <option value="Microsoft-Windows-Deployment-auditUser" class="">Microsoft-Windows-Deployment – auditUser</option>
+        <option value="Microsoft-Windows-Deployment-oobeSystem" class="">Microsoft-Windows-Deployment – oobeSystem</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-DeviceAccess">
+        <option value="Microsoft-Windows-DeviceAccess-specialize" class="">Microsoft-Windows-DeviceAccess – specialize</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-DeviceGuard-Unattend">
+        <option value="Microsoft-Windows-DeviceGuard-Unattend-offlineServicing" class="">Microsoft-Windows-DeviceGuard-Unattend – offlineServicing</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-Devices-Lights-WinRT">
+        <option value="Microsoft-Windows-Devices-Lights-WinRT-offlineServicing" class="">Microsoft-Windows-Devices-Lights-WinRT – offlineServicing</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-DiagCpl">
+        <option value="Microsoft-Windows-DiagCpl-offlineServicing" class="">Microsoft-Windows-DiagCpl – offlineServicing</option>
+        <option value="Microsoft-Windows-DiagCpl-generalize" class="">Microsoft-Windows-DiagCpl – generalize</option>
+        <option value="Microsoft-Windows-DiagCpl-specialize" class="">Microsoft-Windows-DiagCpl – specialize</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-Disk-Failure-Diagnostic-Module">
+        <option value="Microsoft-Windows-Disk-Failure-Diagnostic-Module-offlineServicing" class="">Microsoft-Windows-Disk-Failure-Diagnostic-Module – offlineServicing</option>
+        <option value="Microsoft-Windows-Disk-Failure-Diagnostic-Module-generalize" class="">Microsoft-Windows-Disk-Failure-Diagnostic-Module – generalize</option>
+        <option value="Microsoft-Windows-Disk-Failure-Diagnostic-Module-specialize" class="">Microsoft-Windows-Disk-Failure-Diagnostic-Module – specialize</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-DNS-Client">
+        <option value="Microsoft-Windows-DNS-Client-specialize" class="">Microsoft-Windows-DNS-Client – specialize</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-Embedded-BootExp">
+        <option value="Microsoft-Windows-Embedded-BootExp-specialize" class="">Microsoft-Windows-Embedded-BootExp – specialize</option>
+        <option value="Microsoft-Windows-Embedded-BootExp-oobeSystem" class="">Microsoft-Windows-Embedded-BootExp – oobeSystem</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-Embedded-EmbeddedLogon">
+        <option value="Microsoft-Windows-Embedded-EmbeddedLogon-offlineServicing" class="">Microsoft-Windows-Embedded-EmbeddedLogon – offlineServicing</option>
+        <option value="Microsoft-Windows-Embedded-EmbeddedLogon-specialize" class="">Microsoft-Windows-Embedded-EmbeddedLogon – specialize</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-Embedded-KeyboardFilterService">
+        <option value="Microsoft-Windows-Embedded-KeyboardFilterService-offlineServicing" class="">Microsoft-Windows-Embedded-KeyboardFilterService – offlineServicing</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-Embedded-ShellLauncher">
+        <option value="Microsoft-Windows-Embedded-ShellLauncher-oobeSystem" class="">Microsoft-Windows-Embedded-ShellLauncher – oobeSystem</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-Embedded-UnifiedWriteFilter">
+        <option value="Microsoft-Windows-Embedded-UnifiedWriteFilter-specialize" class="">Microsoft-Windows-Embedded-UnifiedWriteFilter – specialize</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-EnhancedStorage-Adm">
+        <option value="Microsoft-Windows-EnhancedStorage-Adm-specialize" class="">Microsoft-Windows-EnhancedStorage-Adm – specialize</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-ErrorReportingCore">
+        <option value="Microsoft-Windows-ErrorReportingCore-specialize" class="">Microsoft-Windows-ErrorReportingCore – specialize</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-Fax-Service">
+        <option value="Microsoft-Windows-Fax-Service-specialize" class="">Microsoft-Windows-Fax-Service – specialize</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-GPIOButtons">
+        <option value="Microsoft-Windows-GPIOButtons-offlineServicing" class="">Microsoft-Windows-GPIOButtons – offlineServicing</option>
+        <option value="Microsoft-Windows-GPIOButtons-specialize" class="">Microsoft-Windows-GPIOButtons – specialize</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-HelpAndSupport">
+        <option value="Microsoft-Windows-HelpAndSupport-specialize" class="">Microsoft-Windows-HelpAndSupport – specialize</option>
+        <option value="Microsoft-Windows-HelpAndSupport-oobeSystem" class="">Microsoft-Windows-HelpAndSupport – oobeSystem</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-IE-ClientNetworkProtocolImplementation">
+        <option value="Microsoft-Windows-IE-ClientNetworkProtocolImplementation-oobeSystem" class="">Microsoft-Windows-IE-ClientNetworkProtocolImplementation – oobeSystem</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-IE-ESC">
+        <option value="Microsoft-Windows-IE-ESC-specialize" class="">Microsoft-Windows-IE-ESC – specialize</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-IE-InternetExplorer">
+        <option value="Microsoft-Windows-IE-InternetExplorer-specialize" class="">Microsoft-Windows-IE-InternetExplorer – specialize</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-International-Core">
+        <option value="Microsoft-Windows-International-Core-specialize" class="">Microsoft-Windows-International-Core – specialize</option>
+        <option value="Microsoft-Windows-International-Core-oobeSystem" class="UsedInternally">Microsoft-Windows-International-Core – oobeSystem</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-International-Core-WinPE">
+        <option value="Microsoft-Windows-International-Core-WinPE-windowsPE" class="UsedInternally">Microsoft-Windows-International-Core-WinPE – windowsPE</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-LUA-Settings">
+        <option value="Microsoft-Windows-LUA-Settings-offlineServicing" class="">Microsoft-Windows-LUA-Settings – offlineServicing</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-MapControl-Desktop">
+        <option value="Microsoft-Windows-MapControl-Desktop-specialize" class="">Microsoft-Windows-MapControl-Desktop – specialize</option>
+        <option value="Microsoft-Windows-MapControl-Desktop-oobeSystem" class="">Microsoft-Windows-MapControl-Desktop – oobeSystem</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-MediaPlayer-Core">
+        <option value="Microsoft-Windows-MediaPlayer-Core-offlineServicing" class="">Microsoft-Windows-MediaPlayer-Core – offlineServicing</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-MicrosoftEdgeBrowser">
+        <option value="Microsoft-Windows-MicrosoftEdgeBrowser-specialize" class="">Microsoft-Windows-MicrosoftEdgeBrowser – specialize</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-MobilePC-Sensors-API">
+        <option value="Microsoft-Windows-MobilePC-Sensors-API-specialize" class="">Microsoft-Windows-MobilePC-Sensors-API – specialize</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-NetBT">
+        <option value="Microsoft-Windows-NetBT-specialize" class="">Microsoft-Windows-NetBT – specialize</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-NetworkBridge">
+        <option value="Microsoft-Windows-NetworkBridge-generalize" class="">Microsoft-Windows-NetworkBridge – generalize</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-NetworkLoadBalancing-Core">
+        <option value="Microsoft-Windows-NetworkLoadBalancing-Core-specialize" class="">Microsoft-Windows-NetworkLoadBalancing-Core – specialize</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-OutOfBoxExperience">
+        <option value="Microsoft-Windows-OutOfBoxExperience-generalize" class="">Microsoft-Windows-OutOfBoxExperience – generalize</option>
+        <option value="Microsoft-Windows-OutOfBoxExperience-specialize" class="">Microsoft-Windows-OutOfBoxExperience – specialize</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-PartitionManager">
+        <option value="Microsoft-Windows-PartitionManager-offlineServicing" class="">Microsoft-Windows-PartitionManager – offlineServicing</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-PnpCustomizationsNonWinPE">
+        <option value="Microsoft-Windows-PnpCustomizationsNonWinPE-offlineServicing" class="">Microsoft-Windows-PnpCustomizationsNonWinPE – offlineServicing</option>
+        <option value="Microsoft-Windows-PnpCustomizationsNonWinPE-auditSystem" class="">Microsoft-Windows-PnpCustomizationsNonWinPE – auditSystem</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-PnpCustomizationsWinPE">
+        <option value="Microsoft-Windows-PnpCustomizationsWinPE-windowsPE" class="">Microsoft-Windows-PnpCustomizationsWinPE – windowsPE</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-PnpSysprep">
+        <option value="Microsoft-Windows-PnpSysprep-generalize" class="">Microsoft-Windows-PnpSysprep – generalize</option>
+        <option value="Microsoft-Windows-PnpSysprep-specialize" class="">Microsoft-Windows-PnpSysprep – specialize</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-PowerCPL">
+        <option value="Microsoft-Windows-PowerCPL-generalize" class="">Microsoft-Windows-PowerCPL – generalize</option>
+        <option value="Microsoft-Windows-PowerCPL-specialize" class="">Microsoft-Windows-PowerCPL – specialize</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-Printing-Spooler-Core">
+        <option value="Microsoft-Windows-Printing-Spooler-Core-specialize" class="">Microsoft-Windows-Printing-Spooler-Core – specialize</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-RasServer">
+        <option value="Microsoft-Windows-RasServer-specialize" class="">Microsoft-Windows-RasServer – specialize</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-RemoteAssistance-Exe">
+        <option value="Microsoft-Windows-RemoteAssistance-Exe-specialize" class="">Microsoft-Windows-RemoteAssistance-Exe – specialize</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-SecureStartup-FilterDriver">
+        <option value="Microsoft-Windows-SecureStartup-FilterDriver-offlineServicing" class="">Microsoft-Windows-SecureStartup-FilterDriver – offlineServicing</option>
+        <option value="Microsoft-Windows-SecureStartup-FilterDriver-specialize" class="">Microsoft-Windows-SecureStartup-FilterDriver – specialize</option>
+        <option value="Microsoft-Windows-SecureStartup-FilterDriver-auditSystem" class="">Microsoft-Windows-SecureStartup-FilterDriver – auditSystem</option>
+        <option value="Microsoft-Windows-SecureStartup-FilterDriver-oobeSystem" class="">Microsoft-Windows-SecureStartup-FilterDriver – oobeSystem</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-Security-SPP">
+        <option value="Microsoft-Windows-Security-SPP-generalize" class="">Microsoft-Windows-Security-SPP – generalize</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-Security-SPP-UX">
+        <option value="Microsoft-Windows-Security-SPP-UX-specialize" class="">Microsoft-Windows-Security-SPP-UX – specialize</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-Sensors-Core">
+        <option value="Microsoft-Windows-Sensors-Core-offlineServicing" class="">Microsoft-Windows-Sensors-Core – offlineServicing</option>
+        <option value="Microsoft-Windows-Sensors-Core-specialize" class="">Microsoft-Windows-Sensors-Core – specialize</option>
+        <option value="Microsoft-Windows-Sensors-Core-oobeSystem" class="">Microsoft-Windows-Sensors-Core – oobeSystem</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-ServerManager-SvrMgrNc">
+        <option value="Microsoft-Windows-ServerManager-SvrMgrNc-generalize" class="">Microsoft-Windows-ServerManager-SvrMgrNc – generalize</option>
+        <option value="Microsoft-Windows-ServerManager-SvrMgrNc-specialize" class="">Microsoft-Windows-ServerManager-SvrMgrNc – specialize</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-Setup">
+        <option value="Microsoft-Windows-Setup-windowsPE" class="UsedInternally">Microsoft-Windows-Setup – windowsPE</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-SharedAccess">
+        <option value="Microsoft-Windows-SharedAccess-generalize" class="">Microsoft-Windows-SharedAccess – generalize</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-Shell-Setup">
+        <option value="Microsoft-Windows-Shell-Setup-offlineServicing" class="">Microsoft-Windows-Shell-Setup – offlineServicing</option>
+        <option value="Microsoft-Windows-Shell-Setup-windowsPE" class="">Microsoft-Windows-Shell-Setup – windowsPE</option>
+        <option value="Microsoft-Windows-Shell-Setup-generalize" class="">Microsoft-Windows-Shell-Setup – generalize</option>
+        <option value="Microsoft-Windows-Shell-Setup-specialize" class="UsedInternally">Microsoft-Windows-Shell-Setup – specialize</option>
+        <option value="Microsoft-Windows-Shell-Setup-auditSystem" class="">Microsoft-Windows-Shell-Setup – auditSystem</option>
+        <option value="Microsoft-Windows-Shell-Setup-auditUser" class="">Microsoft-Windows-Shell-Setup – auditUser</option>
+        <option value="Microsoft-Windows-Shell-Setup-oobeSystem" class="UsedInternally">Microsoft-Windows-Shell-Setup – oobeSystem</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-SHWebSVC">
+        <option value="Microsoft-Windows-SHWebSVC-oobeSystem" class="">Microsoft-Windows-SHWebSVC – oobeSystem</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-SMBServer">
+        <option value="Microsoft-Windows-SMBServer-generalize" class="">Microsoft-Windows-SMBServer – generalize</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-SNMP-Agent-Service">
+        <option value="Microsoft-Windows-SNMP-Agent-Service-generalize" class="">Microsoft-Windows-SNMP-Agent-Service – generalize</option>
+        <option value="Microsoft-Windows-SNMP-Agent-Service-specialize" class="">Microsoft-Windows-SNMP-Agent-Service – specialize</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-SQMAPI">
+        <option value="Microsoft-Windows-SQMAPI-specialize" class="">Microsoft-Windows-SQMAPI – specialize</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-STObject">
+        <option value="Microsoft-Windows-STObject-generalize" class="">Microsoft-Windows-STObject – generalize</option>
+        <option value="Microsoft-Windows-STObject-specialize" class="">Microsoft-Windows-STObject – specialize</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-StorPort-RegistrySettings">
+        <option value="Microsoft-Windows-StorPort-RegistrySettings-specialize" class="">Microsoft-Windows-StorPort-RegistrySettings – specialize</option>
+        <option value="Microsoft-Windows-StorPort-RegistrySettings-auditSystem" class="">Microsoft-Windows-StorPort-RegistrySettings – auditSystem</option>
+        <option value="Microsoft-Windows-StorPort-RegistrySettings-auditUser" class="">Microsoft-Windows-StorPort-RegistrySettings – auditUser</option>
+        <option value="Microsoft-Windows-StorPort-RegistrySettings-oobeSystem" class="">Microsoft-Windows-StorPort-RegistrySettings – oobeSystem</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-SystemMaintenanceService">
+        <option value="Microsoft-Windows-SystemMaintenanceService-specialize" class="">Microsoft-Windows-SystemMaintenanceService – specialize</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-SystemRestore-Main">
+        <option value="Microsoft-Windows-SystemRestore-Main-specialize" class="">Microsoft-Windows-SystemRestore-Main – specialize</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-SystemSettingsThreshold">
+        <option value="Microsoft-Windows-SystemSettingsThreshold-generalize" class="">Microsoft-Windows-SystemSettingsThreshold – generalize</option>
+        <option value="Microsoft-Windows-SystemSettingsThreshold-specialize" class="">Microsoft-Windows-SystemSettingsThreshold – specialize</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-TabletPC-Platform-Input-Core">
+        <option value="Microsoft-Windows-TabletPC-Platform-Input-Core-offlineServicing" class="">Microsoft-Windows-TabletPC-Platform-Input-Core – offlineServicing</option>
+        <option value="Microsoft-Windows-TabletPC-Platform-Input-Core-specialize" class="">Microsoft-Windows-TabletPC-Platform-Input-Core – specialize</option>
+        <option value="Microsoft-Windows-TabletPC-Platform-Input-Core-oobeSystem" class="">Microsoft-Windows-TabletPC-Platform-Input-Core – oobeSystem</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-TapiSetup">
+        <option value="Microsoft-Windows-TapiSetup-specialize" class="">Microsoft-Windows-TapiSetup – specialize</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-TCPIP">
+        <option value="Microsoft-Windows-TCPIP-windowsPE" class="">Microsoft-Windows-TCPIP – windowsPE</option>
+        <option value="Microsoft-Windows-TCPIP-specialize" class="">Microsoft-Windows-TCPIP – specialize</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-TerminalServices-CentralPublishing">
+        <option value="Microsoft-Windows-TerminalServices-CentralPublishing-oobeSystem" class="">Microsoft-Windows-TerminalServices-CentralPublishing – oobeSystem</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-TerminalServices-LicenseServer">
+        <option value="Microsoft-Windows-TerminalServices-LicenseServer-oobeSystem" class="">Microsoft-Windows-TerminalServices-LicenseServer – oobeSystem</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-TerminalServices-LocalSessionManager">
+        <option value="Microsoft-Windows-TerminalServices-LocalSessionManager-offlineServicing" class="">Microsoft-Windows-TerminalServices-LocalSessionManager – offlineServicing</option>
+        <option value="Microsoft-Windows-TerminalServices-LocalSessionManager-generalize" class="">Microsoft-Windows-TerminalServices-LocalSessionManager – generalize</option>
+        <option value="Microsoft-Windows-TerminalServices-LocalSessionManager-specialize" class="">Microsoft-Windows-TerminalServices-LocalSessionManager – specialize</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-TerminalServices-Publishing-WMIProvider">
+        <option value="Microsoft-Windows-TerminalServices-Publishing-WMIProvider-offlineServicing" class="">Microsoft-Windows-TerminalServices-Publishing-WMIProvider – offlineServicing</option>
+        <option value="Microsoft-Windows-TerminalServices-Publishing-WMIProvider-generalize" class="">Microsoft-Windows-TerminalServices-Publishing-WMIProvider – generalize</option>
+        <option value="Microsoft-Windows-TerminalServices-Publishing-WMIProvider-specialize" class="">Microsoft-Windows-TerminalServices-Publishing-WMIProvider – specialize</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-TerminalServices-RDP-WinStationExtensions">
+        <option value="Microsoft-Windows-TerminalServices-RDP-WinStationExtensions-generalize" class="">Microsoft-Windows-TerminalServices-RDP-WinStationExtensions – generalize</option>
+        <option value="Microsoft-Windows-TerminalServices-RDP-WinStationExtensions-specialize" class="">Microsoft-Windows-TerminalServices-RDP-WinStationExtensions – specialize</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-TerminalServices-RemoteConnectionManager">
+        <option value="Microsoft-Windows-TerminalServices-RemoteConnectionManager-offlineServicing" class="">Microsoft-Windows-TerminalServices-RemoteConnectionManager – offlineServicing</option>
+        <option value="Microsoft-Windows-TerminalServices-RemoteConnectionManager-generalize" class="">Microsoft-Windows-TerminalServices-RemoteConnectionManager – generalize</option>
+        <option value="Microsoft-Windows-TerminalServices-RemoteConnectionManager-specialize" class="">Microsoft-Windows-TerminalServices-RemoteConnectionManager – specialize</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-Tpm-Tasks">
+        <option value="Microsoft-Windows-Tpm-Tasks-specialize" class="">Microsoft-Windows-Tpm-Tasks – specialize</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-TwinUI">
+        <option value="Microsoft-Windows-TwinUI-offlineServicing" class="">Microsoft-Windows-TwinUI – offlineServicing</option>
+        <option value="Microsoft-Windows-TwinUI-specialize" class="">Microsoft-Windows-TwinUI – specialize</option>
+        <option value="Microsoft-Windows-TwinUI-oobeSystem" class="">Microsoft-Windows-TwinUI – oobeSystem</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-UnattendedJoin">
+        <option value="Microsoft-Windows-UnattendedJoin-offlineServicing" class="">Microsoft-Windows-UnattendedJoin – offlineServicing</option>
+        <option value="Microsoft-Windows-UnattendedJoin-specialize" class="">Microsoft-Windows-UnattendedJoin – specialize</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-WDF-KernelLibrary">
+        <option value="Microsoft-Windows-WDF-KernelLibrary-offlineServicing" class="">Microsoft-Windows-WDF-KernelLibrary – offlineServicing</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-WiFiNetworkManager">
+        <option value="Microsoft-Windows-WiFiNetworkManager-offlineServicing" class="">Microsoft-Windows-WiFiNetworkManager – offlineServicing</option>
+        <option value="Microsoft-Windows-WiFiNetworkManager-specialize" class="">Microsoft-Windows-WiFiNetworkManager – specialize</option>
+        <option value="Microsoft-Windows-WiFiNetworkManager-oobeSystem" class="">Microsoft-Windows-WiFiNetworkManager – oobeSystem</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-WinRE-RecoveryAgent">
+        <option value="Microsoft-Windows-WinRE-RecoveryAgent-oobeSystem" class="">Microsoft-Windows-WinRE-RecoveryAgent – oobeSystem</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-WLANSVC">
+        <option value="Microsoft-Windows-WLANSVC-offlineServicing" class="">Microsoft-Windows-WLANSVC – offlineServicing</option>
+        <option value="Microsoft-Windows-WLANSVC-windowsPE" class="">Microsoft-Windows-WLANSVC – windowsPE</option>
+        <option value="Microsoft-Windows-WLANSVC-specialize" class="">Microsoft-Windows-WLANSVC – specialize</option>
+        <option value="Microsoft-Windows-WLANSVC-oobeSystem" class="">Microsoft-Windows-WLANSVC – oobeSystem</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-WorkstationService">
+        <option value="Microsoft-Windows-WorkstationService-generalize" class="">Microsoft-Windows-WorkstationService – generalize</option>
+        <option value="Microsoft-Windows-WorkstationService-specialize" class="">Microsoft-Windows-WorkstationService – specialize</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-WPD-BusEnumService">
+        <option value="Microsoft-Windows-WPD-BusEnumService-specialize" class="">Microsoft-Windows-WPD-BusEnumService – specialize</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-WWANUI">
+        <option value="Microsoft-Windows-WWANUI-generalize" class="">Microsoft-Windows-WWANUI – generalize</option>
+        <option value="Microsoft-Windows-WWANUI-specialize" class="">Microsoft-Windows-WWANUI – specialize</option>
+      </optgroup>
+      <optgroup label="Networking-MPSSVC-Svc">
+        <option value="Networking-MPSSVC-Svc-specialize" class="">Networking-MPSSVC-Svc – specialize</option>
+      </optgroup>
+      <optgroup label="Security-Malware-Windows-Defender">
+        <option value="Security-Malware-Windows-Defender-offlineServicing" class="">Security-Malware-Windows-Defender – offlineServicing</option>
+        <option value="Security-Malware-Windows-Defender-specialize" class="">Security-Malware-Windows-Defender – specialize</option>
+        <option value="Security-Malware-Windows-Defender-oobeSystem" class="">Security-Malware-Windows-Defender – oobeSystem</option>
+      </optgroup>
+    </select>
+    <span>component.</span>
+  </li>
+  <li>
+    <span>Insert XML markup</span>
+    <textarea rows="5" name="ComponentContent2" placeholder="&lt;Data&gt;3&lt;/Data&gt;" spellcheck="false" wrap="off"></textarea>
+    <span>to the</span>
+    <select name="Component2">
+      <option value=""></option>
+      <optgroup label="Microsoft-Windows-Audio-AudioCore">
+        <option value="Microsoft-Windows-Audio-AudioCore-specialize" class="">Microsoft-Windows-Audio-AudioCore – specialize</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-Audio-VolumeControl">
+        <option value="Microsoft-Windows-Audio-VolumeControl-specialize" class="">Microsoft-Windows-Audio-VolumeControl – specialize</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-Authentication-AuthUI">
+        <option value="Microsoft-Windows-Authentication-AuthUI-specialize" class="">Microsoft-Windows-Authentication-AuthUI – specialize</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-BLB-WSB-Online-Main">
+        <option value="Microsoft-Windows-BLB-WSB-Online-Main-specialize" class="">Microsoft-Windows-BLB-WSB-Online-Main – specialize</option>
+        <option value="Microsoft-Windows-BLB-WSB-Online-Main-oobeSystem" class="">Microsoft-Windows-BLB-WSB-Online-Main – oobeSystem</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-BrowserService">
+        <option value="Microsoft-Windows-BrowserService-generalize" class="">Microsoft-Windows-BrowserService – generalize</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-CodeIntegrity">
+        <option value="Microsoft-Windows-CodeIntegrity-offlineServicing" class="">Microsoft-Windows-CodeIntegrity – offlineServicing</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-CoreMmRes">
+        <option value="Microsoft-Windows-CoreMmRes-generalize" class="">Microsoft-Windows-CoreMmRes – generalize</option>
+        <option value="Microsoft-Windows-CoreMmRes-specialize" class="">Microsoft-Windows-CoreMmRes – specialize</option>
+        <option value="Microsoft-Windows-CoreMmRes-auditSystem" class="">Microsoft-Windows-CoreMmRes – auditSystem</option>
+        <option value="Microsoft-Windows-CoreMmRes-auditUser" class="">Microsoft-Windows-CoreMmRes – auditUser</option>
+        <option value="Microsoft-Windows-CoreMmRes-oobeSystem" class="">Microsoft-Windows-CoreMmRes – oobeSystem</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-Deployment">
+        <option value="Microsoft-Windows-Deployment-generalize" class="">Microsoft-Windows-Deployment – generalize</option>
+        <option value="Microsoft-Windows-Deployment-specialize" class="UsedInternally">Microsoft-Windows-Deployment – specialize</option>
+        <option value="Microsoft-Windows-Deployment-auditSystem" class="">Microsoft-Windows-Deployment – auditSystem</option>
+        <option value="Microsoft-Windows-Deployment-auditUser" class="">Microsoft-Windows-Deployment – auditUser</option>
+        <option value="Microsoft-Windows-Deployment-oobeSystem" class="">Microsoft-Windows-Deployment – oobeSystem</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-DeviceAccess">
+        <option value="Microsoft-Windows-DeviceAccess-specialize" class="">Microsoft-Windows-DeviceAccess – specialize</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-DeviceGuard-Unattend">
+        <option value="Microsoft-Windows-DeviceGuard-Unattend-offlineServicing" class="">Microsoft-Windows-DeviceGuard-Unattend – offlineServicing</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-Devices-Lights-WinRT">
+        <option value="Microsoft-Windows-Devices-Lights-WinRT-offlineServicing" class="">Microsoft-Windows-Devices-Lights-WinRT – offlineServicing</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-DiagCpl">
+        <option value="Microsoft-Windows-DiagCpl-offlineServicing" class="">Microsoft-Windows-DiagCpl – offlineServicing</option>
+        <option value="Microsoft-Windows-DiagCpl-generalize" class="">Microsoft-Windows-DiagCpl – generalize</option>
+        <option value="Microsoft-Windows-DiagCpl-specialize" class="">Microsoft-Windows-DiagCpl – specialize</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-Disk-Failure-Diagnostic-Module">
+        <option value="Microsoft-Windows-Disk-Failure-Diagnostic-Module-offlineServicing" class="">Microsoft-Windows-Disk-Failure-Diagnostic-Module – offlineServicing</option>
+        <option value="Microsoft-Windows-Disk-Failure-Diagnostic-Module-generalize" class="">Microsoft-Windows-Disk-Failure-Diagnostic-Module – generalize</option>
+        <option value="Microsoft-Windows-Disk-Failure-Diagnostic-Module-specialize" class="">Microsoft-Windows-Disk-Failure-Diagnostic-Module – specialize</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-DNS-Client">
+        <option value="Microsoft-Windows-DNS-Client-specialize" class="">Microsoft-Windows-DNS-Client – specialize</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-Embedded-BootExp">
+        <option value="Microsoft-Windows-Embedded-BootExp-specialize" class="">Microsoft-Windows-Embedded-BootExp – specialize</option>
+        <option value="Microsoft-Windows-Embedded-BootExp-oobeSystem" class="">Microsoft-Windows-Embedded-BootExp – oobeSystem</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-Embedded-EmbeddedLogon">
+        <option value="Microsoft-Windows-Embedded-EmbeddedLogon-offlineServicing" class="">Microsoft-Windows-Embedded-EmbeddedLogon – offlineServicing</option>
+        <option value="Microsoft-Windows-Embedded-EmbeddedLogon-specialize" class="">Microsoft-Windows-Embedded-EmbeddedLogon – specialize</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-Embedded-KeyboardFilterService">
+        <option value="Microsoft-Windows-Embedded-KeyboardFilterService-offlineServicing" class="">Microsoft-Windows-Embedded-KeyboardFilterService – offlineServicing</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-Embedded-ShellLauncher">
+        <option value="Microsoft-Windows-Embedded-ShellLauncher-oobeSystem" class="">Microsoft-Windows-Embedded-ShellLauncher – oobeSystem</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-Embedded-UnifiedWriteFilter">
+        <option value="Microsoft-Windows-Embedded-UnifiedWriteFilter-specialize" class="">Microsoft-Windows-Embedded-UnifiedWriteFilter – specialize</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-EnhancedStorage-Adm">
+        <option value="Microsoft-Windows-EnhancedStorage-Adm-specialize" class="">Microsoft-Windows-EnhancedStorage-Adm – specialize</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-ErrorReportingCore">
+        <option value="Microsoft-Windows-ErrorReportingCore-specialize" class="">Microsoft-Windows-ErrorReportingCore – specialize</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-Fax-Service">
+        <option value="Microsoft-Windows-Fax-Service-specialize" class="">Microsoft-Windows-Fax-Service – specialize</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-GPIOButtons">
+        <option value="Microsoft-Windows-GPIOButtons-offlineServicing" class="">Microsoft-Windows-GPIOButtons – offlineServicing</option>
+        <option value="Microsoft-Windows-GPIOButtons-specialize" class="">Microsoft-Windows-GPIOButtons – specialize</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-HelpAndSupport">
+        <option value="Microsoft-Windows-HelpAndSupport-specialize" class="">Microsoft-Windows-HelpAndSupport – specialize</option>
+        <option value="Microsoft-Windows-HelpAndSupport-oobeSystem" class="">Microsoft-Windows-HelpAndSupport – oobeSystem</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-IE-ClientNetworkProtocolImplementation">
+        <option value="Microsoft-Windows-IE-ClientNetworkProtocolImplementation-oobeSystem" class="">Microsoft-Windows-IE-ClientNetworkProtocolImplementation – oobeSystem</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-IE-ESC">
+        <option value="Microsoft-Windows-IE-ESC-specialize" class="">Microsoft-Windows-IE-ESC – specialize</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-IE-InternetExplorer">
+        <option value="Microsoft-Windows-IE-InternetExplorer-specialize" class="">Microsoft-Windows-IE-InternetExplorer – specialize</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-International-Core">
+        <option value="Microsoft-Windows-International-Core-specialize" class="">Microsoft-Windows-International-Core – specialize</option>
+        <option value="Microsoft-Windows-International-Core-oobeSystem" class="UsedInternally">Microsoft-Windows-International-Core – oobeSystem</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-International-Core-WinPE">
+        <option value="Microsoft-Windows-International-Core-WinPE-windowsPE" class="UsedInternally">Microsoft-Windows-International-Core-WinPE – windowsPE</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-LUA-Settings">
+        <option value="Microsoft-Windows-LUA-Settings-offlineServicing" class="">Microsoft-Windows-LUA-Settings – offlineServicing</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-MapControl-Desktop">
+        <option value="Microsoft-Windows-MapControl-Desktop-specialize" class="">Microsoft-Windows-MapControl-Desktop – specialize</option>
+        <option value="Microsoft-Windows-MapControl-Desktop-oobeSystem" class="">Microsoft-Windows-MapControl-Desktop – oobeSystem</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-MediaPlayer-Core">
+        <option value="Microsoft-Windows-MediaPlayer-Core-offlineServicing" class="">Microsoft-Windows-MediaPlayer-Core – offlineServicing</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-MicrosoftEdgeBrowser">
+        <option value="Microsoft-Windows-MicrosoftEdgeBrowser-specialize" class="">Microsoft-Windows-MicrosoftEdgeBrowser – specialize</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-MobilePC-Sensors-API">
+        <option value="Microsoft-Windows-MobilePC-Sensors-API-specialize" class="">Microsoft-Windows-MobilePC-Sensors-API – specialize</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-NetBT">
+        <option value="Microsoft-Windows-NetBT-specialize" class="">Microsoft-Windows-NetBT – specialize</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-NetworkBridge">
+        <option value="Microsoft-Windows-NetworkBridge-generalize" class="">Microsoft-Windows-NetworkBridge – generalize</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-NetworkLoadBalancing-Core">
+        <option value="Microsoft-Windows-NetworkLoadBalancing-Core-specialize" class="">Microsoft-Windows-NetworkLoadBalancing-Core – specialize</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-OutOfBoxExperience">
+        <option value="Microsoft-Windows-OutOfBoxExperience-generalize" class="">Microsoft-Windows-OutOfBoxExperience – generalize</option>
+        <option value="Microsoft-Windows-OutOfBoxExperience-specialize" class="">Microsoft-Windows-OutOfBoxExperience – specialize</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-PartitionManager">
+        <option value="Microsoft-Windows-PartitionManager-offlineServicing" class="">Microsoft-Windows-PartitionManager – offlineServicing</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-PnpCustomizationsNonWinPE">
+        <option value="Microsoft-Windows-PnpCustomizationsNonWinPE-offlineServicing" class="">Microsoft-Windows-PnpCustomizationsNonWinPE – offlineServicing</option>
+        <option value="Microsoft-Windows-PnpCustomizationsNonWinPE-auditSystem" class="">Microsoft-Windows-PnpCustomizationsNonWinPE – auditSystem</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-PnpCustomizationsWinPE">
+        <option value="Microsoft-Windows-PnpCustomizationsWinPE-windowsPE" class="">Microsoft-Windows-PnpCustomizationsWinPE – windowsPE</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-PnpSysprep">
+        <option value="Microsoft-Windows-PnpSysprep-generalize" class="">Microsoft-Windows-PnpSysprep – generalize</option>
+        <option value="Microsoft-Windows-PnpSysprep-specialize" class="">Microsoft-Windows-PnpSysprep – specialize</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-PowerCPL">
+        <option value="Microsoft-Windows-PowerCPL-generalize" class="">Microsoft-Windows-PowerCPL – generalize</option>
+        <option value="Microsoft-Windows-PowerCPL-specialize" class="">Microsoft-Windows-PowerCPL – specialize</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-Printing-Spooler-Core">
+        <option value="Microsoft-Windows-Printing-Spooler-Core-specialize" class="">Microsoft-Windows-Printing-Spooler-Core – specialize</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-RasServer">
+        <option value="Microsoft-Windows-RasServer-specialize" class="">Microsoft-Windows-RasServer – specialize</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-RemoteAssistance-Exe">
+        <option value="Microsoft-Windows-RemoteAssistance-Exe-specialize" class="">Microsoft-Windows-RemoteAssistance-Exe – specialize</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-SecureStartup-FilterDriver">
+        <option value="Microsoft-Windows-SecureStartup-FilterDriver-offlineServicing" class="">Microsoft-Windows-SecureStartup-FilterDriver – offlineServicing</option>
+        <option value="Microsoft-Windows-SecureStartup-FilterDriver-specialize" class="">Microsoft-Windows-SecureStartup-FilterDriver – specialize</option>
+        <option value="Microsoft-Windows-SecureStartup-FilterDriver-auditSystem" class="">Microsoft-Windows-SecureStartup-FilterDriver – auditSystem</option>
+        <option value="Microsoft-Windows-SecureStartup-FilterDriver-oobeSystem" class="">Microsoft-Windows-SecureStartup-FilterDriver – oobeSystem</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-Security-SPP">
+        <option value="Microsoft-Windows-Security-SPP-generalize" class="">Microsoft-Windows-Security-SPP – generalize</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-Security-SPP-UX">
+        <option value="Microsoft-Windows-Security-SPP-UX-specialize" class="">Microsoft-Windows-Security-SPP-UX – specialize</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-Sensors-Core">
+        <option value="Microsoft-Windows-Sensors-Core-offlineServicing" class="">Microsoft-Windows-Sensors-Core – offlineServicing</option>
+        <option value="Microsoft-Windows-Sensors-Core-specialize" class="">Microsoft-Windows-Sensors-Core – specialize</option>
+        <option value="Microsoft-Windows-Sensors-Core-oobeSystem" class="">Microsoft-Windows-Sensors-Core – oobeSystem</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-ServerManager-SvrMgrNc">
+        <option value="Microsoft-Windows-ServerManager-SvrMgrNc-generalize" class="">Microsoft-Windows-ServerManager-SvrMgrNc – generalize</option>
+        <option value="Microsoft-Windows-ServerManager-SvrMgrNc-specialize" class="">Microsoft-Windows-ServerManager-SvrMgrNc – specialize</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-Setup">
+        <option value="Microsoft-Windows-Setup-windowsPE" class="UsedInternally">Microsoft-Windows-Setup – windowsPE</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-SharedAccess">
+        <option value="Microsoft-Windows-SharedAccess-generalize" class="">Microsoft-Windows-SharedAccess – generalize</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-Shell-Setup">
+        <option value="Microsoft-Windows-Shell-Setup-offlineServicing" class="">Microsoft-Windows-Shell-Setup – offlineServicing</option>
+        <option value="Microsoft-Windows-Shell-Setup-windowsPE" class="">Microsoft-Windows-Shell-Setup – windowsPE</option>
+        <option value="Microsoft-Windows-Shell-Setup-generalize" class="">Microsoft-Windows-Shell-Setup – generalize</option>
+        <option value="Microsoft-Windows-Shell-Setup-specialize" class="UsedInternally">Microsoft-Windows-Shell-Setup – specialize</option>
+        <option value="Microsoft-Windows-Shell-Setup-auditSystem" class="">Microsoft-Windows-Shell-Setup – auditSystem</option>
+        <option value="Microsoft-Windows-Shell-Setup-auditUser" class="">Microsoft-Windows-Shell-Setup – auditUser</option>
+        <option value="Microsoft-Windows-Shell-Setup-oobeSystem" class="UsedInternally">Microsoft-Windows-Shell-Setup – oobeSystem</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-SHWebSVC">
+        <option value="Microsoft-Windows-SHWebSVC-oobeSystem" class="">Microsoft-Windows-SHWebSVC – oobeSystem</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-SMBServer">
+        <option value="Microsoft-Windows-SMBServer-generalize" class="">Microsoft-Windows-SMBServer – generalize</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-SNMP-Agent-Service">
+        <option value="Microsoft-Windows-SNMP-Agent-Service-generalize" class="">Microsoft-Windows-SNMP-Agent-Service – generalize</option>
+        <option value="Microsoft-Windows-SNMP-Agent-Service-specialize" class="">Microsoft-Windows-SNMP-Agent-Service – specialize</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-SQMAPI">
+        <option value="Microsoft-Windows-SQMAPI-specialize" class="">Microsoft-Windows-SQMAPI – specialize</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-STObject">
+        <option value="Microsoft-Windows-STObject-generalize" class="">Microsoft-Windows-STObject – generalize</option>
+        <option value="Microsoft-Windows-STObject-specialize" class="">Microsoft-Windows-STObject – specialize</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-StorPort-RegistrySettings">
+        <option value="Microsoft-Windows-StorPort-RegistrySettings-specialize" class="">Microsoft-Windows-StorPort-RegistrySettings – specialize</option>
+        <option value="Microsoft-Windows-StorPort-RegistrySettings-auditSystem" class="">Microsoft-Windows-StorPort-RegistrySettings – auditSystem</option>
+        <option value="Microsoft-Windows-StorPort-RegistrySettings-auditUser" class="">Microsoft-Windows-StorPort-RegistrySettings – auditUser</option>
+        <option value="Microsoft-Windows-StorPort-RegistrySettings-oobeSystem" class="">Microsoft-Windows-StorPort-RegistrySettings – oobeSystem</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-SystemMaintenanceService">
+        <option value="Microsoft-Windows-SystemMaintenanceService-specialize" class="">Microsoft-Windows-SystemMaintenanceService – specialize</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-SystemRestore-Main">
+        <option value="Microsoft-Windows-SystemRestore-Main-specialize" class="">Microsoft-Windows-SystemRestore-Main – specialize</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-SystemSettingsThreshold">
+        <option value="Microsoft-Windows-SystemSettingsThreshold-generalize" class="">Microsoft-Windows-SystemSettingsThreshold – generalize</option>
+        <option value="Microsoft-Windows-SystemSettingsThreshold-specialize" class="">Microsoft-Windows-SystemSettingsThreshold – specialize</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-TabletPC-Platform-Input-Core">
+        <option value="Microsoft-Windows-TabletPC-Platform-Input-Core-offlineServicing" class="">Microsoft-Windows-TabletPC-Platform-Input-Core – offlineServicing</option>
+        <option value="Microsoft-Windows-TabletPC-Platform-Input-Core-specialize" class="">Microsoft-Windows-TabletPC-Platform-Input-Core – specialize</option>
+        <option value="Microsoft-Windows-TabletPC-Platform-Input-Core-oobeSystem" class="">Microsoft-Windows-TabletPC-Platform-Input-Core – oobeSystem</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-TapiSetup">
+        <option value="Microsoft-Windows-TapiSetup-specialize" class="">Microsoft-Windows-TapiSetup – specialize</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-TCPIP">
+        <option value="Microsoft-Windows-TCPIP-windowsPE" class="">Microsoft-Windows-TCPIP – windowsPE</option>
+        <option value="Microsoft-Windows-TCPIP-specialize" class="">Microsoft-Windows-TCPIP – specialize</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-TerminalServices-CentralPublishing">
+        <option value="Microsoft-Windows-TerminalServices-CentralPublishing-oobeSystem" class="">Microsoft-Windows-TerminalServices-CentralPublishing – oobeSystem</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-TerminalServices-LicenseServer">
+        <option value="Microsoft-Windows-TerminalServices-LicenseServer-oobeSystem" class="">Microsoft-Windows-TerminalServices-LicenseServer – oobeSystem</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-TerminalServices-LocalSessionManager">
+        <option value="Microsoft-Windows-TerminalServices-LocalSessionManager-offlineServicing" class="">Microsoft-Windows-TerminalServices-LocalSessionManager – offlineServicing</option>
+        <option value="Microsoft-Windows-TerminalServices-LocalSessionManager-generalize" class="">Microsoft-Windows-TerminalServices-LocalSessionManager – generalize</option>
+        <option value="Microsoft-Windows-TerminalServices-LocalSessionManager-specialize" class="">Microsoft-Windows-TerminalServices-LocalSessionManager – specialize</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-TerminalServices-Publishing-WMIProvider">
+        <option value="Microsoft-Windows-TerminalServices-Publishing-WMIProvider-offlineServicing" class="">Microsoft-Windows-TerminalServices-Publishing-WMIProvider – offlineServicing</option>
+        <option value="Microsoft-Windows-TerminalServices-Publishing-WMIProvider-generalize" class="">Microsoft-Windows-TerminalServices-Publishing-WMIProvider – generalize</option>
+        <option value="Microsoft-Windows-TerminalServices-Publishing-WMIProvider-specialize" class="">Microsoft-Windows-TerminalServices-Publishing-WMIProvider – specialize</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-TerminalServices-RDP-WinStationExtensions">
+        <option value="Microsoft-Windows-TerminalServices-RDP-WinStationExtensions-generalize" class="">Microsoft-Windows-TerminalServices-RDP-WinStationExtensions – generalize</option>
+        <option value="Microsoft-Windows-TerminalServices-RDP-WinStationExtensions-specialize" class="">Microsoft-Windows-TerminalServices-RDP-WinStationExtensions – specialize</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-TerminalServices-RemoteConnectionManager">
+        <option value="Microsoft-Windows-TerminalServices-RemoteConnectionManager-offlineServicing" class="">Microsoft-Windows-TerminalServices-RemoteConnectionManager – offlineServicing</option>
+        <option value="Microsoft-Windows-TerminalServices-RemoteConnectionManager-generalize" class="">Microsoft-Windows-TerminalServices-RemoteConnectionManager – generalize</option>
+        <option value="Microsoft-Windows-TerminalServices-RemoteConnectionManager-specialize" class="">Microsoft-Windows-TerminalServices-RemoteConnectionManager – specialize</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-Tpm-Tasks">
+        <option value="Microsoft-Windows-Tpm-Tasks-specialize" class="">Microsoft-Windows-Tpm-Tasks – specialize</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-TwinUI">
+        <option value="Microsoft-Windows-TwinUI-offlineServicing" class="">Microsoft-Windows-TwinUI – offlineServicing</option>
+        <option value="Microsoft-Windows-TwinUI-specialize" class="">Microsoft-Windows-TwinUI – specialize</option>
+        <option value="Microsoft-Windows-TwinUI-oobeSystem" class="">Microsoft-Windows-TwinUI – oobeSystem</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-UnattendedJoin">
+        <option value="Microsoft-Windows-UnattendedJoin-offlineServicing" class="">Microsoft-Windows-UnattendedJoin – offlineServicing</option>
+        <option value="Microsoft-Windows-UnattendedJoin-specialize" class="">Microsoft-Windows-UnattendedJoin – specialize</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-WDF-KernelLibrary">
+        <option value="Microsoft-Windows-WDF-KernelLibrary-offlineServicing" class="">Microsoft-Windows-WDF-KernelLibrary – offlineServicing</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-WiFiNetworkManager">
+        <option value="Microsoft-Windows-WiFiNetworkManager-offlineServicing" class="">Microsoft-Windows-WiFiNetworkManager – offlineServicing</option>
+        <option value="Microsoft-Windows-WiFiNetworkManager-specialize" class="">Microsoft-Windows-WiFiNetworkManager – specialize</option>
+        <option value="Microsoft-Windows-WiFiNetworkManager-oobeSystem" class="">Microsoft-Windows-WiFiNetworkManager – oobeSystem</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-WinRE-RecoveryAgent">
+        <option value="Microsoft-Windows-WinRE-RecoveryAgent-oobeSystem" class="">Microsoft-Windows-WinRE-RecoveryAgent – oobeSystem</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-WLANSVC">
+        <option value="Microsoft-Windows-WLANSVC-offlineServicing" class="">Microsoft-Windows-WLANSVC – offlineServicing</option>
+        <option value="Microsoft-Windows-WLANSVC-windowsPE" class="">Microsoft-Windows-WLANSVC – windowsPE</option>
+        <option value="Microsoft-Windows-WLANSVC-specialize" class="">Microsoft-Windows-WLANSVC – specialize</option>
+        <option value="Microsoft-Windows-WLANSVC-oobeSystem" class="">Microsoft-Windows-WLANSVC – oobeSystem</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-WorkstationService">
+        <option value="Microsoft-Windows-WorkstationService-generalize" class="">Microsoft-Windows-WorkstationService – generalize</option>
+        <option value="Microsoft-Windows-WorkstationService-specialize" class="">Microsoft-Windows-WorkstationService – specialize</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-WPD-BusEnumService">
+        <option value="Microsoft-Windows-WPD-BusEnumService-specialize" class="">Microsoft-Windows-WPD-BusEnumService – specialize</option>
+      </optgroup>
+      <optgroup label="Microsoft-Windows-WWANUI">
+        <option value="Microsoft-Windows-WWANUI-generalize" class="">Microsoft-Windows-WWANUI – generalize</option>
+        <option value="Microsoft-Windows-WWANUI-specialize" class="">Microsoft-Windows-WWANUI – specialize</option>
+      </optgroup>
+      <optgroup label="Networking-MPSSVC-Svc">
+        <option value="Networking-MPSSVC-Svc-specialize" class="">Networking-MPSSVC-Svc – specialize</option>
+      </optgroup>
+      <optgroup label="Security-Malware-Windows-Defender">
+        <option value="Security-Malware-Windows-Defender-offlineServicing" class="">Security-Malware-Windows-Defender – offlineServicing</option>
+        <option value="Security-Malware-Windows-Defender-specialize" class="">Security-Malware-Windows-Defender – specialize</option>
+        <option value="Security-Malware-Windows-Defender-oobeSystem" class="">Security-Malware-Windows-Defender – oobeSystem</option>
+      </optgroup>
+    </select>
+    <span>component.</span>
+  </li>
+</ol>
+        </td>
+      </tr>

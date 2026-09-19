@@ -1,0 +1,80 @@
+<tr>
+        <th>AppLocker:</th>
+        <td>
+
+          <div class="IndentContainer">
+            <label class="radio">
+              <input type="radio" name="AppLockerMode" value="Skip" checked="checked" />
+              <span>Do not configure AppLocker policy</span>
+            </label>
+          </div>
+
+          <div class="IndentContainer">
+            <label class="radio">
+              <input type="radio" name="AppLockerMode" value="Configure" />
+              <span>Apply this AppLocker policy:</span>
+            </label>
+            <fieldset>
+              <textarea rows="25" name="AppLockerPolicyXml" data-required="true" spellcheck="false" wrap="off">&lt;AppLockerPolicy Version="1"&gt;
+  &lt;RuleCollection Type="Appx" EnforcementMode="Enabled"&gt;
+    &lt;FilePublisherRule Id="30591721-b29c-457d-b083-243f87b3527d" Name="All signed packaged apps" Description="Allows members of the Everyone group to run packaged apps that are signed." UserOrGroupSid="S-1-1-0" Action="Allow"&gt;
+      &lt;Conditions&gt;
+        &lt;FilePublisherCondition PublisherName="*" ProductName="*" BinaryName="*"&gt;
+          &lt;BinaryVersionRange LowSection="0.0.0.0" HighSection="*" /&gt;
+        &lt;/FilePublisherCondition&gt;
+      &lt;/Conditions&gt;
+    &lt;/FilePublisherRule&gt;
+  &lt;/RuleCollection&gt;
+  &lt;RuleCollection Type="Dll" EnforcementMode="NotConfigured" /&gt;
+  &lt;RuleCollection Type="Exe" EnforcementMode="Enabled"&gt;
+    &lt;FilePathRule Id="921cc481-6e17-4653-8f75-050b80acca20" Name="(Default Rule) All files located in the Program Files folder" Description="Allows members of the Everyone group to run applications that are located in the Program Files folder." UserOrGroupSid="S-1-1-0" Action="Allow"&gt;
+      &lt;Conditions&gt;
+        &lt;FilePathCondition Path="%PROGRAMFILES%\*" /&gt;
+      &lt;/Conditions&gt;
+    &lt;/FilePathRule&gt;
+    &lt;FilePathRule Id="a61c8b2c-a319-4cd0-9690-d2177cad7b51" Name="(Default Rule) All files located in the Windows folder" Description="Allows members of the Everyone group to run applications that are located in the Windows folder." UserOrGroupSid="S-1-1-0" Action="Allow"&gt;
+      &lt;Conditions&gt;
+        &lt;FilePathCondition Path="%WINDIR%\*" /&gt;
+      &lt;/Conditions&gt;
+    &lt;/FilePathRule&gt;
+    &lt;FilePathRule Id="fd686d83-a829-4351-8ff4-27c7de5755d2" Name="(Default Rule) All files" Description="Allows members of the local Administrators group to run all applications." UserOrGroupSid="S-1-5-32-544" Action="Allow"&gt;
+      &lt;Conditions&gt;
+        &lt;FilePathCondition Path="*" /&gt;
+      &lt;/Conditions&gt;
+    &lt;/FilePathRule&gt;
+  &lt;/RuleCollection&gt;
+  &lt;RuleCollection Type="Msi" EnforcementMode="Enabled"&gt;
+    &lt;FilePathRule Id="5b290184-345a-4453-b184-45305f6d9a54" Name="(Default Rule) All Windows Installer files in %systemdrive%\Windows\Installer" Description="Allows members of the Everyone group to run all Windows Installer files located in %systemdrive%\Windows\Installer." UserOrGroupSid="S-1-1-0" Action="Allow"&gt;
+      &lt;Conditions&gt;
+        &lt;FilePathCondition Path="%WINDIR%\Installer\*" /&gt;
+      &lt;/Conditions&gt;
+    &lt;/FilePathRule&gt;
+    &lt;FilePathRule Id="64ad46ff-0d71-4fa0-a30b-3f3d30c5433d" Name="(Default Rule) All Windows Installer files" Description="Allows members of the local Administrators group to run all Windows Installer files." UserOrGroupSid="S-1-5-32-544" Action="Allow"&gt;
+      &lt;Conditions&gt;
+        &lt;FilePathCondition Path="*.*" /&gt;
+      &lt;/Conditions&gt;
+    &lt;/FilePathRule&gt;
+  &lt;/RuleCollection&gt;
+  &lt;RuleCollection Type="Script" EnforcementMode="Enabled"&gt;
+    &lt;FilePathRule Id="06dce67b-934c-454f-a263-2515c8796a5d" Name="(Default Rule) All scripts located in the Program Files folder" Description="Allows members of the Everyone group to run scripts that are located in the Program Files folder." UserOrGroupSid="S-1-1-0" Action="Allow"&gt;
+      &lt;Conditions&gt;
+        &lt;FilePathCondition Path="%PROGRAMFILES%\*" /&gt;
+      &lt;/Conditions&gt;
+    &lt;/FilePathRule&gt;
+    &lt;FilePathRule Id="9428c672-5fc3-47f4-808a-a0011f36dd2c" Name="(Default Rule) All scripts located in the Windows folder" Description="Allows members of the Everyone group to run scripts that are located in the Windows folder." UserOrGroupSid="S-1-1-0" Action="Allow"&gt;
+      &lt;Conditions&gt;
+        &lt;FilePathCondition Path="%WINDIR%\*" /&gt;
+      &lt;/Conditions&gt;
+    &lt;/FilePathRule&gt;
+    &lt;FilePathRule Id="ed97d0cb-15ff-430f-b82c-8d7832957725" Name="(Default Rule) All scripts" Description="Allows members of the local Administrators group to run all scripts." UserOrGroupSid="S-1-5-32-544" Action="Allow"&gt;
+      &lt;Conditions&gt;
+        &lt;FilePathCondition Path="*" /&gt;
+      &lt;/Conditions&gt;
+    &lt;/FilePathRule&gt;
+  &lt;/RuleCollection&gt;
+&lt;/AppLockerPolicy&gt;</textarea>
+            </fieldset>
+          </div>
+
+        </td>
+      </tr>

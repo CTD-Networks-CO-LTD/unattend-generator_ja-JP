@@ -1,0 +1,69 @@
+<tr>
+        <th>File&#xA0;Explorer tweaks:</th>
+        <td>
+          <fieldset class="has-legend">
+            <legend>Choose which files are hidden in File&#xA0;Explorer</legend>
+
+            <div class="IndentContainer">
+              <label class="radio">
+                <input type="radio" name="HideFiles" value="Hidden" checked="checked" />
+                <span>Use File&#xA0;Explorer default setting</span>
+              </label>
+              <div>This will hide any file that has the <code>Hidden</code> attribute set.</div>
+            </div>
+
+            <div class="IndentContainer">
+              <label class="radio">
+                <input type="radio" name="HideFiles" value="HiddenSystem" />
+                <span>Hide protected operating system files</span>
+              </label>
+              <div>This will only hide files that have both the <code>Hidden</code> and  the <code>System</code> attribute set.</div>
+            </div>
+
+            <div class="IndentContainer">
+              <label class="radio">
+                <input type="radio" name="HideFiles" value="None" />
+                <span>Show all files</span>
+              </label>
+              <div>This setting is recommended for advanced users.</div>
+            </div>
+          </fieldset>
+
+          <div class="IndentContainer">
+            <label class="checkbox">
+              <input type="checkbox" name="ShowFileExtensions" value="true" />
+              <span>Always show file extensions</span>
+            </label>
+            <div>By default, File&#xA0;Explorer would hide extensions for known file types.</div>
+          </div>
+
+          <div class="IndentContainer">
+            <label class="checkbox">
+              <input type="checkbox" name="ClassicContextMenu" value="true" />
+              <span>Use classic context (right-click) menu in Windows 11</span>
+            </label>
+          </div>
+
+          <div class="IndentContainer">
+            <label class="checkbox">
+              <input type="checkbox" name="HideInfoTip" value="true" />
+              <span>Hide pop-up description for folder and desktop items</span>
+            </label>
+          </div>
+
+          <div class="IndentContainer">
+            <label class="checkbox">
+              <input type="checkbox" name="LaunchToThisPC" value="true" />
+              <span>Open File&#xA0;Explorer to <em>This&#xA0;PC</em> instead of <em>Quick access</em></span>
+            </label>
+          </div>
+
+          <div class="IndentContainer">
+            <label class="checkbox">
+              <input type="checkbox" name="ShowEndTask" value="true" />
+              <span>Show <em>End task</em> command in the taskbar</span>
+            </label>
+          </div>
+
+        </td>
+      </tr>
