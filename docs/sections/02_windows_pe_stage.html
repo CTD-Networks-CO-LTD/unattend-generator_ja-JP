@@ -15,7 +15,7 @@
               <div class="IndentContainer">
                 <label class="radio">
                   <input type="radio" name="WindowsEditionMode" value="Interactive" checked="checked" />
-                  <span>Enter a product key interactively during Windows Setup</span>
+                  <span>Enter a product key interactively during Windows&#xA0;Setup</span>
                 </label>
               </div>
 
@@ -71,12 +71,13 @@
               <input type="radio" name="PEMode" value="Generated" />
               <span>Generate a .cmd script to handle the Windows&#xA0;PE stage:</span>
             </label>
+            <div>Choose this for a fully automated installation, particularly on VMs or when you are okay with wiping existing partitions.</div>
 
             <fieldset>
               <div class="IndentContainer">
                 <label class="checkbox">
                   <input type="checkbox" name="Disable8Dot3Names" value="true" />
-                  <span class="Recommended">Disable 8.3 file names</span>
+                  <span>Disable 8.3 file names</span>
                 </label>
                 <div>This removes all existing <a href="https://schneegans.de/windows/no-8.3/" hreflang="en">short file names</a> such as <code translate="no" class="notranslate">PROGRA~1</code> and disables the creation of new ones.</div>
               </div>
@@ -106,25 +107,25 @@
               <div class="IndentContainer">
                 <label class="checkbox">
                   <input type="checkbox" name="CompactOs" value="true" />
-                  <span>Apply Windows image in compact mode</span>
+                  <span>Apply Windows <span translate="no" class="notranslate">image</span> in compact mode</span>
                 </label>
               </div>
 
               <div class="IndentContainer">
                 <label class="checkbox">
                   <input type="checkbox" name="SkipIntegrityCheck" value="true" />
-                  <span>Skip integrity check when appyling image</span>
+                  <span>Skip integrity check when appyling <span translate="no" class="notranslate">image</span></span>
                 </label>
-                <div>This will omit the parameters <code translate="no" class="notranslate">/CheckIntegrity /Verify</code>, which might speed up the imaging operation.</div>
+                <div>This will omit the parameters <code translate="no" class="notranslate">/CheckIntegrity /Verify</code>, which might speed up the <span translate="no" class="notranslate">imaging</span> operation.</div>
               </div>
 
               <fieldset class="has-legend">
-                <legend>Windows image to install</legend>
+                <legend>Windows <span translate="no" class="notranslate">image</span> to install</legend>
 
                 <div class="IndentContainer">
                   <label class="radio">
                     <input type="radio" name="InstallFromMode" value="Edition" checked="checked" />
-                    <span>Select image for this <strong>edition</strong>:</span>
+                    <span>Select <span translate="no" class="notranslate">image</span> for this <strong>edition</strong>:</span>
                   </label>
                   <fieldset>
                     <select translate="no" class="notranslate" name="InstallFromEdition">
@@ -148,18 +149,18 @@
                 <div class="IndentContainer">
                   <label class="radio">
                     <input type="radio" name="InstallFromMode" value="Name" />
-                    <span>Select image with this <strong>name</strong>:</span>
+                    <span>Select <span translate="no" class="notranslate">image</span> with this <strong>name</strong>:</span>
                   </label>
                   <fieldset>
                     <input type="text" name="InstallFromName" value="Windows 11 Pro" required="required" size="50" />
                   </fieldset>
-                  <div>Run <code translate="no" class="notranslate">dism.exe /Get-WimInfo /WimFile:"…\install.wim"</code> or <code translate="no" class="notranslate">Get-WindowsImage -ImagePath "…\install.wim"</code> in PowerShell to learn the name and index of an image inside a .wim file.</div>
+                  <div>Run <code translate="no" class="notranslate">dism.exe /Get-WimInfo /WimFile:"…\install.wim"</code> or <code translate="no" class="notranslate">Get-WindowsImage -ImagePath "…\install.wim"</code> in PowerShell to learn the name and index of an <span translate="no" class="notranslate">image</span> inside a .wim file.</div>
                 </div>
 
                 <div class="IndentContainer">
                   <label class="radio">
                     <input type="radio" name="InstallFromMode" value="Index" />
-                    <span>Select image with this <strong>index</strong>:</span>
+                    <span>Select <span translate="no" class="notranslate">image</span> with this <strong>index</strong>:</span>
                   </label>
                   <fieldset>
                     <input type="number" name="InstallFromIndex" value="1" min="1" required="required" />
@@ -169,9 +170,9 @@
                 <div class="IndentContainer">
                   <label class="radio">
                     <input type="radio" name="InstallFromMode" value="Interactive" />
-                    <span>Select image interactively during Windows Setup</span>
+                    <span>Select <span translate="no" class="notranslate">image</span> interactively during Windows&#xA0;Setup</span>
                   </label>
-                  <div>This will show a list of available images, and you select the image to install by typing in its index.</div>
+                  <div>This will show a list of available <span translate="no" class="notranslate">images</span>, and you select the <span translate="no" class="notranslate">image</span> to install by typing in its index.</div>
                 </div>
 
               </fieldset>
@@ -188,7 +189,124 @@
 
                     <fieldset class="has-legend">
                       <legend>Select target disk</legend>
-                      <span>The hard drive is disk <input type="number" name="TargetDisk" value="0" min="0" required="required" /> (0-based).</span>
+                      <div class="AfterLegend">Specify criteria that distinguish the intended target disk from other disks in your computer, such as secondary hard disks or USB flash drives. A generated script will test all available physical disks. If <strong>exactly one</strong> disk matches all criteria, it will be used as the target disk (and thus be wiped and formatted automatically). Otherwise, Windows&#xA0;Setup will halt to avoid data loss.</div>
+                      <div class="IndentContainer">
+                        <label class="radio">
+                          <input type="radio" name="TargetDiskMode" value="Generated" checked="checked" />
+                          <span>Select the target disk based on these criteria:</span>
+                        </label>
+                        <fieldset>
+
+                          <div class="IndentContainer">
+                            <label class="checkbox">
+                              <input type="checkbox" name="TargetDiskNoPartitions" value="true" checked="checked" />
+                              <span>The target disk must not contain any existing partitions</span>
+                            </label>
+                          </div>
+
+                          <div class="IndentContainer">
+                            <label class="checkbox">
+                              <input type="checkbox" name="TargetDiskInterfaceType" value="true" checked="checked" />
+                              <span>The target disk must be connected to a SATA, SCSI, SAS or NVMe controller</span>
+                            </label>
+                          </div>
+
+                          <div class="IndentContainer">
+                            <label class="checkbox">
+                              <input type="checkbox" name="TargetDiskMediaType" value="true" checked="checked" />
+                              <span>The target disk must report its media type as <em>Fixed hard disk</em> to the operating system</span>
+                            </label>
+                          </div>
+
+                          <div class="IndentContainer">
+                            <label class="checkbox">
+                              <input type="checkbox" name="TargetDiskSize" value="true" checked="checked" />
+                              <span>The target disk must have this capacity:</span>
+                            </label>
+                            <fieldset>between <input type="number" name="TargetDiskMinSize" value="100" min="0" /> and <input type="number" name="TargetDiskMaxSize" value="4000" min="0" />&#xA0;GiB</fieldset>
+                          </div>
+
+                          <div class="IndentContainer">
+                            <label class="checkbox">
+                              <input type="checkbox" name="TargetDiskIndex" value="true" checked="checked" />
+                              <span>The target disk must have this index number:</span>
+                            </label>
+                            <fieldset><input type="number" name="TargetDisk" value="0" min="0" required="required" /> (0-based)</fieldset>
+                            <div>There is no guarantee that <strong>disk&#xA0;0</strong> refers to the primary hard drive – it may very well refer to a USB flash drive instead. You should generally not rely on this criterion alone.</div>
+                          </div>
+
+                        </fieldset>
+                      </div>
+
+                      <div class="IndentContainer">
+                        <label class="radio">
+                          <input type="radio" name="TargetDiskMode" value="Script" />
+                          <span>Provide your own .vbs script to determine the target disk:</span>
+                        </label>
+                        <fieldset>
+                          <textarea translate="no" class="notranslate" rows="25" name="TargetDiskScript" data-required="true" spellcheck="false" wrap="off">Function Fail(message)
+  WScript.Echo message
+  WScript.Quit 1
+End Function
+
+On Error Resume Next
+Set wmi = GetObject("winmgmts:\\.\root\cimv2")
+Set drives = wmi.InstancesOf("Win32_DiskDrive")
+If Err.Number &lt;&gt; 0 Then
+  Fail "Could not enumerate disks: " &amp; Err.Description
+End If
+Set accepted = CreateObject("Scripting.Dictionary")
+
+For Each drive In drives
+  accept = True
+
+  actual = CInt(drive.Size / 1024 / 1024 / 1024)
+  expected = 100
+  If actual &lt; expected Then
+    accept = False
+  End If
+
+  actual = CInt(drive.Size / 1024 / 1024 / 1024)
+  expected = 4000
+  If actual &gt; expected Then
+    accept = False
+  End If
+
+  actual = drive.Index
+  expected = 0
+  If actual &lt;&gt; expected Then
+    accept = False
+  End If
+
+  actual = drive.Partitions
+  If actual &gt; 0 Then
+    accept = False
+  End If
+
+  If accept Then
+    accepted.Add drive.Index, ""
+  End If
+Next
+
+If accepted.Count = 0 Then
+  Fail "No disk satisfied the given criteria."
+ElseIf accepted.Count &gt; 1 Then
+  Fail "Several disks (" &amp; Join(accepted.Keys, ", ") &amp; ") satisfied the given criteria."
+Else
+  WScript.Echo Join(accepted.Keys)
+  WScript.Quit 0
+End If</textarea>
+                          <span>Your script has to return the index number of the target disk via <code translate="no" class="notranslate">WScript.Echo</code>. In case of an error, call <code translate="no" class="notranslate">WScript.Quit 1</code> – Windows&#xA0;Setup will then halt to avoid data loss.</span>
+                        </fieldset>
+                      </div>
+
+                      <div class="IndentContainer">
+                        <label class="radio">
+                          <input type="radio" name="TargetDiskMode" value="Interactive" />
+                          <span>Type in the index number of the target disk interactively during Windows&#xA0;Setup</span>
+                        </label>
+                      </div>
+
                     </fieldset>
 
                     <fieldset class="has-legend">
@@ -199,7 +317,7 @@
                           <input type="radio" name="PartitionLayout" value="Automatic" checked="checked" />
                           <span>Automatic</span>
                         </label>
-                        <fieldset>This will attempt to detect the firmware type (BIOS or UEFI) and select the partition layout (MBR or GPT) accordingly.</fieldset>
+                        <fieldset>This will detect the firmware type (BIOS or UEFI) and select the partition layout (MBR or GPT) accordingly.</fieldset>
                       </div>
 
                       <div class="IndentContainer">
@@ -269,103 +387,16 @@ FORMAT QUICK FS=NTFS LABEL="Recovery"
 ASSIGN LETTER=R
 SET ID="de94bba4-06d1-4d40-a16a-bfd50179d6ac"
 GPT ATTRIBUTES=0x8000000000000001</textarea>
-                    <div>Drive letter assignments in the script (e.g. <code translate="no" class="notranslate" class="nowrap">ASSIGN LETTER=W</code>) solely affect the Windows&#xA0;PE stage of Windows Setup. These assignments do not persist to the new installation, which will <em>always</em> assign the <code translate="no" class="notranslate">C:</code> drive letter to the Windows partition.</div>
+                    <div>Drive letter assignments in the script (e.g. <code translate="no" class="nowrap notranslate">ASSIGN LETTER=W</code>) solely affect the Windows&#xA0;PE stage of Windows Setup. These assignments do not persist to the new installation, which will <em>always</em> assign the <code translate="no" class="notranslate">C:</code> drive letter to the Windows partition.</div>
                   </fieldset>
                 </div>
 
                 <div class="IndentContainer">
                   <label class="radio">
                     <input type="radio" name="PartitionMode" value="Interactive" />
-                    <span>Run <code translate="no" class="notranslate">diskpart</code> interactively during Windows Setup</span>
+                    <span>Run <code translate="no" class="notranslate">diskpart</code> interactively during Windows&#xA0;Setup</span>
                   </label>
                   <div>You will have to enter the commands to partition and format your disks. There is no graphical user interface.</div>
-                </div>
-
-              </fieldset>
-
-              <fieldset class="has-legend">
-                <legend>Verify disk numbers</legend>
-                <div class="AfterLegend">When you let Windows Setup wipe and partition your disks, there is a risk they were assigned unexpected index numbers. For example, on some computers, <strong>disk&#xA0;0</strong> might refer to a USB flash drive instead of the primary hard drive. To make sure that Windows Setup targets the intended disk, you can make assertions about that disk. If these assertions are not met, Windows Setup will halt to avoid data loss.</div>
-
-                <div class="IndentContainer">
-                  <label class="radio">
-                    <input type="radio" name="DiskAssertionMode" value="Generated" checked="checked" />
-                    <span>Make these assertions about the target disk:</span>
-                  </label>
-                  <fieldset>
-
-                    <div class="IndentContainer">
-                      <label class="checkbox">
-                        <input type="checkbox" disabled="disabled" checked="checked" />
-                        <span>Assert that the target disk has a capacity between <input type="number" name="AssertMinSize" value="100" min="0" /> and <input type="number" name="AssertMaxSize" value="4000" min="0" />&#xA0;GiB.</span>
-                      </label>
-                    </div>
-
-                    <div class="IndentContainer">
-                      <label class="checkbox">
-                        <input type="checkbox" name="AssertNoPartitions" value="true" checked="checked" />
-                        <span>Assert that there are no partitions on the target disk</span>
-                      </label>
-                    </div>
-
-                    <div class="IndentContainer">
-                      <label class="checkbox">
-                        <input type="checkbox" name="AssertInterfaceType" value="true" />
-                        <span>Assert that the target disk is connected to a SATA, SCSI, SAS or NVMe controller</span>
-                      </label>
-                    </div>
-
-                    <div class="IndentContainer">
-                      <label class="checkbox">
-                        <input type="checkbox" name="AssertMediaType" value="true" />
-                        <span>Assert that the target disk reports its media type as <em>Fixed hard disk</em> to the operating system</span>
-                      </label>
-                    </div>
-
-                  </fieldset>
-                </div>
-
-                <div class="IndentContainer">
-                  <label class="radio">
-                    <input type="radio" name="DiskAssertionMode" value="Script" />
-                    <span>Provide your own .vbs script to check disk numbers:</span>
-                  </label>
-                  <fieldset>
-                    <textarea translate="no" class="notranslate" rows="29" name="DiskAssertionScript" data-required="true" spellcheck="false" wrap="off">Function Fail(message)
-  WScript.Echo message
-  WScript.Quit 1
-End Function
-
-On Error Resume Next
-Set wmi = GetObject("winmgmts:\\.\root\cimv2")
-Set drive = wmi.Get("Win32_DiskDrive.DeviceID='\\.\PHYSICALDRIVE0'")
-If Err.Number &lt;&gt; 0 Then
-  Fail "Could not locate disk 0 (" &amp; Err.Description &amp; ")."
-End If
-actual = CInt(drive.Size / 1024 / 1024 / 1024)
-expected = 100
-If actual &lt; expected Then
-  Fail "Size of disk 0 is expected to be at least " &amp; expected &amp; " GiB, but actually is " &amp; actual &amp; " GiB."
-End If
-actual = CInt(drive.Size / 1024 / 1024 / 1024)
-expected = 4000
-If actual &gt; expected Then
-  Fail "Size of disk 0 is expected to be at most " &amp; expected &amp; " GiB, but actually is " &amp; actual &amp; " GiB."
-End If
-actual = drive.Partitions
-If actual &gt; 0 Then
-  Fail "There are already " &amp; actual &amp; " partitions on disk 0."
-End If
-WScript.Echo "Disk assertions were satisfied."
-WScript.Quit 0</textarea>
-                  </fieldset>
-                </div>
-
-                <div class="IndentContainer">
-                  <label class="radio">
-                    <input type="radio" name="DiskAssertionMode" value="Skip" />
-                    <span>Make no assertions about the target disk</span>
-                  </label>
                 </div>
 
               </fieldset>
@@ -385,7 +416,7 @@ WScript.Quit 0</textarea>
                     <input type="radio" name="PagingFileMode" value="Custom" />
                     <span>Use custom-sized paging file:</span>
                   </label>
-                  <fieldset>Set its initial size to <input type="number" name="InitPagingFileSize" value="200" min="0" required="required" />&#xA0;MB and its maximum size to <input type="number" name="MaxPagingFileSize" value="400" min="0" required="required" />&#xA0;MB</fieldset>
+                  <fieldset>Set its initial size to <input type="number" name="InitPagingFileSize" value="2000" min="0" required="required" />&#xA0;MB and its maximum size to <input type="number" name="MaxPagingFileSize" value="4000" min="0" required="required" />&#xA0;MB</fieldset>
                 </div>
 
                 <div class="IndentContainer">
@@ -403,7 +434,7 @@ WScript.Quit 0</textarea>
           <div class="IndentContainer">
             <label class="radio">
               <input type="radio" name="PEMode" value="Script" />
-              <span>Provide your own .cmd script to handle the Windows&#xA0;PE stage:</span>
+              <span>Provide your own .cmd script to handle the entire Windows&#xA0;PE stage:</span>
             </label>
             <fieldset>
               <textarea translate="no" class="notranslate" rows="25" name="PEScript" data-required="true" spellcheck="false" wrap="off">@echo off
@@ -433,86 +464,107 @@ if defined PEDRIVERS_FOLDER (
     for /R %PEDRIVERS_FOLDER% %%f IN (*.inf) do drvload.exe "%%f"
 )
 
-&gt;X:\assert.vbs (
-	echo:Function Fail(message^)
-	echo:WScript.Echo message
-	echo:WScript.Quit 1
-	echo:End Function
-	echo:On Error Resume Next
-	echo:Set wmi = GetObject(^"winmgmts:\\.\root\cimv2^"^)
-	echo:Set drive = wmi.Get(^"Win32_DiskDrive.DeviceID='\\.\PHYSICALDRIVE0'^"^)
-	echo:If Err.Number ^&lt;^&gt; 0 Then
-	echo:Fail ^"Could not locate disk 0 (^" ^&amp; Err.Description ^&amp; ^"^).^"
-	echo:End If
-	echo:actual = CInt(drive.Size / 1024 / 1024 / 1024^)
-	echo:expected = 100
-	echo:If actual ^&lt; expected Then
-	echo:Fail ^"Size of disk 0 is expected to be at least ^" ^&amp; expected ^&amp; ^" GiB, but actually is ^" ^&amp; actual ^&amp; ^" GiB.^"
-	echo:End If
-	echo:actual = CInt(drive.Size / 1024 / 1024 / 1024^)
-	echo:expected = 4000
-	echo:If actual ^&gt; expected Then
-	echo:Fail ^"Size of disk 0 is expected to be at most ^" ^&amp; expected ^&amp; ^" GiB, but actually is ^" ^&amp; actual ^&amp; ^" GiB.^"
-	echo:End If
-	echo:actual = drive.Partitions
-	echo:If actual ^&gt; 0 Then
-	echo:Fail ^"There are already ^" ^&amp; actual ^&amp; ^" partitions on disk 0.^"
-	echo:End If
-	echo:WScript.Echo ^"Disk assertions were satisfied.^"
-	echo:WScript.Quit 0
+&gt;X:\target.vbs (
+    echo:Function Fail(message^)
+    echo:WScript.Echo message
+    echo:WScript.Quit 1
+    echo:End Function
+    echo:On Error Resume Next
+    echo:Set wmi = GetObject(^"winmgmts:\\.\root\cimv2^"^)
+    echo:Set drives = wmi.InstancesOf(^"Win32_DiskDrive^"^)
+    echo:If Err.Number ^&lt;^&gt; 0 Then
+    echo:Fail ^"Could not enumerate disks: ^" ^&amp; Err.Description
+    echo:End If
+    echo:Set accepted = CreateObject(^"Scripting.Dictionary^"^)
+    echo:For Each drive In drives
+    echo:accept = True
+    echo:actual = CInt(drive.Size / 1024 / 1024 / 1024^)
+    echo:expected = 100
+    echo:If actual ^&lt; expected Then
+    echo:accept = False
+    echo:End If
+    echo:actual = CInt(drive.Size / 1024 / 1024 / 1024^)
+    echo:expected = 4000
+    echo:If actual ^&gt; expected Then
+    echo:accept = False
+    echo:End If
+    echo:actual = drive.Index
+    echo:expected = 0
+    echo:If actual ^&lt;^&gt; expected Then
+    echo:accept = False
+    echo:End If
+    echo:actual = drive.Partitions
+    echo:If actual ^&gt; 0 Then
+    echo:accept = False
+    echo:End If
+    echo:If accept Then
+    echo:accepted.Add drive.Index, ^"^"
+    echo:End If
+    echo:Next
+    echo:If accepted.Count = 0 Then
+    echo:Fail ^"No disk satisfied the given criteria.^"
+    echo:ElseIf accepted.Count ^&gt; 1 Then
+    echo:Fail ^"Several disks (^" ^&amp; Join(accepted.Keys, ^", ^"^) ^&amp; ^"^) satisfied the given criteria.^"
+    echo:Else
+    echo:WScript.Echo Join(accepted.Keys^)
+    echo:WScript.Quit 0
+    echo:End If
 )
 
-call :print "Running disk assertions"
-cscript.exe //E:vbscript "X:\assert.vbs" //Nologo || call :fail "Disk assertion failed. Windows Setup will halt to avoid potential data loss."
-
-&gt;X:\GPT.txt (
-	echo:SELECT DISK=0
-	echo:CLEAN
-	echo:CONVERT GPT
-	echo:CREATE PARTITION EFI SIZE=300
-	echo:FORMAT QUICK FS=FAT32 LABEL=^"System^"
-	echo:ASSIGN LETTER=S
-	echo:CREATE PARTITION MSR SIZE=16
-	echo:CREATE PARTITION PRIMARY
-	echo:SHRINK MINIMUM=1000
-	echo:FORMAT QUICK FS=NTFS LABEL=^"Windows^"
-	echo:ASSIGN LETTER=W
-	echo:CREATE PARTITION PRIMARY
-	echo:FORMAT QUICK FS=NTFS LABEL=^"Recovery^"
-	echo:ASSIGN LETTER=R
-	echo:SET ID=^"de94bba4-06d1-4d40-a16a-bfd50179d6ac^"
-	echo:GPT ATTRIBUTES=0x8000000000000001
-)
-
-&gt;X:\MBR.txt (
-	echo:SELECT DISK=0
-	echo:CLEAN
-	echo:CREATE PARTITION PRIMARY SIZE=300
-	echo:FORMAT QUICK FS=NTFS LABEL=^"System^"
-	echo:ASSIGN LETTER=S
-	echo:ACTIVE
-	echo:CREATE PARTITION PRIMARY
-	echo:SHRINK MINIMUM=1000
-	echo:FORMAT QUICK FS=NTFS LABEL=^"Windows^"
-	echo:ASSIGN LETTER=W
-	echo:CREATE PARTITION PRIMARY
-	echo:FORMAT QUICK FS=NTFS LABEL=^"Recovery^"
-	echo:ASSIGN LETTER=R
-	echo:SET ID=27
-)
+call :print "Determining target disk"
+(cscript.exe //E:vbscript "X:\target.vbs" //Nologo &gt;X:\target.out) || (type X:\target.out &amp; call :fail "Could not determine target disk. Windows Setup will halt to avoid potential data loss.")
+for /f %%t in (X:\target.out) do set "TARGET_DISK=%%t"
 
 wpeutil.exe UpdateBootInfo
 for /f "tokens=3" %%t in ('reg.exe query HKLM\System\CurrentControlSet\Control /v PEFirmwareType') do (
-  if %%t == 0x1 (
-    set "LAYOUT=MBR"
-  ) else if %%t == 0x2 (
-    set "LAYOUT=GPT"
-  ) else (
-    call :fail "Unexpected value %%t."
-  )
+    if %%t == 0x1 (
+        set "LAYOUT=MBR"
+        set "FIRMWARE=BIOS"
+    ) else if %%t == 0x2 (
+        set "LAYOUT=GPT"
+        set "FIRMWARE=UEFI"
+    ) else (
+        call :fail "Unexpected PEFirmwareType value %%t."
+    )
 )
-call :print "The target disk will be configured with the %LAYOUT% partition layout"
-call :print "diskpart will now partition and format your disk"
+call :print "The computer is booted in %FIRMWARE% mode, hence the target disk must be configured with the %LAYOUT% partition layout"
+&gt;X:\GPT.txt (
+    echo:SELECT DISK=%TARGET_DISK%
+    echo:CLEAN
+    echo:CONVERT GPT
+    echo:CREATE PARTITION EFI SIZE=300
+    echo:FORMAT QUICK FS=FAT32 LABEL="System"
+    echo:ASSIGN LETTER=S
+    echo:CREATE PARTITION MSR SIZE=16
+    echo:CREATE PARTITION PRIMARY
+    echo:SHRINK MINIMUM=1000
+    echo:FORMAT QUICK FS=NTFS LABEL="Windows"
+    echo:ASSIGN LETTER=W
+    echo:CREATE PARTITION PRIMARY
+    echo:FORMAT QUICK FS=NTFS LABEL="Recovery"
+    echo:ASSIGN LETTER=R
+    echo:SET ID="de94bba4-06d1-4d40-a16a-bfd50179d6ac"
+    echo:GPT ATTRIBUTES=0x8000000000000001
+)
+
+&gt;X:\MBR.txt (
+    echo:SELECT DISK=%TARGET_DISK%
+    echo:CLEAN
+    echo:CREATE PARTITION PRIMARY SIZE=300
+    echo:FORMAT QUICK FS=NTFS LABEL="System"
+    echo:ASSIGN LETTER=S
+    echo:ACTIVE
+    echo:CREATE PARTITION PRIMARY
+    echo:SHRINK MINIMUM=1000
+    echo:FORMAT QUICK FS=NTFS LABEL="Windows"
+    echo:ASSIGN LETTER=W
+    echo:CREATE PARTITION PRIMARY
+    echo:FORMAT QUICK FS=NTFS LABEL="Recovery"
+    echo:ASSIGN LETTER=R
+    echo:SET ID=27
+)
+
+call :print "diskpart will now wipe, partition and format disk %TARGET_DISK%"
 diskpart.exe /s X:\%LAYOUT%.txt || call :fail "diskpart.exe encountered an error."
 
 set "IMG_PARAM=/Name:"Windows %OS_VERSION% Pro""
@@ -521,7 +573,9 @@ dism.exe /Apply-Image /ImageFile:%IMAGE_FILE% %SWM_PARAM% %IMG_PARAM% /ApplyDir:
 
 call :print "Making system partition bootable"
 bcdboot.exe W:\Windows /s S: || call :fail "bcdboot.exe encountered an error."
-bcdedit.exe /set {fwbootmgr} bootsequence {bootmgr}
+if %LAYOUT% == GPT (
+    bcdedit.exe /set {fwbootmgr} bootsequence {bootmgr} || call :fail "bcdedit.exe encountered an error."
+)
 
 call :print "Copying answer file to target disk"
 mkdir W:\Windows\Panther
@@ -570,12 +624,12 @@ echo:
 pause
 exit 1
 
-:print 
+:print
 echo:
 echo:*** %~1 ***
 echo:
 goto :eof</textarea>
-              <span>Your script has to partition and format the disk, make it bootable and copy a Windows image to it. Note that PowerShell is usually not available in Windows&#xA0;PE.</span>
+              <span>Your script has to partition and format the disk, make it bootable and copy a Windows <span translate="no" class="notranslate">image</span> to it. Note that PowerShell is usually not available in Windows&#xA0;PE.</span>
             </fieldset>
           </div>
 

@@ -98,7 +98,7 @@
             <div class="IndentContainer">
               <label class="radio">
                 <input type="radio" name="WallpaperMode" value="Script" />
-                <span>Provide a Windows PowerShell script to load a desktop wallpaper image:</span>
+                <span>Provide a Windows PowerShell script to load a desktop wallpaper <span translate="no" class="notranslate">image</span>:</span>
               </label>
               <fieldset>
                 <textarea translate="no" class="notranslate" rows="8" name="WallpaperScript" data-required="true" spellcheck="false" wrap="off"># Photo by Benjamin Voros on Unsplash. See https://unsplash.com/photos/snow-mountain-under-stars-phIFdC6lA4E for more info.
@@ -108,25 +108,25 @@ $url = 'https://images.unsplash.com/photo-1519681393784-d120267933ba?w=2400';
     ( Invoke-WebRequest -Uri $url -UseBasicParsing -TimeoutSec 30 ).Content;
 };</textarea>
 
-                <div>Your script will be evaluated during Windows Setup, after your computer has connected to a network. The script must return a <code translate="no" class="notranslate" class="nowrap">byte[]</code> value, which must contain the raw image data. For example, you can download an image from the internet, locate an image file on a removable drive or a network share and load it via <code translate="no" class="notranslate" class="nowrap">[System.IO.File]::ReadAllBytes</code>, or provide the image data directly via <code translate="no" class="notranslate" class="nowrap">[convert]::FromBase64String</code>.</div>
+                <div>Your script will be evaluated during Windows Setup, after your computer has connected to a network. The script must return a <code translate="no" class="nowrap notranslate">byte[]</code> value, which must contain the raw <span translate="no" class="notranslate">image</span> data. For example, you can download an <span translate="no" class="notranslate">image</span> from the internet, locate an <span translate="no" class="notranslate">image</span> file on a removable drive or a network share and load it via <code translate="no" class="nowrap notranslate">[System.IO.File]::ReadAllBytes</code>, or provide the <span translate="no" class="notranslate">image</span> data directly via <code translate="no" class="nowrap notranslate">[convert]::FromBase64String</code>.</div>
               </fieldset>
             </div>
           </fieldset>
 
           <fieldset class="has-legend">
-            <legend>Lock screen image</legend>
+            <legend>Lock screen <span translate="no" class="notranslate">image</span></legend>
 
             <div class="IndentContainer">
               <label class="radio">
                 <input type="radio" name="LockScreenMode" value="Default" checked="checked" />
-                <span>Use default lock screen image</span>
+                <span>Use default lock screen <span translate="no" class="notranslate">image</span></span>
               </label>
             </div>
 
             <div class="IndentContainer">
               <label class="radio">
                 <input type="radio" name="LockScreenMode" value="Script" />
-                <span>Provide a Windows PowerShell script to load the lock screen image:</span>
+                <span>Provide a Windows PowerShell script to load the lock screen <span translate="no" class="notranslate">image</span>:</span>
               </label>
               <fieldset>
                 <textarea translate="no" class="notranslate" rows="8" name="LockScreenScript" data-required="true" spellcheck="false" wrap="off">foreach( $drive in [System.IO.DriveInfo]::GetDrives() ) {
