@@ -50,6 +50,11 @@ const commitUrlBase = repoUrl + '/commit/';
 // 3. Determine release tag and release URL
 let releaseTag = process.env.RELEASE_TAG || '';
 if (!releaseTag) {
+  if (process.env.GITHUB_REF_TYPE === 'tag' && process.env.GITHUB_REF_NAME) {
+    releaseTag = process.env.GITHUB_REF_NAME;
+  }
+}
+if (!releaseTag) {
   try {
     const tagOutput = execSync('git tag -l "v*" --sort=-v:refname', { cwd: repoRoot, encoding: 'utf8' }).trim();
     const tags = tagOutput.split(/\r?\n/).map(t => t.trim()).filter(Boolean);
@@ -64,7 +69,7 @@ if (!releaseTag) {
   } catch (e) {}
 }
 if (!releaseTag) {
-  releaseTag = 'v1.3.0_20260918';
+  releaseTag = 'v1.4.0_20260919';
 }
 const releaseUrl = releaseTag ? (repoUrl + '/releases/tag/' + releaseTag) : (repoUrl + '/releases');
 
