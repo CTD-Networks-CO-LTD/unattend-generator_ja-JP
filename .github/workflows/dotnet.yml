@@ -1,13 +1,13 @@
-# This workflow will build a .NET project and verify JavaScript engine parity
+# This workflow will build a .NET project
 # For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-net
 
 name: .NET
 
 on:
   push:
-    branches: [ "master", "main" ]
+    branches: [ "master" ]
   pull_request:
-    branches: [ "master", "main" ]
+    branches: [ "master" ]
 
 jobs:
   build:
@@ -16,40 +16,17 @@ jobs:
 
     steps:
     - uses: actions/checkout@v6
-
     - name: Setup .NET
       uses: actions/setup-dotnet@v5
       with:
         dotnet-version: 10
-
     - name: Restore dependencies
       run: dotnet restore
-
     - name: Build
       run: dotnet build --no-restore
-
     - name: Test
       run: dotnet test --no-build --verbosity normal
-
-    - name: Setup Node.js 24
-      uses: actions/setup-node@v5
-      with:
-        node-version: 24
-
-    - name: Run Modifier Sync Check
-      run: node build/sync_modifiers.js --check
-
-    - name: Build Unattend Engine Bundle
-      run: node build/build_engine.js
-
-    - name: Run Engine Parity Tests
-      run: node test_tools/test_engine_parity.js
-
-    - name: Run Feature Parity & AST Tests
-      run: node test_tools/test_feature_parity.js
-
     - name: Upload artifacts
       uses: actions/upload-artifact@v7
       with:
         path: ${{ github.workspace }}/bin/Debug/net*/*
-

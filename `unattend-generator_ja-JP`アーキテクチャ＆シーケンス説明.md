@@ -58,7 +58,8 @@ sequenceDiagram
     actor Dev as 開発者 (Developer)
     participant Local as ローカル環境 / Git
     participant Repo as GitHub リポジトリ<br/>(CTD-Networks-CO-LTD/unattend-generator_ja-JP)
-    participant GHA_Net as GitHub Actions (.NET & CI)<br/>(.github/workflows/dotnet.yml)
+    participant GHA_Net as GitHub Actions (.NET CI)<br/>(.github/workflows/dotnet.yml)
+    participant GHA_JS as GitHub Actions (JS Parity & CI)<br/>(.github/workflows/verify-engine.yml)
     participant GHA_Pages as GitHub Actions (Pages & CD)<br/>(.github/workflows/deploy-pages.yml)
     participant Pages_Preview as GitHub Pages (プレビュー環境)<br/>(/preview/)
     participant Pages_Prod as GitHub Pages (本番環境)<br/>(ルート /)
@@ -78,18 +79,23 @@ sequenceDiagram
     Dev->>Local: git commit & git push origin feature/...
     Local->>Repo: master ブランチへの Pull Request / マージ
 
-    par .NET ビルド・単体テスト＆JSパリティ検証パイプライン (CI)
-        Repo->>GHA_Net: トリガー発火 (push / PR: master, main)
+    par .NET ビルド・単体テストパイプライン (dotnet.yml: アップストリーム完全同期)
+        Repo->>GHA_Net: トリガー発火 (push / PR: master)
         GHA_Net->>GHA_Net: actions/checkout@v6
         GHA_Net->>GHA_Net: actions/setup-dotnet@v5 (NET 10.x)
         GHA_Net->>GHA_Net: dotnet restore
         GHA_Net->>GHA_Net: dotnet build --no-restore
         GHA_Net->>GHA_Net: dotnet test --no-build (C# コアロジックの検証)
-        GHA_Net->>GHA_Net: actions/setup-node@v4 (Node.js 24)
-        GHA_Net->>GHA_Net: node build/sync_modifiers.js --check (Modifier 同期検査)
-        GHA_Net->>GHA_Net: node build/build_engine.js (自動バンドル検証)
-        GHA_Net->>GHA_Net: node test_tools/test_engine_parity.js (Byte-exact 検証)
-        GHA_Net->>GHA_Net: node test_tools/test_feature_parity.js (機能パリティ検証)
+        GHA_Net->>GHA_Net: actions/upload-artifact@v7
+    and JS パリティ検証パイプライン (verify-engine.yml: .NET 成功検知 / PR・push 連携)
+        GHA_Net-->>GHA_JS: workflow_run (.NET completed 成功検知)
+        Repo->>GHA_JS: トリガー発火 (push / PR: master, main, workflow_dispatch)
+        GHA_JS->>GHA_JS: actions/checkout@v6 (head_sha / sha)
+        GHA_JS->>GHA_JS: actions/setup-node@v5 (Node.js 24)
+        GHA_JS->>GHA_JS: node build/sync_modifiers.js --check (Modifier 同期検査)
+        GHA_JS->>GHA_JS: node build/build_engine.js (自動バンドル検証)
+        GHA_JS->>GHA_JS: node test_tools/test_engine_parity.js (Byte-exact 検証)
+        GHA_JS->>GHA_JS: node test_tools/test_feature_parity.js (機能パリティ検証)
     and GitHub Pages デプロイパイプライン (CD: Node 24 対応)
         Repo->>GHA_Pages: トリガー発火 (push: master/main, paths: docs/**, modifier/**, resource/**, build/**, *.cs 等)
         GHA_Pages->>GHA_Pages: actions/checkout@v6 (fetch-depth: 0)
@@ -150,7 +156,8 @@ sequenceDiagram
 
 | ワークフロー定義 | 種別 | トリガー条件 | 実行内容・役割 |
 | :--- | :--- | :--- | :--- |
-| **`.github/workflows/dotnet.yml`** | CI<br/>(継続的インテグレーション) | `master`, `main` への push、Pull Request | **C# Core ビルド＆JS パリティ自動検証**:<br/>1. .NET 10 環境で `UnattendGenerator.csproj` をビルド（`dotnet build`）および単体テスト（`dotnet test`）を実行。<br/>2. Node.js 24 環境で `node build/sync_modifiers.js --check` による C#/JS 同期検査を実行。<br/>3. `node build/build_engine.js` でエンジンを再バンドル。<br/>4. `test_engine_parity.js`（Byte-exact 10件）および `test_feature_parity.js`（機能54項目）を実行し、パリティ完全一致を検証。 |
+| **`.github/workflows/dotnet.yml`** | CI<br/>(継続的インテグレーション) | `master` への push、Pull Request | **C# Core ビルド＆単体テスト（アップストリーム完全一致）**:<br/>1. .NET 10 環境で `UnattendGenerator.csproj` を依存関係復元・ビルド（`dotnet build`）および単体テスト（`dotnet test`）を実行。<br/>2. ビルド成果物のアップロード（`actions/upload-artifact@v7`）。<br/>※アップストリーム本家の `dotnet.yml` と完全同一構成を維持しコンフリクトを防止。 |
+| **`.github/workflows/verify-engine.yml`** | CI<br/>(品質保証・パリティ検証) | `.NET` 完了時（`workflow_run`）、`master`/`main` への push / PR、手動実行 (`workflow_dispatch`) | **Fork独自 JS パリティ自動検証＆連携パイプライン**:<br/>1. 先行する `.NET` ワークフローの成功を検知して自動トリガー、または PR/push 契機で即時実行。<br/>2. Node.js 24 環境で `node build/sync_modifiers.js --check` による C#/JS 同期検査を実行。<br/>3. `node build/build_engine.js` でエンジンを再バンドル。<br/>4. `test_engine_parity.js`（Byte-exact 10件）および `test_feature_parity.js`（機能54項目）を実行し、パリティ完全一致を検証。 |
 | **`.github/workflows/deploy-pages.yml`** | CD<br/>(継続的デプロイ) | `docs/**`, `modifier/**`, `resource/**`, `build/**`, `*.cs`, `UnattendGenerator.csproj` パスの変更 push、GitHub リリース公開 (`release: published`)、手動実行 (`workflow_dispatch`) | **GitHub Pages 自動配信＆プレビュー/本番完全分離 (Node 24 対応)**:<br/>1. Node.js 24 をセットアップ。<br/>2. デプロイ前ゲートとして `node build/sync_modifiers.js --check`、`node build/build_engine.js`、パリティテスト（`test_engine_parity.js`, `test_feature_parity.js`）を実行。<br/>3. **master push 時**: 最新リリースタグの資材を `/`（ルート）に維持しつつ、master の最新資材を `/preview/` へプレビュー自動デプロイ。<br/>4. **リリース公開時**: master の最新資材を `/` および `/preview/` の両方へ本番公開反映。<br/>`actions/upload-pages-artifact@v5` と `actions/deploy-pages@v5` を使用。 |
 
 ---
@@ -339,7 +346,7 @@ C# の `modifier/*.cs` が更新・追加された際に、JavaScript 側（`doc
   - `modifier/` 配下の全 C# ファイルをスキャン。
   - 専用 Modifier（15件）または統合・コア内包 Modifier（16件）のいずれにもマッピングされていない未同期 C# ファイルを検知した場合、終了コード 1 で異常終了。
   - 専用 JS モジュールが `build/build_engine.js` の `moduleFiles` 配列に未登録の場合も即座に検知。
-  - CI（`dotnet.yml`）および CD（`deploy-pages.yml`）の品質ゲートとして自動実行。
+  - CI（`verify-engine.yml`）および CD（`deploy-pages.yml`）の品質ゲートとして自動実行。
 - **スタブ自動生成モード (`node build/sync_modifiers.js --generate [CsFileName]`)**:
   - 新規追加された C# Modifier に対し、対応する `docs/js/modifiers/<snake_case>.js` を自動生成。
   - `build/build_engine.js` の `moduleFiles` および `docs/js/generator_engine.js` の実行パイプラインへ自動登録。
