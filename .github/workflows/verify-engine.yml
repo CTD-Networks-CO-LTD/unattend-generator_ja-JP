@@ -1,0 +1,46 @@
+# This workflow verifies JavaScript engine synchronization and parity with C# codebase
+# Fork-specific CI pipeline separate from upstream dotnet.yml
+
+name: Node.js Engine Parity
+
+on:
+  workflow_run:
+    workflows: [".NET"]
+    types: [completed]
+  push:
+    branches: [ "master", "main" ]
+  pull_request:
+    branches: [ "master", "main" ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    # workflow_run 契機の場合は先行する .NET ワークフローが成功した場合のみ実行
+    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+
+      - name: Setup Node.js 24
+        uses: actions/setup-node@v5
+        with:
+          node-version: 24
+
+      - name: Run Modifier Sync Check
+        run: node build/sync_modifiers.js --check
+
+      - name: Build Unattend Engine Bundle
+        run: node build/build_engine.js
+
+      - name: Run Engine Parity Tests
+        run: node test_tools/test_engine_parity.js
+
+      - name: Run Feature Parity & AST Tests
+        run: node test_tools/test_feature_parity.js
