@@ -87,10 +87,9 @@ sequenceDiagram
         GHA_Net->>GHA_Net: dotnet build --no-restore
         GHA_Net->>GHA_Net: dotnet test --no-build (C# コアロジックの検証)
         GHA_Net->>GHA_Net: actions/upload-artifact@v7
-    and JS パリティ検証パイプライン (verify-engine.yml: .NET 成功検知 / PR・push 連携)
-        GHA_Net-->>GHA_JS: workflow_run (.NET completed 成功検知)
+    and JS パリティ検証パイプライン (verify-engine.yml: PR・push 独立並列 CI)
         Repo->>GHA_JS: トリガー発火 (push / PR: master, main, workflow_dispatch)
-        GHA_JS->>GHA_JS: actions/checkout@v6 (head_sha / sha)
+        GHA_JS->>GHA_JS: actions/checkout@v6
         GHA_JS->>GHA_JS: actions/setup-node@v5 (Node.js 24)
         GHA_JS->>GHA_JS: node build/sync_modifiers.js --check (Modifier 同期検査)
         GHA_JS->>GHA_JS: node build/build_engine.js (自動バンドル検証)
@@ -157,7 +156,7 @@ sequenceDiagram
 | ワークフロー定義 | 種別 | トリガー条件 | 実行内容・役割 |
 | :--- | :--- | :--- | :--- |
 | **`.github/workflows/dotnet.yml`** | CI<br/>(継続的インテグレーション) | `master` への push、Pull Request | **C# Core ビルド＆単体テスト（アップストリーム完全一致）**:<br/>1. .NET 10 環境で `UnattendGenerator.csproj` を依存関係復元・ビルド（`dotnet build`）および単体テスト（`dotnet test`）を実行。<br/>2. ビルド成果物のアップロード（`actions/upload-artifact@v7`）。<br/>※アップストリーム本家の `dotnet.yml` と完全同一構成を維持しコンフリクトを防止。 |
-| **`.github/workflows/verify-engine.yml`** | CI<br/>(品質保証・パリティ検証) | `.NET` 完了時（`workflow_run`）、`master`/`main` への push / PR、手動実行 (`workflow_dispatch`) | **Fork独自 JS パリティ自動検証＆連携パイプライン**:<br/>1. 先行する `.NET` ワークフローの成功を検知して自動トリガー、または PR/push 契機で即時実行。<br/>2. Node.js 24 環境で `node build/sync_modifiers.js --check` による C#/JS 同期検査を実行。<br/>3. `node build/build_engine.js` でエンジンを再バンドル。<br/>4. `test_engine_parity.js`（Byte-exact 10件）および `test_feature_parity.js`（機能54項目）を実行し、パリティ完全一致を検証。 |
+| **`.github/workflows/verify-engine.yml`** | CI<br/>(品質保証・パリティ検証) | `master`/`main` への push / PR、手動実行 (`workflow_dispatch`) | **Fork独自 JS パリティ自動検証・並列 CI パイプライン**:<br/>1. PR 起票時および push 契機で標準セキュリティサンドボックス内で安全に並列実行。<br/>2. Node.js 24 環境で `node build/sync_modifiers.js --check` による C#/JS 同期検査を実行。<br/>3. `node build/build_engine.js` でエンジンを再バンドル。<br/>4. `test_engine_parity.js`（Byte-exact 10件）および `test_feature_parity.js`（機能54項目）を実行し、パリティ完全一致を検証。 |
 | **`.github/workflows/deploy-pages.yml`** | CD<br/>(継続的デプロイ) | `docs/**`, `modifier/**`, `resource/**`, `build/**`, `*.cs`, `UnattendGenerator.csproj` パスの変更 push、GitHub リリース公開 (`release: published`)、手動実行 (`workflow_dispatch`) | **GitHub Pages 自動配信＆プレビュー/本番完全分離 (Node 24 対応)**:<br/>1. Node.js 24 をセットアップ。<br/>2. デプロイ前ゲートとして `node build/sync_modifiers.js --check`、`node build/build_engine.js`、パリティテスト（`test_engine_parity.js`, `test_feature_parity.js`）を実行。<br/>3. **master push 時**: 最新リリースタグの資材を `/`（ルート）に維持しつつ、master の最新資材を `/preview/` へプレビュー自動デプロイ。<br/>4. **リリース公開時**: master の最新資材を `/` および `/preview/` の両方へ本番公開反映。<br/>`actions/upload-pages-artifact@v5` と `actions/deploy-pages@v5` を使用。 |
 
 ---
