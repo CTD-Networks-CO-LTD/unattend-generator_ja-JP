@@ -343,7 +343,7 @@
       return val === 'true' || val === 'on' || val === '1';
     };
 
-    var commitHash = '89c738057b23d24e02d5b4d2827d51d02ea30488';
+    var commitHash = '4a58c3fe83840e41d48b70cfa4700887c9f6304d';
 
     // Script sequences
     var specializeScript = new PowerShellSequence('Running scripts to customize your Windows installation.', 'C:\\Windows\\Setup\\Scripts\\Specialize.log');
@@ -447,21 +447,9 @@
     // Express Settings
     var expressSettings = getVal('ExpressSettings', 'DisableAll');
 
-    // AutoLogon script (UsersModifier before DeleteModifier)
+    // AutoLogon script (UsersModifier)
     if (userAccountMode === 'Unattended' && autoLogonMode !== 'None') {
       firstLogonScript.append("Set-ItemProperty -LiteralPath 'Registry::HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon' -Name 'AutoLogonCount' -Type 'DWord' -Force -Value 0;");
-    }
-
-    // KeepSensitiveFiles (DeleteModifier)
-    var keepSensitiveFiles = getBool('KeepSensitiveFiles', false);
-    if (!keepSensitiveFiles && userAccountMode === 'Unattended' && autoLogonMode !== 'None') {
-      firstLogonScript.append([
-        'Remove-Item -LiteralPath @(',
-        "  'C:\\Windows\\Panther\\unattend.xml';",
-        "  'C:\\Windows\\Panther\\unattend-original.xml';",
-        "  'C:\\Windows\\Setup\\Scripts\\Wifi.xml';",
-        ") -Force -ErrorAction 'SilentlyContinue' -Verbose;"
-      ].join('\r\n'));
     }
 
     // Optimizations & Registry
@@ -721,6 +709,93 @@
         "} catch {}"
       ].join('\r\n'));
     }
+
+    // RestartExplorer option & Custom Scripts (ScriptsModifier)
+    if (getBool('RestartExplorer', false)) {
+      userOnceScript.restartExplorer();
+    }
+
+    var scriptPhases = [
+      {
+        name: 'System',
+        sequence: specializeScript,
+        count: 4,
+        defaultTypes: ['Cmd', 'Ps1', 'Reg', 'Vbs']
+      },
+      {
+        name: 'DefaultUser',
+        sequence: defaultUserScript,
+        count: 3,
+        defaultTypes: ['Reg', 'Cmd', 'Ps1']
+      },
+      {
+        name: 'FirstLogon',
+        sequence: firstLogonScript,
+        count: 4,
+        defaultTypes: ['Cmd', 'Ps1', 'Reg', 'Vbs']
+      },
+      {
+        name: 'UserOnce',
+        sequence: userOnceScript,
+        count: 4,
+        defaultTypes: ['Cmd', 'Ps1', 'Reg', 'Vbs']
+      }
+    ];
+
+    var customScriptIndex = 0;
+    for (var sp = 0; sp < scriptPhases.length; sp++) {
+      var sPhase = scriptPhases[sp];
+      for (var si = 0; si < sPhase.count; si++) {
+        var sKey = sPhase.name + 'Script' + si;
+        var tKey = sPhase.name + 'ScriptType' + si;
+        var rContent = getVal(sKey, '');
+        if (rContent && rContent.trim().length > 0) {
+          var sContent = rContent.trim();
+          var sType = getVal(tKey, sPhase.defaultTypes[si] || 'Cmd');
+
+          customScriptIndex++;
+          var sHexIndex = (customScriptIndex < 16 ? '0' : '') + customScriptIndex.toString(16).toLowerCase();
+          var sFileName = 'unattend-' + sHexIndex + '.' + sType.toLowerCase();
+          var sFilePath = 'C:\\Windows\\Setup\\Scripts\\' + sFileName;
+
+          if (sType.toLowerCase() === 'reg') {
+            var rPrefix = 'Windows Registry Editor Version 5.00';
+            if (sContent.indexOf(rPrefix) !== 0) {
+              sContent = rPrefix + '\r\n\r\n' + sContent;
+            }
+          }
+          sContent = sContent.replace(/\r\n/g, '\n').replace(/\r/g, '\n').replace(/\n/g, '\r\n');
+
+          embedTextFile(sFileName, sContent);
+
+          var sTypeLower = sType.toLowerCase();
+          if (sTypeLower === 'ps1') {
+            sPhase.sequence.invokeFile(sFilePath);
+          } else if (sTypeLower === 'cmd') {
+            sPhase.sequence.append(sFilePath + ';');
+          } else if (sTypeLower === 'reg') {
+            sPhase.sequence.append('reg.exe import "' + sFilePath + '";');
+          } else if (sTypeLower === 'vbs') {
+            sPhase.sequence.append('cscript.exe //E:vbscript "' + sFilePath + '";');
+          } else if (sTypeLower === 'js') {
+            sPhase.sequence.append('cscript.exe //E:jscript "' + sFilePath + '";');
+          }
+        }
+      }
+    }
+
+    // KeepSensitiveFiles (DeleteModifier - runs after custom scripts, before finalization)
+    var keepSensitiveFiles = getBool('KeepSensitiveFiles', false);
+    if (!keepSensitiveFiles && userAccountMode === 'Unattended' && autoLogonMode !== 'None') {
+      firstLogonScript.append([
+        'Remove-Item -LiteralPath @(',
+        "  'C:\\Windows\\Panther\\unattend.xml';",
+        "  'C:\\Windows\\Panther\\unattend-original.xml';",
+        "  'C:\\Windows\\Setup\\Scripts\\Wifi.xml';",
+        ") -Force -ErrorAction 'SilentlyContinue' -Verbose;"
+      ].join('\r\n'));
+    }
+
 
     // Finalize PowerShell sequences into embedded files
     if (!userOnceScript.isEmpty()) {

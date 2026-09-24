@@ -55,10 +55,10 @@ var SET_COMPUTER_NAME_PS1 = [
 
 var REPO_URL = 'https://github.com/CTD-Networks-CO-LTD/unattend-generator_ja-JP';
 var COMMIT_URL_BASE = REPO_URL + '/commit/';
-var COMMIT_HASH = '89c738057b23d24e02d5b4d2827d51d02ea30488';
-var RELEASE_TAG = 'v1.4.0_20260919';
-var RELEASE_URL = 'https://github.com/CTD-Networks-CO-LTD/unattend-generator_ja-JP/releases/tag/v1.4.0_20260919';
-var COMMIT_DATE = '2026-09-19T10:57:26+09:00';
+var COMMIT_HASH = '4a58c3fe83840e41d48b70cfa4700887c9f6304d';
+var RELEASE_TAG = 'v1.5.1_20260923';
+var RELEASE_URL = 'https://github.com/CTD-Networks-CO-LTD/unattend-generator_ja-JP/releases/tag/v1.5.1_20260923';
+var COMMIT_DATE = '2026-09-24T17:46:52+09:00';
 
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {

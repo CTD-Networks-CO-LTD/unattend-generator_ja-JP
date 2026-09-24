@@ -124,6 +124,31 @@ const testCases = [
       DisableWidgets: 'true',
       DisableAppSuggestions: 'true'
     }
+  },
+  {
+    name: 'Case 11: Custom Scripts in all phases (System, DefaultUser, FirstLogon, UserOnce)',
+    params: {
+      SystemScript0: 'echo SystemScript0',
+      SystemScriptType0: 'Cmd',
+      DefaultUserScript0: '[HKEY_USERS\\DefaultUser\\Software\\Test]\r\n"Val"=dword:00000001',
+      DefaultUserScriptType0: 'Reg',
+      FirstLogonScript0: 'Write-Host "FirstLogon0"',
+      FirstLogonScriptType0: 'Ps1',
+      UserOnceScript0: 'MsgBox "Hello UserOnce"',
+      UserOnceScriptType0: 'Vbs'
+    }
+  },
+  {
+    name: 'Case 12: Custom Scripts with RestartExplorer and all types (Cmd, Ps1, Reg, Vbs, Js)',
+    params: {
+      RestartExplorer: 'true',
+      SystemScript1: 'Write-Output "SysPs1"',
+      SystemScriptType1: 'Ps1',
+      FirstLogonScript1: 'WScript.Echo("JS script");',
+      FirstLogonScriptType1: 'Js',
+      UserOnceScript1: 'echo UserOnceCmd',
+      UserOnceScriptType1: 'Cmd'
+    }
   }
 ];
 
