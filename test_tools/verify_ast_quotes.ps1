@@ -43,20 +43,22 @@ function Test-ScriptContent {
         Write-Host " [PASS] No typographic quotes found." -ForegroundColor Green
     }
 
-    # 2. PowerShell AST 構文解析
-    $errors = $null
-    $tokens = $null
-    [System.Management.Automation.Language.Parser]::ParseInput($Content, [ref]$tokens, [ref]$errors) | Out-Null
+    # 2. PowerShell AST 構文解析（.ps1 スクリプトのみ）
+    if ($Name.EndsWith('.ps1', [System.StringComparison]::OrdinalIgnoreCase) -or (-not [System.IO.Path]::HasExtension($Name))) {
+        $errors = $null
+        $tokens = $null
+        [System.Management.Automation.Language.Parser]::ParseInput($Content, [ref]$tokens, [ref]$errors) | Out-Null
 
-    if ($errors -and $errors.Count -gt 0) {
-        Write-Error "[FAIL] Parse errors detected in: $Name"
-        foreach ($err in $errors) {
-            Write-Host "  Line $($err.Extent.StartLineNumber), Col $($err.Extent.StartColumnNumber): $($err.Message)" -ForegroundColor Red
+        if ($errors -and $errors.Count -gt 0) {
+            Write-Error "[FAIL] Parse errors detected in: $Name"
+            foreach ($err in $errors) {
+                Write-Host "  Line $($err.Extent.StartLineNumber), Col $($err.Extent.StartColumnNumber): $($err.Message)" -ForegroundColor Red
+            }
+            $script:globalErrorCount += $errors.Count
+            $localHasError = $true
+        } else {
+            Write-Host " [PASS] PowerShell AST Syntax OK." -ForegroundColor Green
         }
-        $script:globalErrorCount += $errors.Count
-        $localHasError = $true
-    } else {
-        Write-Host " [PASS] PowerShell AST Syntax OK." -ForegroundColor Green
     }
 
     return -not $localHasError

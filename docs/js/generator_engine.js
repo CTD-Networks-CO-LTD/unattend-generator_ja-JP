@@ -4,13 +4,12 @@
 function generateAutounattendXml(formData) {
   var context = new GenerationContext(formData);
 
-  // Execute modifier pipeline in exact baseline sequence
+  // Execute modifier pipeline in C# matching sequence
   var modifiers = [
     new ComputerNameModifier(context),
     new PasswordExpirationModifier(context),
     new LockoutModifier(context),
     new UsersModifier(context),
-    new DeleteModifier(context),
     new OptimizationsModifier(context),
     new BloatwareModifier(context),
     new LocalesModifier(context),
@@ -19,11 +18,20 @@ function generateAutounattendXml(formData) {
     new TimeZoneModifier(context),
     new ExpressSettingsModifier(context),
     new WifiModifier(context),
-    new ScriptsModifier(context)
+    new ScriptsModifier(context),
+    new DeleteModifier(context)
   ];
 
   for (var i = 0; i < modifiers.length; i++) {
     modifiers[i].process();
+  }
+
+  // Finalize PowerShell sequences into embedded files
+  if (typeof finalizePowerShellSequences === 'function') {
+    finalizePowerShellSequences(context);
+  } else if (typeof require !== 'undefined') {
+    var scriptsMod = require('./modifiers/scripts');
+    scriptsMod.finalizePowerShellSequences(context);
   }
 
   // Construct XML Hierarchy

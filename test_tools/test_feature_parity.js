@@ -185,6 +185,57 @@ function runTests() {
   assert(engine.formatRelativeTime(d1Year, baseNow) === 'updated 1 year ago', '1年前が "updated 1 year ago" とフォーマットされること');
   assert(engine.formatRelativeTime(d2Years, baseNow) === 'updated 2 years ago', '2年前が "updated 2 years ago" とフォーマットされること');
 
+  // --- Test 8: カスタムスクリプト（全フェーズ・全形式・通番・Reg補完・RestartExplorer・実行順序）の検証 ---
+  console.log('\n--- Test 8: カスタムスクリプト（全フェーズ・全形式・通番・Reg補完・RestartExplorer・実行順序）の検証 ---');
+  const customScriptFd = new MockFormData({
+    UserAccountMode: 'Unattended',
+    AutoLogonMode: 'Own',
+    AutoLogonUsername: 'adminuser',
+    AutoLogonPassword: 'Passw0rd123!',
+    SystemScript0: 'echo SystemScript Cmd',
+    SystemScriptType0: 'Cmd',
+    DefaultUserScript0: '[HKEY_USERS\\DefaultUser\\Software\\MyApp]\r\n"Setting"=dword:00000001',
+    DefaultUserScriptType0: 'Reg',
+    FirstLogonScript0: 'Write-Host "FirstLogon Ps1"',
+    FirstLogonScriptType0: 'Ps1',
+    UserOnceScript0: 'MsgBox "UserOnce Vbs"',
+    UserOnceScriptType0: 'Vbs',
+    UserOnceScript1: 'WScript.Echo("UserOnce Js");',
+    UserOnceScriptType1: 'Js',
+    RestartExplorer: 'true'
+  });
+  const customScriptXml = engine.generateAutounattendXml(customScriptFd);
+
+  // 1. 各ファイルが Extensions 内に正しく埋め込まれていること
+  assert(customScriptXml.includes('<File path="C:\\Windows\\Setup\\Scripts\\unattend-01.cmd">'), 'unattend-01.cmd が File 要素として埋め込まれていること');
+  assert(customScriptXml.includes('<File path="C:\\Windows\\Setup\\Scripts\\unattend-02.reg">'), 'unattend-02.reg が File 要素として埋め込まれていること');
+  assert(customScriptXml.includes('<File path="C:\\Windows\\Setup\\Scripts\\unattend-03.ps1">'), 'unattend-03.ps1 が File 要素として埋め込まれていること');
+  assert(customScriptXml.includes('<File path="C:\\Windows\\Setup\\Scripts\\unattend-04.vbs">'), 'unattend-04.vbs が File 要素として埋め込まれていること');
+  assert(customScriptXml.includes('<File path="C:\\Windows\\Setup\\Scripts\\unattend-05.js">'), 'unattend-05.js が File 要素として埋め込まれていること');
+
+  // 2. Reg ファイルのヘッダー自動補完
+  assert(customScriptXml.includes('Windows Registry Editor Version 5.00\r\n\r\n[HKEY_USERS\\DefaultUser\\Software\\MyApp]'), 'unattend-02.reg に Windows Registry Editor Version 5.00 ヘッダーが自動補完されていること');
+
+  // 3. 各スクリプトシーケンス内の呼び出しコマンド
+  assert(customScriptXml.includes('C:\\Windows\\Setup\\Scripts\\unattend-01.cmd;'), 'Specialize.ps1 に unattend-01.cmd 実行コマンドが含まれていること');
+  assert(customScriptXml.includes('reg.exe import "C:\\Windows\\Setup\\Scripts\\unattend-02.reg";'), 'DefaultUser.ps1 に reg.exe import 実行コマンドが含まれていること');
+  assert(customScriptXml.includes("&amp; 'C:\\Windows\\Setup\\Scripts\\unattend-03.ps1';"), 'FirstLogon.ps1 に unattend-03.ps1 実行コマンドが含まれていること');
+  assert(customScriptXml.includes('cscript.exe //E:vbscript "C:\\Windows\\Setup\\Scripts\\unattend-04.vbs";'), 'UserOnce.ps1 に unattend-04.vbs 実行コマンドが含まれていること');
+  assert(customScriptXml.includes('cscript.exe //E:jscript "C:\\Windows\\Setup\\Scripts\\unattend-05.js";'), 'UserOnce.ps1 に unattend-05.js 実行コマンドが含まれていること');
+
+  // 4. FirstLogon.ps1 内の実行順序整合性（カスタムスクリプトが Remove-Item より前にあること）
+  const idxScriptCall = customScriptXml.indexOf("&amp; 'C:\\Windows\\Setup\\Scripts\\unattend-03.ps1';");
+  const idxRemoveItem = customScriptXml.indexOf('Remove-Item -LiteralPath @(');
+  assert(idxScriptCall !== -1 && idxRemoveItem !== -1 && idxScriptCall < idxRemoveItem, 'FirstLogon.ps1 内でカスタムスクリプト呼び出しが Remove-Item (敏感ファイル削除) より前に配置されていること');
+
+  // 5. RestartExplorer による explorer 再起動ブロックの出力
+  assert(customScriptXml.includes("Get-Process -Name 'explorer' -ErrorAction 'SilentlyContinue'"), 'RestartExplorer 有効時に explorer 再起動ブロックが UserOnce.ps1 に含まれていること');
+
+  // 6. カスタムスクリプト未入力時のクリーン動作
+  const cleanFd = new MockFormData({});
+  const cleanXml = engine.generateAutounattendXml(cleanFd);
+  assert(!cleanXml.includes('unattend-01'), 'カスタムスクリプト未入力時には unattend-01.* が生成されないこと');
+
   console.log('\n====================================================');
   console.log(` テスト結果: ${passed} 項目合格 / ${failed} 項目失敗`);
   console.log('====================================================\n');
