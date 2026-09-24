@@ -343,7 +343,7 @@
       return val === 'true' || val === 'on' || val === '1';
     };
 
-    var commitHash = '5f9295fabfa7d5526526472f6fdd3fd20b5b27c3';
+    var commitHash = '14d66dd0c7ce3daf6c20e69f67c55fbfbb89a924';
 
     // Script sequences
     var specializeScript = new PowerShellSequence('Running scripts to customize your Windows installation.', 'C:\\Windows\\Setup\\Scripts\\Specialize.log');
