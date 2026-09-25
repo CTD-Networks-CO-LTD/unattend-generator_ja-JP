@@ -236,6 +236,57 @@ function runTests() {
   const cleanXml = engine.generateAutounattendXml(cleanFd);
   assert(!cleanXml.includes('unattend-01'), 'カスタムスクリプト未入力時には unattend-01.* が生成されないこと');
 
+  // --- Test 9: AppLocker ポリシー設定の検証 ---
+  console.log('\n--- Test 9: AppLocker ポリシー設定の検証 ---');
+  const samplePolicyXml = '<AppLockerPolicy Version="1">\r\n  <RuleCollection Type="Exe" EnforcementMode="Enabled">\r\n    <FilePathRule Id="12345" Name="Allow Program Files" Action="Allow">\r\n      <Conditions>\r\n        <FilePathCondition Path="%PROGRAMFILES%\\*" />\r\n      </Conditions>\r\n    </FilePathRule>\r\n  </RuleCollection>\r\n</AppLockerPolicy>';
+  const appLockerFd = new MockFormData({
+    AppLockerMode: 'Configure',
+    AppLockerPolicyXml: samplePolicyXml
+  });
+  const appLockerXml = engine.generateAutounattendXml(appLockerFd);
+
+  assert(appLockerXml.includes('<File path="C:\\Windows\\Setup\\Scripts\\AppLockerPolicy.xml">'), 'AppLockerPolicy.xml が File 要素として埋め込まれていること');
+  assert(appLockerXml.includes('&lt;AppLockerPolicy Version="1"&gt;'), 'AppLockerPolicy.xml の内容がエスケープされて埋め込まれていること');
+  assert(appLockerXml.includes("Get-Service -Name 'AppIDSvc' | Set-Service -StartupType 'Automatic';"), 'Specialize.ps1 に AppIDSvc 自動起動コマンドが含まれていること');
+  assert(appLockerXml.includes("Get-Service -Name 'AppIDSvc' | Start-Service;"), 'Specialize.ps1 に AppIDSvc 開始コマンドが含まれていること');
+  assert(appLockerXml.includes("Set-AppLockerPolicy -XmlPolicy 'C:\\Windows\\Setup\\Scripts\\AppLockerPolicy.xml';"), 'Specialize.ps1 に Set-AppLockerPolicy 実行コマンドが含まれていること');
+
+  // AppLockerMode = Skip のとき何も出力されないこと
+  const appLockerSkipFd = new MockFormData({
+    AppLockerMode: 'Skip',
+    AppLockerPolicyXml: samplePolicyXml
+  });
+  const appLockerSkipXml = engine.generateAutounattendXml(appLockerSkipFd);
+  assert(!appLockerSkipXml.includes('AppLockerPolicy.xml'), 'AppLockerMode: Skip 時に AppLockerPolicy.xml が生成されないこと');
+  assert(!appLockerSkipXml.includes('AppIDSvc'), 'AppLockerMode: Skip 時に AppIDSvc コマンドが含まれないこと');
+
+  // --- Test 10: 追加コンポーネント XML (ComponentsModifier) の検証 ---
+  console.log('\n--- Test 10: 追加コンポーネント XML (ComponentsModifier) の検証 ---');
+  const compFd = new MockFormData({
+    Component0: 'Microsoft-Windows-Audio-AudioCore-specialize',
+    ComponentContent0: '<AudioSetting action="enable"><Volume>80</Volume></AudioSetting>',
+    Component1: 'Microsoft-Windows-CodeIntegrity-offlineServicing',
+    ComponentContent1: '<Data>TestVal</Data>'
+  });
+  const compXml = engine.generateAutounattendXml(compFd);
+
+  assert(compXml.includes('<settings pass="specialize">'), 'specialize pass が存在すること');
+  assert(compXml.includes('<component name="Microsoft-Windows-Audio-AudioCore" processorArchitecture="x86" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS">'), 'specialize pass に Microsoft-Windows-Audio-AudioCore コンポーネントが生成されていること');
+  assert(compXml.includes('<AudioSetting action="enable">'), '注入された <AudioSetting> 要素が出力されていること');
+  assert(compXml.includes('<Volume>80</Volume>'), '注入された <Volume> 要素が出力されていること');
+
+  assert(compXml.includes('<settings pass="offlineServicing">'), 'offlineServicing pass が存在すること');
+  assert(compXml.includes('<component name="Microsoft-Windows-CodeIntegrity" processorArchitecture="x86" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS">'), 'offlineServicing pass に Microsoft-Windows-CodeIntegrity コンポーネントが生成されていること');
+  assert(compXml.includes('<Data>TestVal</Data>'), '注入された <Data> 要素が出力されていること');
+
+  // 禁止要素（settings や component）を含む場合はスキップされること
+  const forbiddenFd = new MockFormData({
+    Component0: 'Microsoft-Windows-Audio-AudioCore-specialize',
+    ComponentContent0: '<settings><sub/></settings>'
+  });
+  const forbiddenXml = engine.generateAutounattendXml(forbiddenFd);
+  assert(!forbiddenXml.includes('<sub/>'), '禁止要素 <settings> を含むコンポーネントマークアップは注入されないこと');
+
   console.log('\n====================================================');
   console.log(` テスト結果: ${passed} 項目合格 / ${failed} 項目失敗`);
   console.log('====================================================\n');

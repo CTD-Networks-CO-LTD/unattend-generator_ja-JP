@@ -4,6 +4,15 @@
 function generateAutounattendXml(formData) {
   var context = new GenerationContext(formData);
 
+  if (typeof AppLockerModifier === 'undefined' && typeof require !== 'undefined') {
+    AppLockerModifier = require('./modifiers/applocker').AppLockerModifier;
+  }
+  if (typeof ComponentsModifier === 'undefined' && typeof require !== 'undefined') {
+    ComponentsModifier = require('./modifiers/components').ComponentsModifier;
+  }
+
+  var componentsMod = new ComponentsModifier(context);
+
   // Execute modifier pipeline in C# matching sequence
   var modifiers = [
     new ComputerNameModifier(context),
@@ -18,8 +27,10 @@ function generateAutounattendXml(formData) {
     new TimeZoneModifier(context),
     new ExpressSettingsModifier(context),
     new WifiModifier(context),
+    new AppLockerModifier(context),
     new ScriptsModifier(context),
-    new DeleteModifier(context)
+    new DeleteModifier(context),
+    componentsMod
   ];
 
   for (var i = 0; i < modifiers.length; i++) {
@@ -41,7 +52,7 @@ function generateAutounattendXml(formData) {
     });
 
     // 1. pass="offlineServicing"
-    root.addChild(new XmlNode('settings', { 'pass': 'offlineServicing' }));
+    var offlineServicingSettingsElem = root.addChild(new XmlNode('settings', { 'pass': 'offlineServicing' }));
 
     // 2. pass="windowsPE"
     var peSettingsElem = root.addChild(new XmlNode('settings', { 'pass': 'windowsPE' }));
@@ -105,7 +116,7 @@ function generateAutounattendXml(formData) {
     winSetup.addSimpleElement('UseConfigurationSet', context.useConfigurationSet ? 'true' : 'false');
 
     // 3. pass="generalize"
-    root.addChild(new XmlNode('settings', { 'pass': 'generalize' }));
+    var generalizeSettingsElem = root.addChild(new XmlNode('settings', { 'pass': 'generalize' }));
 
     // 4. pass="specialize"
     var specSettingsElem = root.addChild(new XmlNode('settings', { 'pass': 'specialize' }));
@@ -148,10 +159,10 @@ function generateAutounattendXml(formData) {
     }
 
     // 5. pass="auditSystem"
-    root.addChild(new XmlNode('settings', { 'pass': 'auditSystem' }));
+    var auditSystemSettingsElem = root.addChild(new XmlNode('settings', { 'pass': 'auditSystem' }));
 
     // 6. pass="auditUser"
-    root.addChild(new XmlNode('settings', { 'pass': 'auditUser' }));
+    var auditUserSettingsElem = root.addChild(new XmlNode('settings', { 'pass': 'auditUser' }));
 
     // 7. pass="oobeSystem"
     var oobeSettingsElem = root.addChild(new XmlNode('settings', { 'pass': 'oobeSystem' }));
@@ -243,6 +254,17 @@ function generateAutounattendXml(formData) {
       syncCmdOobe.addSimpleElement('Order', '1');
       syncCmdOobe.addSimpleElement('CommandLine', 'powershell.exe -WindowStyle "Normal" -ExecutionPolicy "Unrestricted" -NoProfile -File "' + context.firstLogonFile + '"');
     }
+
+    var passSettings = {
+      offlineServicing: offlineServicingSettingsElem,
+      windowsPE: peSettingsElem,
+      generalize: generalizeSettingsElem,
+      specialize: specSettingsElem,
+      auditSystem: auditSystemSettingsElem,
+      auditUser: auditUserSettingsElem,
+      oobeSystem: oobeSettingsElem
+    };
+    componentsMod.applyToPasses(passSettings);
 
     // 8. Extensions
     if (context.hasExtractScript || context.embeddedFiles.length > 0) {
