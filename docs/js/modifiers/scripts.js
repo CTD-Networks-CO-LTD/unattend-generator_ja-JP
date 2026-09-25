@@ -95,33 +95,40 @@ ScriptsModifier.prototype.process = function () {
  * Corresponds to C# SpecializeModifier, UserOnceModifier, DefaultUserModifier, FirstLogonModifier
  */
 function finalizePowerShellSequences(ctx) {
+  var specializeScript = ctx.sequences.specialize;
   var userOnceScript = ctx.sequences.userOnce;
   var defaultUserScript = ctx.sequences.defaultUser;
-  var specializeScript = ctx.sequences.specialize;
   var firstLogonScript = ctx.sequences.firstLogon;
 
-  if (!userOnceScript.isEmpty()) {
-    var userOnceFile = ctx.embedTextFile('UserOnce.ps1', userOnceScript.getScript());
-    var cmdEscaped = ('powershell.exe -WindowStyle "Normal" -ExecutionPolicy "Unrestricted" -NoProfile -File "' + userOnceFile + '"').replace(/"/g, '\\\"');
-    defaultUserScript.append('reg.exe add "HKU\\DefaultUser\\Software\\Microsoft\\Windows\\CurrentVersion\\RunOnce" /v "UnattendedSetup" /t REG_SZ /d "' + cmdEscaped + '" /f;');
-  }
-  if (!defaultUserScript.isEmpty()) {
-    var defUserFile = ctx.embedTextFile('DefaultUser.ps1', defaultUserScript.getScript());
-    specializeScript.append('reg.exe load "HKU\\DefaultUser" "C:\\Users\\Default\\NTUSER.DAT";');
-    specializeScript.invokeFile(defUserFile);
-    specializeScript.append('reg.exe unload "HKU\\DefaultUser";');
-  }
-
+  // 1. SpecializeModifier: Specialize.ps1 を最初に埋め込む（DefaultUser 処理は含めない）
   var specializeFile = null;
   if (!specializeScript.isEmpty()) {
     specializeFile = ctx.embedTextFile('Specialize.ps1', specializeScript.getScript());
   }
+
+  // 2. UserOnceModifier: UserOnce.ps1 を埋め込み、DefaultUserScript に RunOnce を登録
+  var userOnceFile = null;
+  if (!userOnceScript.isEmpty()) {
+    userOnceFile = ctx.embedTextFile('UserOnce.ps1', userOnceScript.getScript());
+    var cmdEscaped = ('powershell.exe -WindowStyle "Normal" -ExecutionPolicy "Unrestricted" -NoProfile -File "' + userOnceFile + '"').replace(/"/g, '\\\"');
+    defaultUserScript.append('reg.exe add "HKU\\DefaultUser\\Software\\Microsoft\\Windows\\CurrentVersion\\RunOnce" /v "UnattendedSetup" /t REG_SZ /d "' + cmdEscaped + '" /f;');
+  }
+
+  // 3. DefaultUserModifier: DefaultUser.ps1 を埋め込み、コンテキストに保持（specializeScript には append しない）
+  var defaultUserFile = null;
+  if (!defaultUserScript.isEmpty()) {
+    defaultUserFile = ctx.embedTextFile('DefaultUser.ps1', defaultUserScript.getScript());
+  }
+
+  // 4. FirstLogonModifier: FirstLogon.ps1 を埋め込む
   var firstLogonFile = null;
   if (!firstLogonScript.isEmpty()) {
     firstLogonFile = ctx.embedTextFile('FirstLogon.ps1', firstLogonScript.getScript());
   }
 
   ctx.specializeFile = specializeFile;
+  ctx.userOnceFile = userOnceFile;
+  ctx.defaultUserFile = defaultUserFile;
   ctx.firstLogonFile = firstLogonFile;
 }
 

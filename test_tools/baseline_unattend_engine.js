@@ -647,7 +647,7 @@
       return val === 'true' || val === 'on' || val === '1';
     };
 
-    var commitHash = '4b9a11388334c8f11226cef043245fd3e9f3518b';
+    var commitHash = 'b3b02ec4da48390f2e510540278fb600e8f82ad3';
 
     // Script sequences
     var specializeScript = new PowerShellSequence('Running scripts to customize your Windows installation.', 'C:\\Windows\\Setup\\Scripts\\Specialize.log');
@@ -1391,22 +1391,23 @@
 
 
     // Finalize PowerShell sequences into embedded files
-    if (!userOnceScript.isEmpty()) {
-      var userOnceFile = embedTextFile('UserOnce.ps1', userOnceScript.getScript());
-      var cmdEscaped = ('powershell.exe -WindowStyle "Normal" -ExecutionPolicy "Unrestricted" -NoProfile -File "' + userOnceFile + '"').replace(/"/g, '\\"');
-      defaultUserScript.append('reg.exe add "HKU\\DefaultUser\\Software\\Microsoft\\Windows\\CurrentVersion\\RunOnce" /v "UnattendedSetup" /t REG_SZ /d "' + cmdEscaped + '" /f;');
-    }
-    if (!defaultUserScript.isEmpty()) {
-      var defUserFile = embedTextFile('DefaultUser.ps1', defaultUserScript.getScript());
-      specializeScript.append('reg.exe load "HKU\\DefaultUser" "C:\\Users\\Default\\NTUSER.DAT";');
-      specializeScript.invokeFile(defUserFile);
-      specializeScript.append('reg.exe unload "HKU\\DefaultUser";');
-    }
-
     var specializeFile = null;
     if (!specializeScript.isEmpty()) {
       specializeFile = embedTextFile('Specialize.ps1', specializeScript.getScript());
     }
+
+    var userOnceFile = null;
+    if (!userOnceScript.isEmpty()) {
+      userOnceFile = embedTextFile('UserOnce.ps1', userOnceScript.getScript());
+      var cmdEscaped = ('powershell.exe -WindowStyle "Normal" -ExecutionPolicy "Unrestricted" -NoProfile -File "' + userOnceFile + '"').replace(/"/g, '\\"');
+      defaultUserScript.append('reg.exe add "HKU\\DefaultUser\\Software\\Microsoft\\Windows\\CurrentVersion\\RunOnce" /v "UnattendedSetup" /t REG_SZ /d "' + cmdEscaped + '" /f;');
+    }
+
+    var defaultUserFile = null;
+    if (!defaultUserScript.isEmpty()) {
+      defaultUserFile = embedTextFile('DefaultUser.ps1', defaultUserScript.getScript());
+    }
+
     var firstLogonFile = null;
     if (!firstLogonScript.isEmpty()) {
       firstLogonFile = embedTextFile('FirstLogon.ps1', firstLogonScript.getScript());
@@ -1524,7 +1525,7 @@
       }
     }
 
-    if (hasExtractScript || specializeFile) {
+    if (hasExtractScript || specializeFile || defaultUserFile) {
       var specDeploy = specSettingsElem.addChild(new XmlNode('component', {
         'name': 'Microsoft-Windows-Deployment',
         'processorArchitecture': arch,
@@ -1543,6 +1544,19 @@
         var specCmd = runSync.addChild(new XmlNode('RunSynchronousCommand', { 'wcm:action': 'add' }));
         specCmd.addSimpleElement('Order', String(orderNum++));
         specCmd.addSimpleElement('Path', 'powershell.exe -WindowStyle "Normal" -ExecutionPolicy "Unrestricted" -NoProfile -File "' + specializeFile + '"');
+      }
+      if (defaultUserFile) {
+        var loadCmd = runSync.addChild(new XmlNode('RunSynchronousCommand', { 'wcm:action': 'add' }));
+        loadCmd.addSimpleElement('Order', String(orderNum++));
+        loadCmd.addSimpleElement('Path', 'reg.exe load "HKU\\DefaultUser" "C:\\Users\\Default\\NTUSER.DAT"');
+
+        var duCmd = runSync.addChild(new XmlNode('RunSynchronousCommand', { 'wcm:action': 'add' }));
+        duCmd.addSimpleElement('Order', String(orderNum++));
+        duCmd.addSimpleElement('Path', 'powershell.exe -WindowStyle "Normal" -ExecutionPolicy "Unrestricted" -NoProfile -File "' + defaultUserFile + '"');
+
+        var unloadCmd = runSync.addChild(new XmlNode('RunSynchronousCommand', { 'wcm:action': 'add' }));
+        unloadCmd.addSimpleElement('Order', String(orderNum++));
+        unloadCmd.addSimpleElement('Path', 'reg.exe unload "HKU\\DefaultUser"');
       }
     }
 
@@ -1712,6 +1726,11 @@
       commitElem.addSimpleElement('Hash', commitHash);
       commitElem.addSimpleElement('GitHubUrl', 'https://github.com/CTD-Networks-CO-LTD/unattend-generator_ja-JP/commit/' + commitHash);
 
+      if (peScriptCopy) {
+        var peCopyElem = buildElem.addChild(new XmlNode('PEScriptCopy'));
+        peCopyElem.addChild(new XmlNode(peScriptCopy, null, null, true));
+      }
+
       if (hasExtractScript) {
         var extractScriptElem = extensionsElem.addChild(new XmlNode('ExtractScript'));
         extractScriptElem.addChild(new XmlNode(EXTRACT_SCRIPTS_PS1, null, null, true));
@@ -1720,11 +1739,6 @@
       for (var f = 0; f < embeddedFiles.length; f++) {
         var fileElem = extensionsElem.addChild(new XmlNode('File', { 'path': embeddedFiles[f].path }));
         fileElem.addChild(new XmlNode(embeddedFiles[f].content, null, null, true));
-      }
-
-      if (peScriptCopy) {
-        var peCopyElem = extensionsElem.addChild(new XmlNode('PEScriptCopy'));
-        peCopyElem.addChild(new XmlNode(peScriptCopy, null, null, true));
       }
     }
 
