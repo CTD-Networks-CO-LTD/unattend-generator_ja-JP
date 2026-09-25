@@ -251,7 +251,9 @@ const moduleFiles = [
   'modifiers/optimizations.js',
   'modifiers/bloatware.js',
   'modifiers/wifi.js',
+  'modifiers/applocker.js',
   'modifiers/scripts.js',
+  'modifiers/components.js',
   'modifiers/build.js',
 
   // Generator Engine

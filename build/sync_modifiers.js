@@ -20,9 +20,11 @@ const generatorEngineFile = path.join(docsJsDir, 'generator_engine.js');
 
 // Dedicated Modifiers (1-to-1 mapping with docs/js/modifiers/*.js)
 const DEDICATED_MODIFIERS = {
+  'AppLocker.cs': { jsFile: 'modifiers/applocker.js', className: 'AppLockerModifier' },
   'Bloatware.cs': { jsFile: 'modifiers/bloatware.js', className: 'BloatwareModifier' },
   'Build.cs': { jsFile: 'modifiers/build.js', className: 'BuildModifier' },
   'Bypass.cs': { jsFile: 'modifiers/bypass.js', className: 'BypassModifier' },
+  'Components.cs': { jsFile: 'modifiers/components.js', className: 'ComponentsModifier' },
   'ComputerName.cs': { jsFile: 'modifiers/computer_name.js', className: 'ComputerNameModifier' },
   'Delete.cs': { jsFile: 'modifiers/delete.js', className: 'DeleteModifier' },
   'ExpressSettings.cs': { jsFile: 'modifiers/express_settings.js', className: 'ExpressSettingsModifier' },
@@ -40,8 +42,6 @@ const DEDICATED_MODIFIERS = {
 // Integrated / Embedded Modifiers (implemented inside core / engine)
 const INTEGRATED_MODIFIERS = {
   'Accessibility.cs': 'docs/js/generator_engine.js (Client-side accessibility settings)',
-  'AppLocker.cs': 'docs/js/generator_engine.js (Optional AppLocker policies)',
-  'Components.cs': 'docs/js/generator_engine.js (WinPE/Setup component builder)',
   'DefaultUser.cs': 'docs/js/core/powershell_sequence.js / generator_engine.js',
   'Disk.cs': 'docs/js/modifiers/delete.js / generator_engine.js',
   'EmptyElements.cs': 'docs/js/core/xml_node.js (Empty elements clean-up)',

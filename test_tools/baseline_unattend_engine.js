@@ -205,6 +205,123 @@
     return result;
   };
 
+  function unescapeXml(str) {
+    if (!str) return '';
+    return str.replace(/&amp;/g, '&')
+              .replace(/&lt;/g, '<')
+              .replace(/&gt;/g, '>')
+              .replace(/&quot;/g, '"')
+              .replace(/&apos;/g, "'")
+              .replace(/&#x([0-9a-fA-F]+);/g, function (_, hex) { return String.fromCharCode(parseInt(hex, 16)); })
+              .replace(/&#([0-9]+);/g, function (_, dec) { return String.fromCharCode(parseInt(dec, 10)); });
+  }
+
+  function parseAttributes(attrStr) {
+    var attrs = {};
+    if (!attrStr) return attrs;
+    var attrRegex = /([a-zA-Z0-9_\-:]+)\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s'">=]+))/g;
+    var m;
+    while ((m = attrRegex.exec(attrStr)) !== null) {
+      attrs[m[1]] = unescapeXml(m[2] != null ? m[2] : (m[3] != null ? m[3] : m[4]));
+    }
+    return attrs;
+  }
+
+  function domNodeToXmlNode(domNode) {
+    if (domNode.nodeType === 3) {
+      var val = domNode.nodeValue;
+      return val && val.trim().length > 0 ? new XmlNode(val, null, null, true) : null;
+    }
+    if (domNode.nodeType === 1) {
+      var attrs = {};
+      for (var a = 0; a < domNode.attributes.length; a++) {
+        attrs[domNode.attributes[a].name] = domNode.attributes[a].value;
+      }
+      var node = new XmlNode(domNode.tagName, attrs);
+      for (var c = 0; c < domNode.childNodes.length; c++) {
+        var child = domNodeToXmlNode(domNode.childNodes[c]);
+        if (child) node.addChild(child);
+      }
+      return node;
+    }
+    return null;
+  }
+
+  function parseXmlMarkupFallback(xmlStr) {
+    var wrapped = '<root xmlns="urn:schemas-microsoft-com:unattend" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State">' + xmlStr + '</root>';
+    var rootNode = new XmlNode('root');
+    var stack = [rootNode];
+
+    var tagRegex = /<(\/)?([a-zA-Z0-9_\-:]+)((?:\s+[^'">\/=]+(?:\s*=\s*(?:"[^"]*"|'[^']*'|[^\s'">=]+))?)*)\s*(\/)?>/g;
+    var lastIdx = 0;
+    var match;
+
+    while ((match = tagRegex.exec(wrapped)) !== null) {
+      var textBefore = wrapped.substring(lastIdx, match.index);
+      if (textBefore.trim().length > 0) {
+        stack[stack.length - 1].addChild(new XmlNode(unescapeXml(textBefore), null, null, true));
+      }
+      lastIdx = tagRegex.lastIndex;
+
+      var isClosing = !!match[1];
+      var tagName = match[2];
+      var attrStr = match[3];
+      var isSelfClosing = !!match[4];
+
+      if (isClosing) {
+        if (stack.length <= 1) throw new Error('Mismatched closing tag: ' + tagName);
+        var popped = stack.pop();
+        if (popped.name !== tagName) throw new Error('Tag mismatch: expected ' + popped.name + ' but got ' + tagName);
+      } else {
+        var attrs = parseAttributes(attrStr);
+        var newNode = new XmlNode(tagName, attrs);
+        stack[stack.length - 1].addChild(newNode);
+        if (!isSelfClosing) stack.push(newNode);
+      }
+    }
+
+    if (stack.length !== 1) throw new Error('Unclosed tags in XML markup');
+    return rootNode.children;
+  }
+
+  function parseXmlMarkup(xmlStr) {
+    if (typeof DOMParser !== 'undefined') {
+      try {
+        var wrapped = '<root xmlns="urn:schemas-microsoft-com:unattend" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State">' + xmlStr + '</root>';
+        var parser = new DOMParser();
+        var dom = parser.parseFromString(wrapped, 'application/xml');
+        if (!dom.querySelector('parsererror')) {
+          var domChildren = dom.documentElement.childNodes;
+          var result = [];
+          for (var i = 0; i < domChildren.length; i++) {
+            var converted = domNodeToXmlNode(domChildren[i]);
+            if (converted) result.push(converted);
+          }
+          return result;
+        }
+      } catch (e) {
+        // Fallback
+      }
+    }
+    return parseXmlMarkupFallback(xmlStr);
+  }
+
+  function hasForbiddenElements(nodes) {
+    for (var i = 0; i < nodes.length; i++) {
+      var n = nodes[i];
+      if (!n.isText) {
+        var localName = n.name.indexOf(':') !== -1 ? n.name.split(':')[1] : n.name;
+        if (localName.toLowerCase() === 'settings' || localName.toLowerCase() === 'component') {
+          return true;
+        }
+        if (n.children && hasForbiddenElements(n.children)) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
   // PowerShell sequence builder matching C# PowerShellSequence
   function PowerShellSequence(activity, logFile) {
     this.activity = activity;
@@ -343,7 +460,7 @@
       return val === 'true' || val === 'on' || val === '1';
     };
 
-    var commitHash = '4a58c3fe83840e41d48b70cfa4700887c9f6304d';
+    var commitHash = '9fd6c76d8fdc7ba668ae3625e969badf1f8f1993';
 
     // Script sequences
     var specializeScript = new PowerShellSequence('Running scripts to customize your Windows installation.', 'C:\\Windows\\Setup\\Scripts\\Specialize.log');
@@ -710,6 +827,19 @@
       ].join('\r\n'));
     }
 
+    // AppLocker Policy (AppLockerModifier)
+    var appLockerMode = getVal('AppLockerMode', 'Skip');
+    var appLockerPolicyXml = getVal('AppLockerPolicyXml', '');
+    if (appLockerMode === 'Configure' && appLockerPolicyXml && appLockerPolicyXml.trim()) {
+      var cleanPolicyXml = appLockerPolicyXml.trim().replace(/\r\n/g, '\n').replace(/\r/g, '\n').replace(/\n/g, '\r\n');
+      var appLockerFile = embedTextFile('AppLockerPolicy.xml', cleanPolicyXml);
+      specializeScript.append(
+        "Get-Service -Name 'AppIDSvc' | Set-Service -StartupType 'Automatic';\r\n" +
+        "Get-Service -Name 'AppIDSvc' | Start-Service;\r\n" +
+        "Set-AppLockerPolicy -XmlPolicy '" + appLockerFile + "';"
+      );
+    }
+
     // RestartExplorer option & Custom Scripts (ScriptsModifier)
     if (getBool('RestartExplorer', false)) {
       userOnceScript.restartExplorer();
@@ -826,7 +956,7 @@
     });
 
     // 1. pass="offlineServicing"
-    root.addChild(new XmlNode('settings', { 'pass': 'offlineServicing' }));
+    var offlineServicingSettingsElem = root.addChild(new XmlNode('settings', { 'pass': 'offlineServicing' }));
 
     // 2. pass="windowsPE"
     var peSettingsElem = root.addChild(new XmlNode('settings', { 'pass': 'windowsPE' }));
@@ -890,7 +1020,7 @@
     winSetup.addSimpleElement('UseConfigurationSet', useConfigurationSet ? 'true' : 'false');
 
     // 3. pass="generalize"
-    root.addChild(new XmlNode('settings', { 'pass': 'generalize' }));
+    var generalizeSettingsElem = root.addChild(new XmlNode('settings', { 'pass': 'generalize' }));
 
     // 4. pass="specialize"
     var specSettingsElem = root.addChild(new XmlNode('settings', { 'pass': 'specialize' }));
@@ -933,10 +1063,10 @@
     }
 
     // 5. pass="auditSystem"
-    root.addChild(new XmlNode('settings', { 'pass': 'auditSystem' }));
+    var auditSystemSettingsElem = root.addChild(new XmlNode('settings', { 'pass': 'auditSystem' }));
 
     // 6. pass="auditUser"
-    root.addChild(new XmlNode('settings', { 'pass': 'auditUser' }));
+    var auditUserSettingsElem = root.addChild(new XmlNode('settings', { 'pass': 'auditUser' }));
 
     // 7. pass="oobeSystem"
     var oobeSettingsElem = root.addChild(new XmlNode('settings', { 'pass': 'oobeSystem' }));
@@ -1027,6 +1157,59 @@
       var syncCmdOobe = firstLogonCommands.addChild(new XmlNode('SynchronousCommand', { 'wcm:action': 'add' }));
       syncCmdOobe.addSimpleElement('Order', '1');
       syncCmdOobe.addSimpleElement('CommandLine', 'powershell.exe -WindowStyle "Normal" -ExecutionPolicy "Unrestricted" -NoProfile -File "' + firstLogonFile + '"');
+    }
+
+    var passSettings = {
+      offlineServicing: offlineServicingSettingsElem,
+      windowsPE: peSettingsElem,
+      generalize: generalizeSettingsElem,
+      specialize: specSettingsElem,
+      auditSystem: auditSystemSettingsElem,
+      auditUser: auditUserSettingsElem,
+      oobeSystem: oobeSettingsElem
+    };
+
+    // Components (ComponentsModifier)
+    for (var ci = 0; ci <= 2; ci++) {
+      var cVal = getVal('Component' + ci, '');
+      var cMarkup = getVal('ComponentContent' + ci, '');
+      if (!cVal || !cMarkup || !cMarkup.trim()) continue;
+      var cDash = cVal.lastIndexOf('-');
+      if (cDash === -1) continue;
+      var cName = cVal.substring(0, cDash);
+      var cPass = cVal.substring(cDash + 1);
+      var cSetting = passSettings[cPass];
+      if (!cSetting) continue;
+
+      try {
+        var cNodes = parseXmlMarkup(cMarkup.trim());
+        if (hasForbiddenElements(cNodes)) continue;
+
+        var existingComp = null;
+        for (var cidx = 0; cidx < cSetting.children.length; cidx++) {
+          var ch = cSetting.children[cidx];
+          if (!ch.isText && ch.name === 'component' && ch.attrs && ch.attrs.name === cName) {
+            existingComp = ch;
+            break;
+          }
+        }
+        var targetComp = existingComp;
+        if (!targetComp) {
+          targetComp = new XmlNode('component', {
+            'name': cName,
+            'processorArchitecture': 'x86',
+            'publicKeyToken': '31bf3856ad364e35',
+            'language': 'neutral',
+            'versionScope': 'nonSxS'
+          });
+          cSetting.addChild(targetComp);
+        } else {
+          targetComp.children = [];
+        }
+        for (var cni = 0; cni < cNodes.length; cni++) {
+          targetComp.addChild(cNodes[cni]);
+        }
+      } catch (ce) {}
     }
 
     // 8. Extensions
