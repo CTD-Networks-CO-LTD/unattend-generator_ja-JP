@@ -149,7 +149,7 @@ function generateAutounattendXml(formData) {
       }
     }
 
-    if (context.hasExtractScript || context.specializeFile) {
+    if (context.hasExtractScript || context.specializeFile || context.defaultUserFile) {
       var specDeploy = specSettingsElem.addChild(new XmlNode('component', {
         'name': 'Microsoft-Windows-Deployment',
         'processorArchitecture': context.arch,
@@ -168,6 +168,19 @@ function generateAutounattendXml(formData) {
         var specCmd = runSync.addChild(new XmlNode('RunSynchronousCommand', { 'wcm:action': 'add' }));
         specCmd.addSimpleElement('Order', String(orderNum++));
         specCmd.addSimpleElement('Path', 'powershell.exe -WindowStyle "Normal" -ExecutionPolicy "Unrestricted" -NoProfile -File "' + context.specializeFile + '"');
+      }
+      if (context.defaultUserFile) {
+        var loadCmd = runSync.addChild(new XmlNode('RunSynchronousCommand', { 'wcm:action': 'add' }));
+        loadCmd.addSimpleElement('Order', String(orderNum++));
+        loadCmd.addSimpleElement('Path', 'reg.exe load "HKU\\DefaultUser" "C:\\Users\\Default\\NTUSER.DAT"');
+
+        var duCmd = runSync.addChild(new XmlNode('RunSynchronousCommand', { 'wcm:action': 'add' }));
+        duCmd.addSimpleElement('Order', String(orderNum++));
+        duCmd.addSimpleElement('Path', 'powershell.exe -WindowStyle "Normal" -ExecutionPolicy "Unrestricted" -NoProfile -File "' + context.defaultUserFile + '"');
+
+        var unloadCmd = runSync.addChild(new XmlNode('RunSynchronousCommand', { 'wcm:action': 'add' }));
+        unloadCmd.addSimpleElement('Order', String(orderNum++));
+        unloadCmd.addSimpleElement('Path', 'reg.exe unload "HKU\\DefaultUser"');
       }
     }
 
@@ -296,6 +309,12 @@ function generateAutounattendXml(formData) {
       commitElem.addSimpleElement('Hash', context.commitHash);
       commitElem.addSimpleElement('GitHubUrl', urlBase + context.commitHash);
 
+      // PEScriptCopy は C# と同様に Build 要素の内部に配置する
+      if (diskMod.peScriptCopy) {
+        var peCopyElem = buildElem.addChild(new XmlNode('PEScriptCopy'));
+        peCopyElem.addChild(new XmlNode(diskMod.peScriptCopy, null, null, true));
+      }
+
       if (context.hasExtractScript) {
         var extractScriptElem = extensionsElem.addChild(new XmlNode('ExtractScript'));
         extractScriptElem.addChild(new XmlNode(EXTRACT_SCRIPTS_PS1, null, null, true));
@@ -304,11 +323,6 @@ function generateAutounattendXml(formData) {
       for (var f = 0; f < context.embeddedFiles.length; f++) {
         var fileElem = extensionsElem.addChild(new XmlNode('File', { 'path': context.embeddedFiles[f].path }));
         fileElem.addChild(new XmlNode(context.embeddedFiles[f].content, null, null, true));
-      }
-
-      if (diskMod.peScriptCopy) {
-        var peCopyElem = extensionsElem.addChild(new XmlNode('PEScriptCopy'));
-        peCopyElem.addChild(new XmlNode(diskMod.peScriptCopy, null, null, true));
       }
     }
 

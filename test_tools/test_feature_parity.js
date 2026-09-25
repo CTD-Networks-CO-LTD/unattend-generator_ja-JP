@@ -479,6 +479,74 @@ function runTests() {
   assert(!defaultPeXml.includes('<PEScriptCopy>'), 'PEMode: Default 時に PEScriptCopy が出力されないこと');
   assert(!defaultPeXml.includes('X:\\pe.cmd'), 'PEMode: Default 時に X:\\pe.cmd が出力されないこと');
 
+  console.log('\n--- Test 16: specialize パス RunSynchronousCommand (Order 1〜5) & PEScriptCopy 階層パリティの検証 ---');
+  const parityParams = new URLSearchParams({
+    LanguageMode: 'Unattended',
+    UILanguage: 'ja-JP',
+    Locale: 'ja-JP',
+    Keyboard: '00000411',
+    GeoLocation: '122',
+    PEMode: 'Generated',
+    InstallFromMode: 'Edition',
+    InstallFromEdition: 'pro',
+    ComputerNameMode: 'Random',
+    TimeZoneMode: 'Implicit',
+    UserAccountMode: 'Unattended',
+    AccountName0: 'admin',
+    AccountPassword0: 'Pass123!',
+    AccountGroup0: 'Administrators',
+    AutoLogonMode: 'Own',
+    PasswordExpirationMode: 'Unlimited',
+    LockoutMode: 'Default',
+    HideFiles: 'Hidden',
+    ShowFileExtensions: 'true',
+    DisableFastStartup: 'true',
+    DisableAppSuggestions: 'true',
+    PreventDeviceEncryption: 'true',
+    HideEdgeFre: 'true',
+    WifiMode: 'Skip',
+    ExpressSettings: 'DisableAll',
+    RemoveBingSearch: 'true',
+    RemoveCopilot: 'true',
+    FirstLogonScript0: 'Write-Host "Test"',
+    FirstLogonScriptType0: 'Ps1'
+  });
+  const parityXml = engine.generateAutounattendXml(parityParams);
+
+  // 1. specialize RunSynchronousCommand Orders
+  assert(parityXml.includes('<Order>1</Order>\r\n\t\t\t\t\t<Path>powershell.exe -WindowStyle "Normal" -NoProfile -Command "$xml = [xml]::new(); $xml.Load(\'C:\\Windows\\Panther\\unattend.xml\'); $sb = [scriptblock]::Create( $xml.unattend.Extensions.ExtractScript ); Invoke-Command -ScriptBlock $sb -ArgumentList $xml;"</Path>'), 'Order 1 が ExtractScript であること');
+  assert(parityXml.includes('<Order>2</Order>\r\n\t\t\t\t\t<Path>powershell.exe -WindowStyle "Normal" -ExecutionPolicy "Unrestricted" -NoProfile -File "C:\\Windows\\Setup\\Scripts\\Specialize.ps1"</Path>'), 'Order 2 が Specialize.ps1 であること');
+  assert(parityXml.includes('<Order>3</Order>\r\n\t\t\t\t\t<Path>reg.exe load "HKU\\DefaultUser" "C:\\Users\\Default\\NTUSER.DAT"</Path>'), 'Order 3 が reg.exe load であること');
+  assert(parityXml.includes('<Order>4</Order>\r\n\t\t\t\t\t<Path>powershell.exe -WindowStyle "Normal" -ExecutionPolicy "Unrestricted" -NoProfile -File "C:\\Windows\\Setup\\Scripts\\DefaultUser.ps1"</Path>'), 'Order 4 が DefaultUser.ps1 であること');
+  assert(parityXml.includes('<Order>5</Order>\r\n\t\t\t\t\t<Path>reg.exe unload "HKU\\DefaultUser"</Path>'), 'Order 5 が reg.exe unload であること');
+
+  // 2. Specialize.ps1 クリーン性
+  const pSpecMatch = parityXml.match(/<File path="C:\\Windows\\Setup\\Scripts\\Specialize\.ps1">([\s\S]*?)<\/File>/);
+  assert(pSpecMatch, 'Specialize.ps1 が File 要素として存在すること');
+  assert(!pSpecMatch[1].includes('reg.exe load "HKU\\DefaultUser"'), 'Specialize.ps1 に reg.exe load が含まれないこと');
+  assert(!pSpecMatch[1].includes('DefaultUser.ps1'), 'Specialize.ps1 に DefaultUser.ps1 の呼出が含まれないこと');
+
+  // 3. PEScriptCopy が <Build> 内に存在すること
+  const pBuildMatch = parityXml.match(/<Build>([\s\S]*?)<\/Build>/);
+  assert(pBuildMatch, '<Build> 要素が存在すること');
+  assert(pBuildMatch[1].includes('<PEScriptCopy>'), '<Build> 内部に <PEScriptCopy> が存在すること');
+
+  // 4. Extensions 要素順序
+  const pBuildIdx = parityXml.indexOf('<Build>');
+  const pExtractIdx = parityXml.indexOf('<ExtractScript>');
+  const pFirstFileIdx = parityXml.indexOf('<File path=');
+  assert(pBuildIdx < pExtractIdx, '<Build> が <ExtractScript> より前にあること');
+  assert(pExtractIdx < pFirstFileIdx, '<ExtractScript> が 最初の <File> より前にあること');
+
+  // 5. File 要素順序
+  const pSpecFileIdx = parityXml.indexOf('<File path="C:\\Windows\\Setup\\Scripts\\Specialize.ps1">');
+  const pUserOnceFileIdx = parityXml.indexOf('<File path="C:\\Windows\\Setup\\Scripts\\UserOnce.ps1">');
+  const pDefUserFileIdx = parityXml.indexOf('<File path="C:\\Windows\\Setup\\Scripts\\DefaultUser.ps1">');
+  const pFirstLogonFileIdx = parityXml.indexOf('<File path="C:\\Windows\\Setup\\Scripts\\FirstLogon.ps1">');
+  assert(pSpecFileIdx < pUserOnceFileIdx, 'Specialize.ps1 が UserOnce.ps1 より前にあること');
+  assert(pUserOnceFileIdx < pDefUserFileIdx, 'UserOnce.ps1 が DefaultUser.ps1 より前にあること');
+  assert(pDefUserFileIdx < pFirstLogonFileIdx, 'DefaultUser.ps1 が FirstLogon.ps1 より前にあること');
+
   console.log('\n====================================================');
   console.log(` テスト結果: ${passed} 項目合格 / ${failed} 項目失敗`);
   console.log('====================================================\n');
