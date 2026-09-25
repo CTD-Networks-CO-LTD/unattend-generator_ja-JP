@@ -72,6 +72,50 @@ assert(genParams.get('TargetDiskScript') === sampleTargetDiskScript, 'TargetDisk
 assert(genParams.get('PartitionMode') === 'Custom', 'PartitionMode=Custom がクエリ復元パラメータと一致');
 assert(genParams.get('DiskpartScript') === sampleDiskpartScript, 'DiskpartScript がクエリ復元パラメータと一致');
 
+// 3. PEMode = 'Generated' (Default設定: Automatic + Generated TargetDisk) の完全パリティ検証
+const defaultGenFd = new MockFormData({
+  PEMode: 'Generated',
+  LanguageMode: 'Unattended',
+  GeoLocation: '244',
+  TargetDiskMode: 'Generated',
+  TargetDiskInterfaceType: 'true',
+  TargetDiskMediaType: 'true',
+  TargetDiskSize: 'true',
+  TargetDiskMinSize: '100',
+  TargetDiskMaxSize: '4000',
+  TargetDiskIndex: 'true',
+  TargetDisk: '0',
+  TargetDiskNoPartitions: 'true',
+  PartitionMode: 'Unattended',
+  PartitionLayout: 'Automatic',
+  SystemSize: '300',
+  RecoveryMode: 'Partition',
+  RecoverySize: '1000',
+  InstallFromMode: 'Edition',
+  InstallFromEdition: 'pro'
+});
+const defaultGenXml = engine.generateAutounattendXml(defaultGenFd);
+
+assert(defaultGenXml.includes('&gt;&gt;X:\\pe.cmd'), 'pe.cmd 作成コマンドが存在 (Default Generated)');
+assert(defaultGenXml.includes('target.vbs'), 'target.vbs 出力処理が存在 (Default Generated)');
+assert(defaultGenXml.includes('Win32_DiskDrive'), 'VBScript内に WMI Win32_DiskDrive 照会が存在');
+assert(defaultGenXml.includes('Fixed hard disk media'), 'VBScript内に Fixed hard disk media チェックが存在');
+assert(defaultGenXml.includes('wpeutil.exe UpdateBootInfo'), 'UpdateBootInfo による UEFI/BIOS 判定が存在');
+assert(defaultGenXml.includes('PEFirmwareType'), 'レジストリ PEFirmwareType 判定が存在');
+assert(defaultGenXml.includes('&gt;X:\\GPT.txt'), 'GPT.txt 出力処理が存在');
+assert(defaultGenXml.includes('&gt;X:\\MBR.txt'), 'MBR.txt 出力処理が存在');
+assert(defaultGenXml.includes('diskpart.exe /s X:\\%LAYOUT%.txt'), '動的レイアウト指定での diskpart 実行が存在');
+assert(defaultGenXml.includes('Windows %OS_VERSION% Pro'), 'Windowsイメージ適用に対象エディション名が存在');
+assert(defaultGenXml.includes('bcdboot.exe W:\\Windows /s S:'), 'bcdboot によるブート構成作成が存在');
+assert(defaultGenXml.includes('bcdedit.exe /set {fwbootmgr} bootsequence {bootmgr}'), 'GPT時の bcdedit ブートシーケンス設定が存在');
+assert(defaultGenXml.includes('DeviceRegion'), 'DeviceRegion レジストリ設定が存在');
+assert(defaultGenXml.includes('cmd.exe /c "X:\\pe.cmd"'), 'pe.cmd 実行コマンドが存在');
+
+const pePassMatch = defaultGenXml.match(/<settings pass="windowsPE">[\s\S]*?<\/settings>/);
+assert(pePassMatch !== null, 'windowsPE パスが存在');
+const syncCommands = pePassMatch[0].match(/<RunSynchronousCommand/g);
+assert(syncCommands && syncCommands.length === 36, 'windowsPE の RunSynchronousCommand が正確に 36 個存在 (実際: ' + (syncCommands ? syncCommands.length : 0) + ')');
+
 console.log('\n====================================================');
-console.log(' 全 16 検証項目 合格！');
+console.log(' 全 ' + (16 + 15) + ' 検証項目 合格！');
 console.log('====================================================');
