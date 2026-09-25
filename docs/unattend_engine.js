@@ -220,10 +220,10 @@ var SET_WALLPAPER_PS1 = [
 
 var REPO_URL = 'https://github.com/CTD-Networks-CO-LTD/unattend-generator_ja-JP';
 var COMMIT_URL_BASE = REPO_URL + '/commit/';
-var COMMIT_HASH = 'f4c8db9f894a4724f87e710da27f3ce75db388d8';
+var COMMIT_HASH = '2b1e8183a89d8d91bd21697097e5ac8d7ae29b0a';
 var RELEASE_TAG = 'v1.5.1_20260923';
 var RELEASE_URL = 'https://github.com/CTD-Networks-CO-LTD/unattend-generator_ja-JP/releases/tag/v1.5.1_20260923';
-var COMMIT_DATE = '2026-09-25T10:00:31+09:00';
+var COMMIT_DATE = '2026-09-25T10:00:36+09:00';
 
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
@@ -1294,19 +1294,71 @@ if (typeof module !== 'undefined' && module.exports) {
 
   // --- Begin: modifiers/wifi.js ---
 /**
- * Wifi modifier matching baseline_unattend_engine.js
+ * Wifi modifier matching C# WifiModifier & baseline_unattend_engine.js
+ * Handles WifiMode === 'FromProfile' and embeds Wifi.xml with WlanSvc wait loop
  */
 function WifiModifier(context) {
   this.context = context;
 }
 
 WifiModifier.prototype.process = function () {
-  // Baseline does not generate additional XML for Wifi settings
+  var ctx = this.context;
+  var wifiMode = ctx.getVal('WifiMode', 'Interactive');
+  if (wifiMode !== 'FromProfile') {
+    return;
+  }
+
+  var rawProfileXml = ctx.getVal('WifiProfileXml', '');
+  if (!rawProfileXml || !rawProfileXml.trim()) {
+    return;
+  }
+
+  var profileXml = rawProfileXml.trim().replace(/\r\n/g, '\n').replace(/\r/g, '\n').replace(/\n/g, '\r\n');
+  var xmlFile = ctx.embedTextFile('Wifi.xml', profileXml);
+
+  ctx.sequences.specialize.append([
+    "$name = 'WlanSvc';",
+    '$start = [datetime]::Now;',
+    '$timeout = $start.AddMinutes( 1 );',
+    '$params = @{',
+    '  Id = 1;',
+    '  ParentId = 0;',
+    '  Activity = "Waiting for service \'${name}\' to start.";',
+    '};',
+    'while( $true ) {',
+    "\tif( $service = Get-Service -Name $name -ErrorAction 'SilentlyContinue' ) {",
+    "\t\tif( $service.Status -eq 'Running' ) {",
+    '\t\t\tbreak;',
+    '\t\t}',
+    '\t}',
+    '\tif( [datetime]::Now -gt $timeout ) {',
+    '\t\t"Service \'${name}\' did not start in time." | Write-Warning;',
+    '\t\tbreak;',
+    '\t}',
+    '\tWrite-Progress @params -PercentComplete $(',
+    '\t\t100 * ( [datetime]::Now - $start ).Ticks / ( $timeout - $start ).Ticks',
+    '\t);',
+    '\tStart-Sleep -Seconds 5;',
+    '}',
+    'Write-Progress @params -Completed;'
+  ].join('\r\n'));
+
+  ctx.sequences.specialize.append('netsh.exe wlan add profile filename="' + xmlFile + '" user=all;');
+
+  var nameMatch = profileXml.match(/<name>([^<]+)<\/name>/i);
+  var profileName = nameMatch ? nameMatch[1].trim() : '';
+  var modeMatch = profileXml.match(/<connectionMode>([^<]+)<\/connectionMode>/i);
+  var isAuto = modeMatch && modeMatch[1].trim().toLowerCase() === 'auto';
+
+  if (isAuto && profileName) {
+    ctx.sequences.specialize.append('netsh.exe wlan connect name="' + profileName + '" ssid="' + profileName + '";');
+  }
 };
 
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = { WifiModifier: WifiModifier };
 }
+
 
   // --- End: modifiers/wifi.js ---
 
@@ -1992,7 +2044,12 @@ function generateAutounattendXml(formData) {
       oobeSub.addSimpleElement('ProtectYourPC', '1');
     }
     oobeSub.addSimpleElement('HideEULAPage', 'true');
-    oobeSub.addSimpleElement('HideWirelessSetupInOOBE', 'false');
+    var wifiMode = context.getVal('WifiMode', 'Interactive');
+    if (wifiMode === 'Skip') {
+      oobeSub.addSimpleElement('HideWirelessSetupInOOBE', 'true');
+    } else if (wifiMode !== 'FromProfile') {
+      oobeSub.addSimpleElement('HideWirelessSetupInOOBE', 'false');
+    }
     oobeSub.addSimpleElement('HideOnlineAccountScreens', 'false');
 
     if (context.firstLogonFile) {

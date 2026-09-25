@@ -370,6 +370,37 @@ function runTests() {
   assert(!defaultPersonalizationXml.includes('GetWallpaper.ps1'), 'WallpaperMode: Default 時に GetWallpaper.ps1 が出力されないこと');
   assert(!defaultPersonalizationXml.includes('GetLockScreenImage.ps1'), 'LockScreenMode: Default 時に GetLockScreenImage.ps1 が出力されないこと');
 
+  // --- Test 14: Wi-Fi プロファイル (WifiProfileXml / HideWirelessSetupInOOBE) の検証 ---
+  console.log('\n--- Test 14: Wi-Fi プロファイル (WifiProfileXml / HideWirelessSetupInOOBE) の検証 ---');
+  const sampleWifiXml = '<WLANProfile xmlns="http://www.microsoft.com/networking/WLAN/profile/v1"><name>Office-WiFi</name><connectionType>ESS</connectionType><connectionMode>auto</connectionMode></WLANProfile>';
+  const wifiProfileFd = new MockFormData({
+    WifiMode: 'FromProfile',
+    WifiProfileXml: sampleWifiXml
+  });
+  const wifiProfileXml = engine.generateAutounattendXml(wifiProfileFd);
+
+  assert(wifiProfileXml.includes('<File path="C:\\Windows\\Setup\\Scripts\\Wifi.xml">'), 'Wifi.xml が File 要素として埋め込まれていること');
+  assert(wifiProfileXml.includes("Waiting for service '${name}' to start."), 'Specialize.ps1 に WlanSvc 待機ループスクリプトが含まれていること');
+  assert(wifiProfileXml.includes('netsh.exe wlan add profile filename="C:\\Windows\\Setup\\Scripts\\Wifi.xml" user=all;'), 'Specialize.ps1 に netsh profile 追加コマンドが含まれていること');
+  assert(wifiProfileXml.includes('netsh.exe wlan connect name="Office-WiFi" ssid="Office-WiFi";'), 'Specialize.ps1 に auto 接続コマンドが含まれていること');
+  assert(!wifiProfileXml.includes('HideWirelessSetupInOOBE'), 'WifiMode: FromProfile 時に HideWirelessSetupInOOBE 要素が出力されないこと（削除）');
+
+  // WifiMode = Skip 指定時
+  const wifiSkipFd = new MockFormData({
+    WifiMode: 'Skip'
+  });
+  const wifiSkipXml = engine.generateAutounattendXml(wifiSkipFd);
+  assert(wifiSkipXml.includes('<HideWirelessSetupInOOBE>true</HideWirelessSetupInOOBE>'), 'WifiMode: Skip 時に HideWirelessSetupInOOBE が true であること');
+  assert(!wifiSkipXml.includes('<File path="C:\\Windows\\Setup\\Scripts\\Wifi.xml">'), 'WifiMode: Skip 時に Wifi.xml が埋め込まれないこと');
+
+  // WifiMode = Interactive 指定時
+  const wifiInteractiveFd = new MockFormData({
+    WifiMode: 'Interactive'
+  });
+  const wifiInteractiveXml = engine.generateAutounattendXml(wifiInteractiveFd);
+  assert(wifiInteractiveXml.includes('<HideWirelessSetupInOOBE>false</HideWirelessSetupInOOBE>'), 'WifiMode: Interactive 時に HideWirelessSetupInOOBE が false であること');
+  assert(!wifiInteractiveXml.includes('<File path="C:\\Windows\\Setup\\Scripts\\Wifi.xml">'), 'WifiMode: Interactive 時に Wifi.xml が埋め込まれないこと');
+
   console.log('\n====================================================');
   console.log(` テスト結果: ${passed} 項目合格 / ${failed} 項目失敗`);
   console.log('====================================================\n');
