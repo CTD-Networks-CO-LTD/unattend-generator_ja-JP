@@ -163,7 +163,7 @@ function getTargetDiskScript(ctx) {
   lines.push('');
 
   // 1. AssertInterfaceType (TargetDiskInterfaceType checkbox)
-  if (ctx.getBool('TargetDiskInterfaceType', true)) {
+  if (ctx.getBool('TargetDiskInterfaceType', false)) {
     lines.push('  actual = drive.InterfaceType');
     lines.push('  If actual <> "IDE" And actual <> "SCSI" Then');
     lines.push('    accept = False');
@@ -172,7 +172,7 @@ function getTargetDiskScript(ctx) {
   }
 
   // 2. AssertMediaType (TargetDiskMediaType checkbox)
-  if (ctx.getBool('TargetDiskMediaType', true)) {
+  if (ctx.getBool('TargetDiskMediaType', false)) {
     lines.push('  actual = drive.MediaType');
     lines.push('  If actual <> "Fixed hard disk media" Then');
     lines.push('    accept = False');
@@ -181,7 +181,7 @@ function getTargetDiskScript(ctx) {
   }
 
   // 3. Size check (TargetDiskSize checkbox)
-  if (ctx.getBool('TargetDiskSize', true)) {
+  if (ctx.getBool('TargetDiskSize', false)) {
     var minVal = ctx.getVal('TargetDiskMinSize', '100');
     if (minVal !== '' && minVal !== null && minVal !== undefined) {
       lines.push('  actual = CInt(drive.Size / 1024 / 1024 / 1024)');
@@ -203,7 +203,7 @@ function getTargetDiskScript(ctx) {
   }
 
   // 4. Index check (TargetDiskIndex checkbox)
-  if (ctx.getBool('TargetDiskIndex', true)) {
+  if (ctx.getBool('TargetDiskIndex', false)) {
     var idxVal = ctx.getVal('TargetDisk', '0');
     if (idxVal !== '' && idxVal !== null && idxVal !== undefined) {
       lines.push('  actual = drive.Index');
@@ -216,7 +216,7 @@ function getTargetDiskScript(ctx) {
   }
 
   // 5. AssertNoPartitions (TargetDiskNoPartitions checkbox)
-  if (ctx.getBool('TargetDiskNoPartitions', true)) {
+  if (ctx.getBool('TargetDiskNoPartitions', false)) {
     lines.push('  actual = drive.Partitions');
     lines.push('  If actual > 0 Then');
     lines.push('    accept = False');
@@ -474,7 +474,7 @@ function getPEScript(ctx) {
   lines.push('call :print "Making system partition bootable"');
   lines.push('bcdboot.exe W:\\Windows /s S: || call :fail "bcdboot.exe encountered an error."');
   lines.push('if %LAYOUT% == GPT (');
-  lines.push('    bcdedit.exe /set {fwbootmgr} bootsequence {bootmgr}');
+  lines.push('    bcdedit.exe /set {fwbootmgr} bootsequence {bootmgr} || call :fail "bcdedit.exe encountered an error."');
   lines.push(')');
   lines.push('');
 

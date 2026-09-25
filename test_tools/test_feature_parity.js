@@ -479,6 +479,40 @@ function runTests() {
   assert(!defaultPeXml.includes('<PEScriptCopy>'), 'PEMode: Default 時に PEScriptCopy が出力されないこと');
   assert(!defaultPeXml.includes('X:\\pe.cmd'), 'PEMode: Default 時に X:\\pe.cmd が出力されないこと');
 
+  // Case E: PEMode = 'Generated' with Partial TargetDisk criteria (Only InterfaceType & Size specified)
+  const partialGenFd = new MockFormData({
+    PEMode: 'Generated',
+    LanguageMode: 'Unattended',
+    UILanguage: 'ja-JP',
+    Locale: 'ja-JP',
+    Keyboard: '00000411',
+    GeoLocation: '122',
+    TargetDiskMode: 'Generated',
+    TargetDiskInterfaceType: 'true',
+    TargetDiskSize: 'true',
+    TargetDiskMinSize: '63',
+    TargetDiskMaxSize: '99000',
+    PartitionMode: 'Unattended',
+    PartitionLayout: 'Automatic',
+    SystemSize: '300',
+    RecoveryMode: 'Partition',
+    RecoverySize: '1000',
+    InstallFromMode: 'Edition',
+    InstallFromEdition: 'pro'
+  });
+  const partialGenXml = engine.generateAutounattendXml(partialGenFd);
+  assert(partialGenXml.includes('actual = drive.InterfaceType'), 'target.vbs 内に InterfaceType 判定が含まれること');
+  assert(partialGenXml.includes('expected = 63'), 'target.vbs 内に MinSize 63 判定が含まれること');
+  assert(partialGenXml.includes('expected = 99000'), 'target.vbs 内に MaxSize 99000 判定が含まれること');
+  assert(!partialGenXml.includes('Fixed hard disk media'), 'target.vbs 内に未指定の MediaType 判定が含まれないこと');
+  assert(!partialGenXml.includes('actual = drive.Index'), 'target.vbs 内に未指定の Index 判定が含まれないこと');
+  assert(!partialGenXml.includes('actual = drive.Partitions'), 'target.vbs 内に未指定の Partitions 判定が含まれないこと');
+  assert(partialGenXml.includes('bcdedit.exe /set {fwbootmgr} bootsequence {bootmgr} || call :fail "bcdedit.exe encountered an error."'), 'pe.cmd 内に bcdedit エラーハンドリングが存在すること');
+  const partialPeMatch = partialGenXml.match(/<settings pass="windowsPE">[\s\S]*?<\/settings>/);
+  assert(partialPeMatch !== null, 'windowsPE パスが存在すること');
+  const partialCmdMatches = partialPeMatch[0].match(/<RunSynchronousCommand/g);
+  assert(partialCmdMatches && partialCmdMatches.length === 34, 'windowsPE の RunSynchronousCommand が正確に 34 個出力されること (実際: ' + (partialCmdMatches ? partialCmdMatches.length : 0) + ')');
+
   console.log('\n--- Test 16: specialize パス RunSynchronousCommand (Order 1〜5) & PEScriptCopy 階層パリティの検証 ---');
   const parityParams = new URLSearchParams({
     LanguageMode: 'Unattended',
