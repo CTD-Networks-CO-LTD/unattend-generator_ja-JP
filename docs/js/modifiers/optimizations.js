@@ -1,6 +1,13 @@
 /**
  * Optimizations modifier matching baseline_unattend_engine.js
  */
+if (typeof SET_START_PINS_PS1 === 'undefined' && typeof require !== 'undefined') {
+  var constants = require('../core/constants');
+  SET_START_PINS_PS1 = constants.SET_START_PINS_PS1;
+  UNLOCK_START_LAYOUT_VBS = constants.UNLOCK_START_LAYOUT_VBS;
+  UNLOCK_START_LAYOUT_XML = constants.UNLOCK_START_LAYOUT_XML;
+}
+
 function OptimizationsModifier(context) {
   this.context = context;
 }
@@ -156,6 +163,60 @@ OptimizationsModifier.prototype.process = function () {
         "'VirtIO Guest Tools image (virtio-win-*.iso) is not attached to this VM.';"
       ].join('\r\n'));
       firstLogonScript.invokeFile('C:\\Windows\\Setup\\Scripts\\VirtIoGuestTools.ps1');
+    }
+
+    // Taskbar Icons (SetTaskbarIcons)
+    var taskbarMode = ctx.getVal('TaskbarIconsMode', 'Default');
+    var taskbarXml = '';
+    if (taskbarMode === 'Empty') {
+      taskbarXml = [
+        '<LayoutModificationTemplate xmlns="http://schemas.microsoft.com/Start/2014/LayoutModification" xmlns:defaultlayout="http://schemas.microsoft.com/Start/2014/FullDefaultLayout" xmlns:start="http://schemas.microsoft.com/Start/2014/StartLayout" xmlns:taskbar="http://schemas.microsoft.com/Start/2014/TaskbarLayout" Version="1">',
+        '  <CustomTaskbarLayoutCollection PinListPlacement="Replace">',
+        '    <defaultlayout:TaskbarLayout>',
+        '      <taskbar:TaskbarPinList>',
+        '        <taskbar:DesktopApp DesktopApplicationLinkPath="#leaveempty" />',
+        '      </taskbar:TaskbarPinList>',
+        '    </defaultlayout:TaskbarLayout>',
+        '  </CustomTaskbarLayoutCollection>',
+        '</LayoutModificationTemplate>'
+      ].join('\r\n');
+    } else if (taskbarMode === 'Custom') {
+      taskbarXml = ctx.getVal('TaskbarIconsXml', '').trim();
+    }
+
+    if (taskbarXml) {
+      taskbarXml = taskbarXml.replace(/\r\n/g, '\n').replace(/\r/g, '\n').replace(/\n/g, '\r\n');
+      var taskbarPath = ctx.embedTextFile('TaskbarLayoutModification.xml', taskbarXml);
+      specializeScript.append(
+        'reg.exe add "HKLM\\Software\\Policies\\Microsoft\\Windows\\CloudContent" /v "DisableCloudOptimizedContent" /t REG_DWORD /d 1 /f;\r\n' +
+        "[System.Diagnostics.EventLog]::CreateEventSource( 'UnattendGenerator', 'Application' );"
+      );
+      defaultUserScript.append(
+        'reg.exe add "HKU\\DefaultUser\\Software\\Policies\\Microsoft\\Windows\\Explorer" /v "StartLayoutFile" /t REG_SZ /d "' + taskbarPath + '" /f;\r\n' +
+        'reg.exe add "HKU\\DefaultUser\\Software\\Policies\\Microsoft\\Windows\\Explorer" /v "LockedStartLayout" /t REG_DWORD /d 1 /f;'
+      );
+      ctx.embedTextFile('UnlockStartLayout.vbs', UNLOCK_START_LAYOUT_VBS);
+      var unlockXmlPath = ctx.embedTextFile('UnlockStartLayout.xml', UNLOCK_START_LAYOUT_XML);
+      specializeScript.append("Register-ScheduledTask -TaskName 'UnlockStartLayout' -Xml $( Get-Content -LiteralPath '" + unlockXmlPath + "' -Raw );");
+      userOnceScript.append(
+        "[System.Diagnostics.EventLog]::WriteEntry( 'UnattendGenerator', \"User '$env:USERNAME' has requested to unlock the Start menu layout.\", [System.Diagnostics.EventLogEntryType]::Information, 1 );"
+      );
+    }
+
+    // Start Pins (SetStartPins)
+    var startPinsMode = ctx.getVal('StartPinsMode', 'Default');
+    var startPinsJson = '';
+    if (startPinsMode === 'Empty') {
+      startPinsJson = '{"pinnedList":[]}';
+    } else if (startPinsMode === 'Custom') {
+      startPinsJson = ctx.getVal('StartPinsJson', '').trim();
+    }
+
+    if (startPinsJson) {
+      var escapedJson = startPinsJson.replace(/'/g, "''");
+      var startPinsContent = "$json = '" + escapedJson + "';\r\n" + SET_START_PINS_PS1;
+      var startPinsFile = ctx.embedTextFile('SetStartPins.ps1', startPinsContent);
+      specializeScript.invokeFile(startPinsFile);
     }
     
 };

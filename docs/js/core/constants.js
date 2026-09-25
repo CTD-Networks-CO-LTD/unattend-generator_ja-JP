@@ -53,17 +53,151 @@ var SET_COMPUTER_NAME_PS1 = [
     "} *>&1 | Out-String -Width 1KB -Stream >> 'C:\\Windows\\Setup\\Scripts\\SetComputerName.log';"
   ].join('\r\n');
 
+var SET_START_PINS_PS1 = [
+  'if( [System.Environment]::OSVersion.Version.Build -lt 20000 ) {',
+  '\treturn;',
+  '}',
+  "$key = 'Registry::HKLM\\SOFTWARE\\Microsoft\\PolicyManager\\current\\device\\Start';",
+  "New-Item -Path $key -ItemType 'Directory' -ErrorAction 'SilentlyContinue';",
+  "Set-ItemProperty -LiteralPath $key -Name 'ConfigureStartPins' -Value $json -Type 'String';"
+].join('\r\n');
+
+var UNLOCK_START_LAYOUT_VBS = [
+  'HKU = &H80000003',
+  'Set reg = GetObject("winmgmts://./root/default:StdRegProv")',
+  'Set fso = CreateObject("Scripting.FileSystemObject")',
+  '',
+  'If reg.EnumKey(HKU, "", sids) = 0 Then',
+  '\tIf Not IsNull(sids) Then',
+  '\t\tFor Each sid In sids',
+  '\t\t\tkey = sid + "\\Software\\Policies\\Microsoft\\Windows\\Explorer"',
+  '\t\t\tname = "LockedStartLayout"',
+  '\t\t\tIf reg.GetDWORDValue(HKU, key, name, existing) = 0 Then',
+  '\t\t\t\treg.SetDWORDValue HKU, key, name, 0',
+  '\t\t\tEnd If',
+  '\t\tNext',
+  '\tEnd If',
+  'End If'
+].join('\r\n');
+
+var UNLOCK_START_LAYOUT_XML = [
+  '<Task version="1.2" xmlns="http://schemas.microsoft.com/windows/2004/02/mit/task">',
+  '\t<Triggers>',
+  '\t\t<EventTrigger>',
+  '\t\t\t<Enabled>true</Enabled>',
+  '\t\t\t<Subscription>&lt;QueryList&gt;&lt;Query Id="0" Path="Application"&gt;&lt;Select Path="Application"&gt;*[System[Provider[@Name=\'UnattendGenerator\'] and EventID=1]]&lt;/Select&gt;&lt;/Query&gt;&lt;/QueryList&gt;</Subscription>',
+  '\t\t</EventTrigger>',
+  '\t</Triggers>',
+  '\t<Principals>',
+  '\t\t<Principal id="Author">',
+  '\t\t\t<UserId>S-1-5-18</UserId>',
+  '\t\t\t<RunLevel>LeastPrivilege</RunLevel>',
+  '\t\t</Principal>',
+  '\t</Principals>',
+  '\t<Settings>',
+  '\t\t<MultipleInstancesPolicy>IgnoreNew</MultipleInstancesPolicy>',
+  '\t\t<DisallowStartIfOnBatteries>false</DisallowStartIfOnBatteries>',
+  '\t\t<StopIfGoingOnBatteries>false</StopIfGoingOnBatteries>',
+  '\t\t<AllowHardTerminate>true</AllowHardTerminate>',
+  '\t\t<StartWhenAvailable>false</StartWhenAvailable>',
+  '\t\t<RunOnlyIfNetworkAvailable>false</RunOnlyIfNetworkAvailable>',
+  '\t\t<IdleSettings>',
+  '\t\t\t<StopOnIdleEnd>true</StopOnIdleEnd>',
+  '\t\t\t<RestartOnIdle>false</RestartOnIdle>',
+  '\t\t</IdleSettings>',
+  '\t\t<AllowStartOnDemand>true</AllowStartOnDemand>',
+  '\t\t<Enabled>true</Enabled>',
+  '\t\t<Hidden>false</Hidden>',
+  '\t\t<RunOnlyIfIdle>false</RunOnlyIfIdle>',
+  '\t\t<WakeToRun>false</WakeToRun>',
+  '\t\t<ExecutionTimeLimit>PT72H</ExecutionTimeLimit>',
+  '\t\t<Priority>7</Priority>',
+  '\t</Settings>',
+  '\t<Actions Context="Author">',
+  '\t\t<Exec>',
+  '\t\t\t<Command>C:\\Windows\\System32\\wscript.exe</Command>',
+  '\t\t\t<Arguments>C:\\Windows\\Setup\\Scripts\\UnlockStartLayout.vbs</Arguments>',
+  '\t\t</Exec>',
+  '\t</Actions>',
+  '</Task>'
+].join('\r\n');
+
+var SET_WALLPAPER_PS1 = [
+  "Add-Type -TypeDefinition '",
+  '\tusing System.Drawing;',
+  '\tusing System.Runtime.InteropServices;',
+  '\t',
+  '\tpublic static class WallpaperSetter {',
+  '\t\t[DllImport("user32.dll")]',
+  '\t\tprivate static extern bool SetSysColors(',
+  '\t\t\tint cElements, ',
+  '\t\t\tint[] lpaElements,',
+  '\t\t\tint[] lpaRgbValues',
+  '\t\t);',
+  '',
+  '\t\t[DllImport("user32.dll")]',
+  '\t\tprivate static extern bool SystemParametersInfo(',
+  '\t\t\tuint uiAction,',
+  '\t\t\tuint uiParam,',
+  '\t\t\tstring pvParam,',
+  '\t\t\tuint fWinIni',
+  '\t\t);',
+  '',
+  '\t\tpublic static void SetDesktopBackground(Color color) {',
+  '\t\t\tSystemParametersInfo(20, 0, "", 0);',
+  '\t\t\tSetSysColors(1, new int[] { 1 }, new int[] { ColorTranslator.ToWin32(color) });',
+  '\t\t}',
+  '',
+  '\t\tpublic static void SetDesktopImage(string file) {',
+  '\t\t\tSystemParametersInfo(20, 0, file, 0);',
+  '\t\t}',
+  '\t}',
+  "' -ReferencedAssemblies 'System.Drawing';",
+  '',
+  'function Set-WallpaperColor {',
+  '\tparam(',
+  '\t\t[string]',
+  '\t\t$HtmlColor',
+  '\t);',
+  '',
+  '\t$color = [System.Drawing.ColorTranslator]::FromHtml( $HtmlColor );',
+  '\t[WallpaperSetter]::SetDesktopBackground( $color );',
+  "\tSet-ItemProperty -Path 'Registry::HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Wallpapers' -Name 'BackgroundType' -Type 'DWord' -Value 1 -Force;",
+  "\tSet-ItemProperty -Path 'Registry::HKCU\\Control Panel\\Desktop' -Name 'WallPaper' -Type 'String' -Value '' -Force;",
+  '\tSet-ItemProperty -Path \'Registry::HKCU\\Control Panel\\Colors\' -Name \'Background\' -Type \'String\' -Value "$($color.R) $($color.G) $($color.B)" -Force;',
+  '}',
+  '',
+  'function Set-WallpaperImage {',
+  '\tparam(',
+  '\t\t[string]',
+  '\t\t$LiteralPath',
+  '\t);',
+  '',
+  '\tif( $LiteralPath | Test-Path ) {',
+  '\t\t[WallpaperSetter]::SetDesktopImage( $LiteralPath );',
+  "\t\tSet-ItemProperty -Path 'Registry::HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Wallpapers' -Name 'BackgroundType' -Type 'DWord' -Value 0 -Force;",
+  "\t\tSet-ItemProperty -Path 'Registry::HKCU\\Control Panel\\Desktop' -Name 'WallPaper' -Type 'String' -Value $LiteralPath -Force;",
+  '\t} else {',
+  '\t\t"Cannot use \'$LiteralPath\' as a desktop wallpaper because that file does not exist.";',
+  '\t}',
+  '}'
+].join('\r\n');
+
 var REPO_URL = 'https://github.com/CTD-Networks-CO-LTD/unattend-generator_ja-JP';
 var COMMIT_URL_BASE = REPO_URL + '/commit/';
-var COMMIT_HASH = '9fd6c76d8fdc7ba668ae3625e969badf1f8f1993';
+var COMMIT_HASH = 'c165253c0ee5871f503f087143be06b83ed176f3';
 var RELEASE_TAG = 'v1.5.1_20260923';
 var RELEASE_URL = 'https://github.com/CTD-Networks-CO-LTD/unattend-generator_ja-JP/releases/tag/v1.5.1_20260923';
-var COMMIT_DATE = '2026-09-25T09:50:15+09:00';
+var COMMIT_DATE = '2026-09-25T09:50:28+09:00';
 
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
     EXTRACT_SCRIPTS_PS1: EXTRACT_SCRIPTS_PS1,
     SET_COMPUTER_NAME_PS1: SET_COMPUTER_NAME_PS1,
+    SET_START_PINS_PS1: SET_START_PINS_PS1,
+    UNLOCK_START_LAYOUT_VBS: UNLOCK_START_LAYOUT_VBS,
+    UNLOCK_START_LAYOUT_XML: UNLOCK_START_LAYOUT_XML,
+    SET_WALLPAPER_PS1: SET_WALLPAPER_PS1,
     REPO_URL: REPO_URL,
     COMMIT_URL_BASE: COMMIT_URL_BASE,
     COMMIT_HASH: COMMIT_HASH,

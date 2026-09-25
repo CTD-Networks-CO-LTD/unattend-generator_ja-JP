@@ -10,6 +10,9 @@ function generateAutounattendXml(formData) {
   if (typeof ComponentsModifier === 'undefined' && typeof require !== 'undefined') {
     ComponentsModifier = require('./modifiers/components').ComponentsModifier;
   }
+  if (typeof PersonalizationModifier === 'undefined' && typeof require !== 'undefined') {
+    PersonalizationModifier = require('./modifiers/personalization').PersonalizationModifier;
+  }
 
   var componentsMod = new ComponentsModifier(context);
 
@@ -20,6 +23,7 @@ function generateAutounattendXml(formData) {
     new LockoutModifier(context),
     new UsersModifier(context),
     new OptimizationsModifier(context),
+    new PersonalizationModifier(context),
     new BloatwareModifier(context),
     new LocalesModifier(context),
     new BypassModifier(context),

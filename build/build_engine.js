@@ -249,6 +249,7 @@ const moduleFiles = [
   'modifiers/users.js',
   'modifiers/delete.js',
   'modifiers/optimizations.js',
+  'modifiers/personalization.js',
   'modifiers/bloatware.js',
   'modifiers/wifi.js',
   'modifiers/applocker.js',
