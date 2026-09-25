@@ -220,10 +220,10 @@ var SET_WALLPAPER_PS1 = [
 
 var REPO_URL = 'https://github.com/CTD-Networks-CO-LTD/unattend-generator_ja-JP';
 var COMMIT_URL_BASE = REPO_URL + '/commit/';
-var COMMIT_HASH = '4b9a11388334c8f11226cef043245fd3e9f3518b';
+var COMMIT_HASH = '999844e7c4828ea3874f68d2143bfea1338450da';
 var RELEASE_TAG = 'v1.5.1_20260923';
 var RELEASE_URL = 'https://github.com/CTD-Networks-CO-LTD/unattend-generator_ja-JP/releases/tag/v1.5.1_20260923';
-var COMMIT_DATE = '2026-09-25T10:27:52+09:00';
+var COMMIT_DATE = '2026-09-25T16:12:29+09:00';
 
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
@@ -2216,33 +2216,40 @@ ScriptsModifier.prototype.process = function () {
  * Corresponds to C# SpecializeModifier, UserOnceModifier, DefaultUserModifier, FirstLogonModifier
  */
 function finalizePowerShellSequences(ctx) {
+  var specializeScript = ctx.sequences.specialize;
   var userOnceScript = ctx.sequences.userOnce;
   var defaultUserScript = ctx.sequences.defaultUser;
-  var specializeScript = ctx.sequences.specialize;
   var firstLogonScript = ctx.sequences.firstLogon;
 
-  if (!userOnceScript.isEmpty()) {
-    var userOnceFile = ctx.embedTextFile('UserOnce.ps1', userOnceScript.getScript());
-    var cmdEscaped = ('powershell.exe -WindowStyle "Normal" -ExecutionPolicy "Unrestricted" -NoProfile -File "' + userOnceFile + '"').replace(/"/g, '\\\"');
-    defaultUserScript.append('reg.exe add "HKU\\DefaultUser\\Software\\Microsoft\\Windows\\CurrentVersion\\RunOnce" /v "UnattendedSetup" /t REG_SZ /d "' + cmdEscaped + '" /f;');
-  }
-  if (!defaultUserScript.isEmpty()) {
-    var defUserFile = ctx.embedTextFile('DefaultUser.ps1', defaultUserScript.getScript());
-    specializeScript.append('reg.exe load "HKU\\DefaultUser" "C:\\Users\\Default\\NTUSER.DAT";');
-    specializeScript.invokeFile(defUserFile);
-    specializeScript.append('reg.exe unload "HKU\\DefaultUser";');
-  }
-
+  // 1. SpecializeModifier: Specialize.ps1 を最初に埋め込む（DefaultUser 処理は含めない）
   var specializeFile = null;
   if (!specializeScript.isEmpty()) {
     specializeFile = ctx.embedTextFile('Specialize.ps1', specializeScript.getScript());
   }
+
+  // 2. UserOnceModifier: UserOnce.ps1 を埋め込み、DefaultUserScript に RunOnce を登録
+  var userOnceFile = null;
+  if (!userOnceScript.isEmpty()) {
+    userOnceFile = ctx.embedTextFile('UserOnce.ps1', userOnceScript.getScript());
+    var cmdEscaped = ('powershell.exe -WindowStyle "Normal" -ExecutionPolicy "Unrestricted" -NoProfile -File "' + userOnceFile + '"').replace(/"/g, '\\\"');
+    defaultUserScript.append('reg.exe add "HKU\\DefaultUser\\Software\\Microsoft\\Windows\\CurrentVersion\\RunOnce" /v "UnattendedSetup" /t REG_SZ /d "' + cmdEscaped + '" /f;');
+  }
+
+  // 3. DefaultUserModifier: DefaultUser.ps1 を埋め込み、コンテキストに保持（specializeScript には append しない）
+  var defaultUserFile = null;
+  if (!defaultUserScript.isEmpty()) {
+    defaultUserFile = ctx.embedTextFile('DefaultUser.ps1', defaultUserScript.getScript());
+  }
+
+  // 4. FirstLogonModifier: FirstLogon.ps1 を埋め込む
   var firstLogonFile = null;
   if (!firstLogonScript.isEmpty()) {
     firstLogonFile = ctx.embedTextFile('FirstLogon.ps1', firstLogonScript.getScript());
   }
 
   ctx.specializeFile = specializeFile;
+  ctx.userOnceFile = userOnceFile;
+  ctx.defaultUserFile = defaultUserFile;
   ctx.firstLogonFile = firstLogonFile;
 }
 
@@ -2659,7 +2666,7 @@ function generateAutounattendXml(formData) {
       }
     }
 
-    if (context.hasExtractScript || context.specializeFile) {
+    if (context.hasExtractScript || context.specializeFile || context.defaultUserFile) {
       var specDeploy = specSettingsElem.addChild(new XmlNode('component', {
         'name': 'Microsoft-Windows-Deployment',
         'processorArchitecture': context.arch,
@@ -2678,6 +2685,19 @@ function generateAutounattendXml(formData) {
         var specCmd = runSync.addChild(new XmlNode('RunSynchronousCommand', { 'wcm:action': 'add' }));
         specCmd.addSimpleElement('Order', String(orderNum++));
         specCmd.addSimpleElement('Path', 'powershell.exe -WindowStyle "Normal" -ExecutionPolicy "Unrestricted" -NoProfile -File "' + context.specializeFile + '"');
+      }
+      if (context.defaultUserFile) {
+        var loadCmd = runSync.addChild(new XmlNode('RunSynchronousCommand', { 'wcm:action': 'add' }));
+        loadCmd.addSimpleElement('Order', String(orderNum++));
+        loadCmd.addSimpleElement('Path', 'reg.exe load "HKU\\DefaultUser" "C:\\Users\\Default\\NTUSER.DAT"');
+
+        var duCmd = runSync.addChild(new XmlNode('RunSynchronousCommand', { 'wcm:action': 'add' }));
+        duCmd.addSimpleElement('Order', String(orderNum++));
+        duCmd.addSimpleElement('Path', 'powershell.exe -WindowStyle "Normal" -ExecutionPolicy "Unrestricted" -NoProfile -File "' + context.defaultUserFile + '"');
+
+        var unloadCmd = runSync.addChild(new XmlNode('RunSynchronousCommand', { 'wcm:action': 'add' }));
+        unloadCmd.addSimpleElement('Order', String(orderNum++));
+        unloadCmd.addSimpleElement('Path', 'reg.exe unload "HKU\\DefaultUser"');
       }
     }
 
@@ -2806,6 +2826,12 @@ function generateAutounattendXml(formData) {
       commitElem.addSimpleElement('Hash', context.commitHash);
       commitElem.addSimpleElement('GitHubUrl', urlBase + context.commitHash);
 
+      // PEScriptCopy は C# と同様に Build 要素の内部に配置する
+      if (diskMod.peScriptCopy) {
+        var peCopyElem = buildElem.addChild(new XmlNode('PEScriptCopy'));
+        peCopyElem.addChild(new XmlNode(diskMod.peScriptCopy, null, null, true));
+      }
+
       if (context.hasExtractScript) {
         var extractScriptElem = extensionsElem.addChild(new XmlNode('ExtractScript'));
         extractScriptElem.addChild(new XmlNode(EXTRACT_SCRIPTS_PS1, null, null, true));
@@ -2814,11 +2840,6 @@ function generateAutounattendXml(formData) {
       for (var f = 0; f < context.embeddedFiles.length; f++) {
         var fileElem = extensionsElem.addChild(new XmlNode('File', { 'path': context.embeddedFiles[f].path }));
         fileElem.addChild(new XmlNode(context.embeddedFiles[f].content, null, null, true));
-      }
-
-      if (diskMod.peScriptCopy) {
-        var peCopyElem = extensionsElem.addChild(new XmlNode('PEScriptCopy'));
-        peCopyElem.addChild(new XmlNode(diskMod.peScriptCopy, null, null, true));
       }
     }
 
