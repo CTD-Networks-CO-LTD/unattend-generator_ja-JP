@@ -322,6 +322,63 @@
     return false;
   }
 
+  function escapeBatchLine(line) {
+    return line
+      .replace(/\^/g, '^^')
+      .replace(/&/g, '^&')
+      .replace(/\|/g, '^|')
+      .replace(/</g, '^<')
+      .replace(/>/g, '^>')
+      .replace(/\(/g, '^(')
+      .replace(/\)/g, '^)');
+  }
+
+  function processEchoLines(lines, escape) {
+    var result = [];
+    for (var i = 0; i < lines.length; i++) {
+      var line = lines[i];
+      if (escape) {
+        line = escapeBatchLine(line);
+      }
+      result.push('echo:' + line);
+    }
+    return result;
+  }
+
+  function writeToFilePE(filePath, lines, escape) {
+    var maxLineLength = 255;
+    var segments = processEchoLines(lines, escape !== false);
+    var result = [];
+
+    while (segments.length > 0) {
+      var prev = null;
+      var current = null;
+      for (var take = 1; take <= segments.length; take++) {
+        current = 'cmd.exe /c >>' + filePath + ' (' + segments.slice(0, take).join('&') + ')';
+        if (current.length > maxLineLength) {
+          if (prev === null) {
+            result.push(current);
+            segments.splice(0, take);
+            break;
+          } else {
+            result.push(prev);
+            segments.splice(0, take - 1);
+            break;
+          }
+        } else {
+          prev = current;
+          if (take === segments.length) {
+            result.push(current);
+            segments = [];
+            break;
+          }
+        }
+      }
+    }
+
+    return result;
+  }
+
   // PowerShell sequence builder matching C# PowerShellSequence
   function PowerShellSequence(activity, logFile) {
     this.activity = activity;
@@ -590,7 +647,7 @@
       return val === 'true' || val === 'on' || val === '1';
     };
 
-    var commitHash = '20ca92088aa425cfc3403770af9b8a4e6e0c04a6';
+    var commitHash = '53dcff0cd5f33470bea50c62958d6cb47f5e9f0f';
 
     // Script sequences
     var specializeScript = new PowerShellSequence('Running scripts to customize your Windows installation.', 'C:\\Windows\\Setup\\Scripts\\Specialize.log');
@@ -626,6 +683,139 @@
     var bypassRequirements = getBool('BypassRequirementsCheck', false);
     var bypassNetwork = getBool('BypassNetworkCheck', false);
     var useConfigurationSet = getBool('UseConfigurationSet', false);
+
+    // PE Script generation (DiskModifier)
+    var peLines = [];
+    var peScriptCopy = null;
+    if (peMode === 'Script') {
+      var rawPeScript = getVal('PEScript', '');
+      if (rawPeScript && rawPeScript.trim()) {
+        peLines = rawPeScript.trim().replace(/\r\n/g, '\n').replace(/\r/g, '\n').split('\n');
+      }
+    } else if (peMode === 'Generated') {
+      peLines.push('@echo off');
+      peLines.push('');
+      peLines.push('call :print "Setting keyboard layout for PE session"');
+      var peLcid = isJapaneseKeyboard ? '0411:00000411' : (keyboard || '0409:00000409');
+      peLines.push('wpeutil.exe SetKeyboardLayout ' + peLcid);
+      peLines.push('');
+      peLines.push('for %%d in (C D E F G H I J K L M N O P Q T U V X Y Z) do (');
+      peLines.push('    if exist %%d:\\sources\\install.wim set "IMAGE_FILE=%%d:\\sources\\install.wim"');
+      peLines.push('    if exist %%d:\\sources\\install.esd set "IMAGE_FILE=%%d:\\sources\\install.esd"');
+      peLines.push('    if exist %%d:\\sources\\install.swm set "IMAGE_FILE=%%d:\\sources\\install.swm" & set "SWM_PARAM=/SWMFile:%%d:\\sources\\install*.swm"');
+      peLines.push('    if exist %%d:\\autounattend.xml set "XML_FILE=%%d:\\autounattend.xml"');
+      peLines.push('    if exist %%d:\\$OEM$ set "OEM_FOLDER=%%d:\\$OEM$"');
+      peLines.push('    if exist %%d:\\$WinPEDriver$ set "PEDRIVERS_FOLDER=%%d:\\$WinPEDriver$"');
+      peLines.push(')');
+      peLines.push('for /f "tokens=3" %%t in (\'reg.exe query HKLM\\System\\Setup /v UnattendFile 2^>nul\') do ( if exist %%t set "XML_FILE=%%t" )');
+      peLines.push('if not defined IMAGE_FILE call :fail "Could not locate install.wim, install.esd or install.swm."');
+      peLines.push('if not defined XML_FILE call :fail "Could not locate autounattend.xml."');
+      peLines.push('');
+
+      var peTargetDiskMode = getVal('TargetDiskMode', 'Auto');
+      if (peTargetDiskMode === 'Script') {
+        var rawTargetDiskScript = getVal('TargetDiskScript', '');
+        if (rawTargetDiskScript && rawTargetDiskScript.trim()) {
+          var tdNorm = rawTargetDiskScript.trim().replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+          var tdLines = tdNorm.split('\n');
+          peLines.push('>X:\\target.vbs (');
+          var echoTd = processEchoLines(tdLines, true);
+          for (var e = 0; e < echoTd.length; e++) {
+            peLines.push('    ' + echoTd[e]);
+          }
+          peLines.push(')');
+          peLines.push('');
+          peLines.push('call :print "Determining target disk"');
+          peLines.push('(cscript.exe //E:vbscript "X:\\target.vbs" //Nologo >X:\\target.out) || (type X:\\target.out & call :fail "Could not determine target disk. Windows Setup will halt to avoid potential data loss.")');
+          peLines.push('for /f %%t in (X:\\target.out) do set "TARGET_DISK=%%t"');
+          peLines.push('');
+        }
+      } else if (peTargetDiskMode === 'Interactive') {
+        peLines.push('echo list disk | diskpart.exe');
+        peLines.push('echo:');
+        peLines.push(':choice');
+        peLines.push('set /p "CHOICE=Enter index of the disk you want to install Windows to: " || goto :choice');
+        peLines.push('set "TARGET_DISK=%CHOICE%"');
+        peLines.push('');
+      } else {
+        peLines.push('set "TARGET_DISK=0"');
+        peLines.push('');
+      }
+
+      var pePartitionMode = getVal('PartitionMode', 'Unattended');
+      if (pePartitionMode === 'Custom') {
+        var rawDiskpartScript = getVal('DiskpartScript', '');
+        if (rawDiskpartScript && rawDiskpartScript.trim()) {
+          var dpNorm = rawDiskpartScript.trim().replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+          var dpLines = dpNorm.split('\n');
+          peLines.push('>X:\\diskpart.txt (');
+          var echoDp = processEchoLines(dpLines, false);
+          for (var d = 0; d < echoDp.length; d++) {
+            peLines.push('    ' + echoDp[d]);
+          }
+          peLines.push(')');
+          peLines.push('');
+          peLines.push('call :print "Configuring partitions"');
+          if (getBool('PauseBeforeFormatting', false)) {
+            peLines.push('pause');
+          }
+          peLines.push('diskpart.exe /s X:\\diskpart.txt || call :fail "diskpart.exe encountered an error."');
+          peLines.push('');
+        }
+      } else {
+        peLines.push('>X:\\diskpart.txt (');
+        peLines.push('    echo:SELECT DISK=%TARGET_DISK%');
+        peLines.push('    echo:CLEAN');
+        peLines.push('    echo:CONVERT GPT');
+        peLines.push('    echo:CREATE PARTITION EFI SIZE=300');
+        peLines.push('    echo:FORMAT QUICK FS=FAT32 LABEL="System"');
+        peLines.push('    echo:ASSIGN LETTER=S');
+        peLines.push('    echo:CREATE PARTITION MSR SIZE=16');
+        peLines.push('    echo:CREATE PARTITION PRIMARY');
+        peLines.push('    echo:SHRINK MINIMUM=1000');
+        peLines.push('    echo:FORMAT QUICK FS=NTFS LABEL="Windows"');
+        peLines.push('    echo:ASSIGN LETTER=W');
+        peLines.push('    echo:CREATE PARTITION PRIMARY');
+        peLines.push('    echo:FORMAT QUICK FS=NTFS LABEL="Recovery"');
+        peLines.push('    echo:ASSIGN LETTER=R');
+        peLines.push('    echo:SET ID="de94bba4-06d1-4d40-a16a-bfd50179d6ac"');
+        peLines.push('    echo:GPT ATTRIBUTES=0x8000000000000001');
+        peLines.push(')');
+        peLines.push('');
+        peLines.push('call :print "Configuring partitions"');
+        peLines.push('diskpart.exe /s X:\\diskpart.txt || call :fail "diskpart.exe encountered an error."');
+        peLines.push('');
+      }
+
+      peLines.push('call :print "Applying Windows image"');
+      var peCompactParam = getBool('CompactOs', false) ? ' /Compact' : '';
+      peLines.push('dism.exe /Apply-Image /ImageFile:%IMAGE_FILE% %SWM_PARAM% /Index:1 /ApplyDir:W:\\' + peCompactParam);
+      peLines.push('');
+      peLines.push('call :print "Writing boot files"');
+      peLines.push('W:\\Windows\\System32\\bcdboot.exe W:\\Windows /s S: /f ALL');
+      peLines.push('');
+      peLines.push('call :print "Copying unattend.xml"');
+      peLines.push('mkdir W:\\Windows\\Panther');
+      peLines.push('copy /y %XML_FILE% W:\\Windows\\Panther\\unattend.xml');
+      peLines.push('');
+      if (getBool('PauseBeforeReboot', false)) {
+        peLines.push('pause');
+      }
+      peLines.push('wpeutil.exe Reboot');
+      peLines.push('');
+      peLines.push(':print');
+      peLines.push('echo:=== %~1 ===');
+      peLines.push('goto :eof');
+      peLines.push('');
+      peLines.push(':fail');
+      peLines.push('echo:ERROR: %~1');
+      peLines.push('pause');
+      peLines.push('exit /b 1');
+    }
+
+    if (peLines.length > 0) {
+      peScriptCopy = peLines.join('\r\n');
+    }
 
     // Accounts
     var userAccountMode = getVal('UserAccountMode', 'Unattended');
@@ -1233,64 +1423,85 @@
 
     // 2. pass="windowsPE"
     var peSettingsElem = root.addChild(new XmlNode('settings', { 'pass': 'windowsPE' }));
-    if (langMode === 'Unattended') {
-      var peIntl = peSettingsElem.addChild(new XmlNode('component', {
-        'name': 'Microsoft-Windows-International-Core-WinPE',
+    if (peLines.length > 0) {
+      var winSetup = peSettingsElem.addChild(new XmlNode('component', {
+        'name': 'Microsoft-Windows-Setup',
         'processorArchitecture': arch,
         'publicKeyToken': '31bf3856ad364e35',
         'language': 'neutral',
         'versionScope': 'nonSxS'
       }));
-      if (isJapaneseKeyboard) {
-        var peInputLocStr = keyboard;
-        if (keyboard.indexOf('{') === -1 && keyboard.length === 8) {
-          var peLcidPrefix = keyboard.substring(4);
-          peInputLocStr = peLcidPrefix + ':' + keyboard;
-        }
-        peIntl.addSimpleElement('InputLocale', peInputLocStr);
-        peIntl.addSimpleElement('SystemLocale', locale);
-        peIntl.addSimpleElement('UILanguage', uiLang);
-        peIntl.addSimpleElement('UserLocale', locale);
-        peIntl.addSimpleElement('LayeredDriver', '1');
-      } else {
-        peIntl.addSimpleElement('UILanguage', uiLang);
+      var runSync = winSetup.addChild(new XmlNode('RunSynchronous'));
+      var writeCmds = writeToFilePE('X:\\pe.cmd', peLines);
+      var order = 1;
+      for (var i = 0; i < writeCmds.length; i++) {
+        var cmdElem = runSync.addChild(new XmlNode('RunSynchronousCommand', { 'wcm:action': 'add' }));
+        cmdElem.addSimpleElement('Order', String(order++));
+        cmdElem.addSimpleElement('Path', writeCmds[i]);
       }
-    }
-
-    var winSetup = peSettingsElem.addChild(new XmlNode('component', {
-      'name': 'Microsoft-Windows-Setup',
-      'processorArchitecture': arch,
-      'publicKeyToken': '31bf3856ad364e35',
-      'language': 'neutral',
-      'versionScope': 'nonSxS'
-    }));
-
-    if (bypassRequirements) {
-      var peRunSync = winSetup.addChild(new XmlNode('RunSynchronous'));
-      var bypassKeys = ['BypassTPMCheck', 'BypassSecureBootCheck', 'BypassRAMCheck'];
-      for (var b = 0; b < bypassKeys.length; b++) {
-        var syncCmd = peRunSync.addChild(new XmlNode('RunSynchronousCommand', { 'wcm:action': 'add' }));
-        syncCmd.addSimpleElement('Order', String(b + 1));
-        syncCmd.addSimpleElement('Path', 'reg.exe add "HKLM\\SYSTEM\\Setup\\LabConfig" /v ' + bypassKeys[b] + ' /t REG_DWORD /d 1 /f');
-      }
-    }
-
-    var userData = winSetup.addChild(new XmlNode('UserData'));
-    var prodKeyElem = userData.addChild(new XmlNode('ProductKey'));
-    if (winEditionMode === 'Interactive') {
-      prodKeyElem.addSimpleElement('Key', '00000-00000-00000-00000-00000');
-      prodKeyElem.addSimpleElement('WillShowUI', 'Always');
-    } else if (winEditionMode === 'Custom' && productKeyVal) {
-      prodKeyElem.addSimpleElement('Key', productKeyVal);
-      prodKeyElem.addSimpleElement('WillShowUI', 'OnError');
-    } else if (winEditionMode === 'Firmware') {
-      prodKeyElem.addSimpleElement('WillShowUI', 'Never');
+      var execCmd = runSync.addChild(new XmlNode('RunSynchronousCommand', { 'wcm:action': 'add' }));
+      execCmd.addSimpleElement('Order', String(order++));
+      execCmd.addSimpleElement('Path', 'cmd.exe /c "X:\\pe.cmd"');
     } else {
-      prodKeyElem.addSimpleElement('Key', productKeyVal || '00000-00000-00000-00000-00000');
-      prodKeyElem.addSimpleElement('WillShowUI', 'OnError');
+      if (langMode === 'Unattended') {
+        var peIntl = peSettingsElem.addChild(new XmlNode('component', {
+          'name': 'Microsoft-Windows-International-Core-WinPE',
+          'processorArchitecture': arch,
+          'publicKeyToken': '31bf3856ad364e35',
+          'language': 'neutral',
+          'versionScope': 'nonSxS'
+        }));
+        if (isJapaneseKeyboard) {
+          var peInputLocStr = keyboard;
+          if (keyboard.indexOf('{') === -1 && keyboard.length === 8) {
+            var peLcidPrefix = keyboard.substring(4);
+            peInputLocStr = peLcidPrefix + ':' + keyboard;
+          }
+          peIntl.addSimpleElement('InputLocale', peInputLocStr);
+          peIntl.addSimpleElement('SystemLocale', locale);
+          peIntl.addSimpleElement('UILanguage', uiLang);
+          peIntl.addSimpleElement('UserLocale', locale);
+          peIntl.addSimpleElement('LayeredDriver', '1');
+        } else {
+          peIntl.addSimpleElement('UILanguage', uiLang);
+        }
+      }
+
+      var winSetup = peSettingsElem.addChild(new XmlNode('component', {
+        'name': 'Microsoft-Windows-Setup',
+        'processorArchitecture': arch,
+        'publicKeyToken': '31bf3856ad364e35',
+        'language': 'neutral',
+        'versionScope': 'nonSxS'
+      }));
+
+      if (bypassRequirements) {
+        var peRunSync = winSetup.addChild(new XmlNode('RunSynchronous'));
+        var bypassKeys = ['BypassTPMCheck', 'BypassSecureBootCheck', 'BypassRAMCheck'];
+        for (var b = 0; b < bypassKeys.length; b++) {
+          var syncCmd = peRunSync.addChild(new XmlNode('RunSynchronousCommand', { 'wcm:action': 'add' }));
+          syncCmd.addSimpleElement('Order', String(b + 1));
+          syncCmd.addSimpleElement('Path', 'reg.exe add "HKLM\\SYSTEM\\Setup\\LabConfig" /v ' + bypassKeys[b] + ' /t REG_DWORD /d 1 /f');
+        }
+      }
+
+      var userData = winSetup.addChild(new XmlNode('UserData'));
+      var prodKeyElem = userData.addChild(new XmlNode('ProductKey'));
+      if (winEditionMode === 'Interactive') {
+        prodKeyElem.addSimpleElement('Key', '00000-00000-00000-00000-00000');
+        prodKeyElem.addSimpleElement('WillShowUI', 'Always');
+      } else if (winEditionMode === 'Custom' && productKeyVal) {
+        prodKeyElem.addSimpleElement('Key', productKeyVal);
+        prodKeyElem.addSimpleElement('WillShowUI', 'OnError');
+      } else if (winEditionMode === 'Firmware') {
+        prodKeyElem.addSimpleElement('WillShowUI', 'Never');
+      } else {
+        prodKeyElem.addSimpleElement('Key', productKeyVal || '00000-00000-00000-00000-00000');
+        prodKeyElem.addSimpleElement('WillShowUI', 'OnError');
+      }
+      userData.addSimpleElement('AcceptEula', 'true');
+      winSetup.addSimpleElement('UseConfigurationSet', useConfigurationSet ? 'true' : 'false');
     }
-    userData.addSimpleElement('AcceptEula', 'true');
-    winSetup.addSimpleElement('UseConfigurationSet', useConfigurationSet ? 'true' : 'false');
 
     // 3. pass="generalize"
     var generalizeSettingsElem = root.addChild(new XmlNode('settings', { 'pass': 'generalize' }));
@@ -1491,7 +1702,7 @@
     }
 
     // 8. Extensions
-    if (hasExtractScript || embeddedFiles.length > 0) {
+    if (hasExtractScript || embeddedFiles.length > 0 || peScriptCopy) {
       var extensionsElem = root.addChild(new XmlNode('Extensions', {
         'xmlns': 'https://schneegans.de/windows/unattend-generator/'
       }));
@@ -1509,6 +1720,11 @@
       for (var f = 0; f < embeddedFiles.length; f++) {
         var fileElem = extensionsElem.addChild(new XmlNode('File', { 'path': embeddedFiles[f].path }));
         fileElem.addChild(new XmlNode(embeddedFiles[f].content, null, null, true));
+      }
+
+      if (peScriptCopy) {
+        var peCopyElem = extensionsElem.addChild(new XmlNode('PEScriptCopy'));
+        peCopyElem.addChild(new XmlNode(peScriptCopy, null, null, true));
       }
     }
 

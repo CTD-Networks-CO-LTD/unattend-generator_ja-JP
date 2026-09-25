@@ -239,6 +239,7 @@ const moduleFiles = [
 
   // Modifiers
   'modifiers/locales.js',
+  'modifiers/disk.js',
   'modifiers/bypass.js',
   'modifiers/product_key.js',
   'modifiers/computer_name.js',

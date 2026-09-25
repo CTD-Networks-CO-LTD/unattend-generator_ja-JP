@@ -401,6 +401,43 @@ function runTests() {
   assert(wifiInteractiveXml.includes('<HideWirelessSetupInOOBE>false</HideWirelessSetupInOOBE>'), 'WifiMode: Interactive 時に HideWirelessSetupInOOBE が false であること');
   assert(!wifiInteractiveXml.includes('<File path="C:\\Windows\\Setup\\Scripts\\Wifi.xml">'), 'WifiMode: Interactive 時に Wifi.xml が埋め込まれないこと');
 
+  // --- Test 15: PE ステージスクリプト群 (PEScript, DiskpartScript, TargetDiskScript) の検証 ---
+  console.log('\n--- Test 15: PE ステージスクリプト群 (PEScript, DiskpartScript, TargetDiskScript) の検証 ---');
+
+  // Case A: PEMode = 'Script'
+  const customPeFd = new MockFormData({
+    PEMode: 'Script',
+    PEScript: '@echo off\r\necho Custom PE Script Running\r\nwpeutil reboot'
+  });
+  const customPeXml = engine.generateAutounattendXml(customPeFd);
+  assert(customPeXml.includes('&gt;&gt;X:\\pe.cmd (echo:@echo off'), 'windowsPE 内に X:\\pe.cmd 書出コマンドが存在すること');
+  assert(customPeXml.includes('cmd.exe /c "X:\\pe.cmd"'), 'windowsPE 内に X:\\pe.cmd 実行コマンドが存在すること');
+  assert(customPeXml.includes('<PEScriptCopy>'), 'Extensions 内に PEScriptCopy 要素が存在すること');
+  assert(customPeXml.includes('Custom PE Script Running'), 'PEScriptCopy 内に入力スクリプトが埋め込まれていること');
+
+  // Case B: PEMode = 'Generated', TargetDiskMode = 'Script', PartitionMode = 'Custom'
+  const generatedPeFd = new MockFormData({
+    PEMode: 'Generated',
+    TargetDiskMode: 'Script',
+    TargetDiskScript: 'WScript.Echo 0\r\nWScript.Quit 0',
+    PartitionMode: 'Custom',
+    DiskpartScript: 'SELECT DISK=0\r\nCLEAN\r\nASSIGN LETTER=S\r\nASSIGN LETTER=W'
+  });
+  const generatedPeXml = engine.generateAutounattendXml(generatedPeFd);
+  assert(generatedPeXml.includes('&gt;&gt;X:\\pe.cmd'), 'windowsPE 内に pe.cmd 作成コマンドが存在すること');
+  assert(generatedPeXml.includes('&gt;X:\\target.vbs'), 'pe.cmd 内に target.vbs 出力処理が含まれていること');
+  assert(generatedPeXml.includes('&gt;X:\\diskpart.txt'), 'pe.cmd 内に diskpart.txt 出力処理が含まれていること');
+  assert(generatedPeXml.includes('diskpart.exe /s X:\\diskpart.txt'), 'pe.cmd 内に diskpart.exe /s 実行処理が含まれていること');
+  assert(generatedPeXml.includes('<PEScriptCopy>'), 'Extensions 内に PEScriptCopy が出力されていること');
+
+  // Case C: PEMode = 'Default'
+  const defaultPeFd = new MockFormData({
+    PEMode: 'Default'
+  });
+  const defaultPeXml = engine.generateAutounattendXml(defaultPeFd);
+  assert(!defaultPeXml.includes('<PEScriptCopy>'), 'PEMode: Default 時に PEScriptCopy が出力されないこと');
+  assert(!defaultPeXml.includes('X:\\pe.cmd'), 'PEMode: Default 時に X:\\pe.cmd が出力されないこと');
+
   console.log('\n====================================================');
   console.log(` テスト結果: ${passed} 項目合格 / ${failed} 項目失敗`);
   console.log('====================================================\n');
