@@ -430,7 +430,48 @@ function runTests() {
   assert(generatedPeXml.includes('diskpart.exe /s X:\\diskpart.txt'), 'pe.cmd 内に diskpart.exe /s 実行処理が含まれていること');
   assert(generatedPeXml.includes('<PEScriptCopy>'), 'Extensions 内に PEScriptCopy が出力されていること');
 
-  // Case C: PEMode = 'Default'
+  // Case C: PEMode = 'Generated' (Default Settings: Automatic + Generated TargetDisk + Edition Pro + GeoID 244)
+  const defaultGenFd = new MockFormData({
+    PEMode: 'Generated',
+    LanguageMode: 'Unattended',
+    GeoLocation: '244',
+    TargetDiskMode: 'Generated',
+    TargetDiskInterfaceType: 'true',
+    TargetDiskMediaType: 'true',
+    TargetDiskSize: 'true',
+    TargetDiskMinSize: '100',
+    TargetDiskMaxSize: '4000',
+    TargetDiskIndex: 'true',
+    TargetDisk: '0',
+    TargetDiskNoPartitions: 'true',
+    PartitionMode: 'Unattended',
+    PartitionLayout: 'Automatic',
+    SystemSize: '300',
+    RecoveryMode: 'Partition',
+    RecoverySize: '1000',
+    InstallFromMode: 'Edition',
+    InstallFromEdition: 'pro'
+  });
+  const defaultGenXml = engine.generateAutounattendXml(defaultGenFd);
+  assert(defaultGenXml.includes('&gt;&gt;X:\\pe.cmd'), 'PEMode: Generated (Default) 時に pe.cmd 作成コマンドが存在すること');
+  assert(defaultGenXml.includes('target.vbs'), 'PEMode: Generated (Default) 時に target.vbs 出力処理が存在すること');
+  assert(defaultGenXml.includes('Win32_DiskDrive'), 'target.vbs 内に WMI Win32_DiskDrive 判定が存在すること');
+  assert(defaultGenXml.includes('Fixed hard disk media'), 'target.vbs 内に Fixed hard disk media チェックが存在すること');
+  assert(defaultGenXml.includes('wpeutil.exe UpdateBootInfo'), 'pe.cmd 内に UpdateBootInfo 判定が存在すること');
+  assert(defaultGenXml.includes('PEFirmwareType'), 'pe.cmd 内に PEFirmwareType 判定が存在すること');
+  assert(defaultGenXml.includes('&gt;X:\\GPT.txt'), 'pe.cmd 内に GPT.txt 出力処理が存在すること');
+  assert(defaultGenXml.includes('&gt;X:\\MBR.txt'), 'pe.cmd 内に MBR.txt 出力処理が存在すること');
+  assert(defaultGenXml.includes('diskpart.exe /s X:\\%LAYOUT%.txt'), 'pe.cmd 内に動的レイアウト指定での diskpart 実行が存在すること');
+  assert(defaultGenXml.includes('Windows %OS_VERSION% Pro'), 'pe.cmd 内にエディション Pro 適用パラメータが存在すること');
+  assert(defaultGenXml.includes('bcdboot.exe W:\\Windows /s S:'), 'pe.cmd 内に bcdboot コマンドが存在すること');
+  assert(defaultGenXml.includes('bcdedit.exe /set {fwbootmgr} bootsequence {bootmgr}'), 'pe.cmd 内に GPT時 bcdedit 設定が存在すること');
+  assert(defaultGenXml.includes('DeviceRegion'), 'pe.cmd 内に DeviceRegion (GeoID 244) 設定が存在すること');
+  const peMatch = defaultGenXml.match(/<settings pass="windowsPE">[\s\S]*?<\/settings>/);
+  assert(peMatch !== null, 'PEMode: Generated 時に windowsPE パスが存在すること');
+  const cmdMatches = peMatch[0].match(/<RunSynchronousCommand/g);
+  assert(cmdMatches && cmdMatches.length === 36, 'windowsPE の RunSynchronousCommand が正確に 36 個出力されること (実際: ' + (cmdMatches ? cmdMatches.length : 0) + ')');
+
+  // Case D: PEMode = 'Default'
   const defaultPeFd = new MockFormData({
     PEMode: 'Default'
   });

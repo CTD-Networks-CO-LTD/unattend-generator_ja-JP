@@ -185,10 +185,10 @@ var SET_WALLPAPER_PS1 = [
 
 var REPO_URL = 'https://github.com/CTD-Networks-CO-LTD/unattend-generator_ja-JP';
 var COMMIT_URL_BASE = REPO_URL + '/commit/';
-var COMMIT_HASH = '53dcff0cd5f33470bea50c62958d6cb47f5e9f0f';
+var COMMIT_HASH = '4b9a11388334c8f11226cef043245fd3e9f3518b';
 var RELEASE_TAG = 'v1.5.1_20260923';
 var RELEASE_URL = 'https://github.com/CTD-Networks-CO-LTD/unattend-generator_ja-JP/releases/tag/v1.5.1_20260923';
-var COMMIT_DATE = '2026-09-25T10:15:18+09:00';
+var COMMIT_DATE = '2026-09-25T10:27:52+09:00';
 
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
