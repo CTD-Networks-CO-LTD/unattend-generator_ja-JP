@@ -27,6 +27,7 @@ const DEDICATED_MODIFIERS = {
   'Components.cs': { jsFile: 'modifiers/components.js', className: 'ComponentsModifier' },
   'ComputerName.cs': { jsFile: 'modifiers/computer_name.js', className: 'ComputerNameModifier' },
   'Delete.cs': { jsFile: 'modifiers/delete.js', className: 'DeleteModifier' },
+  'Disk.cs': { jsFile: 'modifiers/disk.js', className: 'DiskModifier' },
   'ExpressSettings.cs': { jsFile: 'modifiers/express_settings.js', className: 'ExpressSettingsModifier' },
   'Locales.cs': { jsFile: 'modifiers/locales.js', className: 'LocalesModifier' },
   'Lockout.cs': { jsFile: 'modifiers/lockout.js', className: 'LockoutModifier' },
@@ -44,7 +45,6 @@ const DEDICATED_MODIFIERS = {
 const INTEGRATED_MODIFIERS = {
   'Accessibility.cs': 'docs/js/generator_engine.js (Client-side accessibility settings)',
   'DefaultUser.cs': 'docs/js/core/powershell_sequence.js / generator_engine.js',
-  'Disk.cs': 'docs/js/modifiers/delete.js / generator_engine.js',
   'EmptyElements.cs': 'docs/js/core/xml_node.js (Empty elements clean-up)',
   'FirstLogon.cs': 'docs/js/core/powershell_sequence.js / generator_engine.js',
   'LocaleDispatcherModifier.cs': 'docs/js/modifiers/locales.js',

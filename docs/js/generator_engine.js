@@ -13,8 +13,12 @@ function generateAutounattendXml(formData) {
   if (typeof PersonalizationModifier === 'undefined' && typeof require !== 'undefined') {
     PersonalizationModifier = require('./modifiers/personalization').PersonalizationModifier;
   }
+  if (typeof DiskModifier === 'undefined' && typeof require !== 'undefined') {
+    DiskModifier = require('./modifiers/disk').DiskModifier;
+  }
 
   var componentsMod = new ComponentsModifier(context);
+  var diskMod = new DiskModifier(context);
 
   // Execute modifier pipeline in C# matching sequence
   var modifiers = [
@@ -26,6 +30,7 @@ function generateAutounattendXml(formData) {
     new PersonalizationModifier(context),
     new BloatwareModifier(context),
     new LocalesModifier(context),
+    diskMod,
     new BypassModifier(context),
     new ProductKeyModifier(context),
     new TimeZoneModifier(context),
@@ -60,64 +65,68 @@ function generateAutounattendXml(formData) {
 
     // 2. pass="windowsPE"
     var peSettingsElem = root.addChild(new XmlNode('settings', { 'pass': 'windowsPE' }));
-    if (context.langMode === 'Unattended') {
-      var peIntl = peSettingsElem.addChild(new XmlNode('component', {
-        'name': 'Microsoft-Windows-International-Core-WinPE',
+    if (diskMod.peLines.length > 0) {
+      diskMod.applyToWindowsPE(peSettingsElem, null, context.arch);
+    } else {
+      if (context.langMode === 'Unattended') {
+        var peIntl = peSettingsElem.addChild(new XmlNode('component', {
+          'name': 'Microsoft-Windows-International-Core-WinPE',
+          'processorArchitecture': context.arch,
+          'publicKeyToken': '31bf3856ad364e35',
+          'language': 'neutral',
+          'versionScope': 'nonSxS'
+        }));
+        if (context.isJapaneseKeyboard) {
+          var peInputLocStr = context.keyboard;
+          if (context.keyboard.indexOf('{') === -1 && context.keyboard.length === 8) {
+            var peLcidPrefix = context.keyboard.substring(4);
+            peInputLocStr = peLcidPrefix + ':' + context.keyboard;
+          }
+          peIntl.addSimpleElement('InputLocale', peInputLocStr);
+          peIntl.addSimpleElement('SystemLocale', context.locale);
+          peIntl.addSimpleElement('UILanguage', context.uiLang);
+          peIntl.addSimpleElement('UserLocale', context.locale);
+          peIntl.addSimpleElement('LayeredDriver', '1');
+        } else {
+          peIntl.addSimpleElement('UILanguage', context.uiLang);
+        }
+      }
+
+      var winSetup = peSettingsElem.addChild(new XmlNode('component', {
+        'name': 'Microsoft-Windows-Setup',
         'processorArchitecture': context.arch,
         'publicKeyToken': '31bf3856ad364e35',
         'language': 'neutral',
         'versionScope': 'nonSxS'
       }));
-      if (context.isJapaneseKeyboard) {
-        var peInputLocStr = context.keyboard;
-        if (context.keyboard.indexOf('{') === -1 && context.keyboard.length === 8) {
-          var peLcidPrefix = context.keyboard.substring(4);
-          peInputLocStr = peLcidPrefix + ':' + context.keyboard;
+
+      if (context.bypassRequirements) {
+        var peRunSync = winSetup.addChild(new XmlNode('RunSynchronous'));
+        var bypassKeys = ['BypassTPMCheck', 'BypassSecureBootCheck', 'BypassRAMCheck'];
+        for (var b = 0; b < bypassKeys.length; b++) {
+          var syncCmd = peRunSync.addChild(new XmlNode('RunSynchronousCommand', { 'wcm:action': 'add' }));
+          syncCmd.addSimpleElement('Order', String(b + 1));
+          syncCmd.addSimpleElement('Path', 'reg.exe add "HKLM\\SYSTEM\\Setup\\LabConfig" /v ' + bypassKeys[b] + ' /t REG_DWORD /d 1 /f');
         }
-        peIntl.addSimpleElement('InputLocale', peInputLocStr);
-        peIntl.addSimpleElement('SystemLocale', context.locale);
-        peIntl.addSimpleElement('UILanguage', context.uiLang);
-        peIntl.addSimpleElement('UserLocale', context.locale);
-        peIntl.addSimpleElement('LayeredDriver', '1');
+      }
+
+      var userData = winSetup.addChild(new XmlNode('UserData'));
+      var prodKeyElem = userData.addChild(new XmlNode('ProductKey'));
+      if (context.winEditionMode === 'Interactive') {
+        prodKeyElem.addSimpleElement('Key', '00000-00000-00000-00000-00000');
+        prodKeyElem.addSimpleElement('WillShowUI', 'Always');
+      } else if (context.winEditionMode === 'Custom' && context.productKeyVal) {
+        prodKeyElem.addSimpleElement('Key', context.productKeyVal);
+        prodKeyElem.addSimpleElement('WillShowUI', 'OnError');
+      } else if (context.winEditionMode === 'Firmware') {
+        prodKeyElem.addSimpleElement('WillShowUI', 'Never');
       } else {
-        peIntl.addSimpleElement('UILanguage', context.uiLang);
+        prodKeyElem.addSimpleElement('Key', context.productKeyVal || '00000-00000-00000-00000-00000');
+        prodKeyElem.addSimpleElement('WillShowUI', 'OnError');
       }
+      userData.addSimpleElement('AcceptEula', 'true');
+      winSetup.addSimpleElement('UseConfigurationSet', context.useConfigurationSet ? 'true' : 'false');
     }
-
-    var winSetup = peSettingsElem.addChild(new XmlNode('component', {
-      'name': 'Microsoft-Windows-Setup',
-      'processorArchitecture': context.arch,
-      'publicKeyToken': '31bf3856ad364e35',
-      'language': 'neutral',
-      'versionScope': 'nonSxS'
-    }));
-
-    if (context.bypassRequirements) {
-      var peRunSync = winSetup.addChild(new XmlNode('RunSynchronous'));
-      var bypassKeys = ['BypassTPMCheck', 'BypassSecureBootCheck', 'BypassRAMCheck'];
-      for (var b = 0; b < bypassKeys.length; b++) {
-        var syncCmd = peRunSync.addChild(new XmlNode('RunSynchronousCommand', { 'wcm:action': 'add' }));
-        syncCmd.addSimpleElement('Order', String(b + 1));
-        syncCmd.addSimpleElement('Path', 'reg.exe add "HKLM\\SYSTEM\\Setup\\LabConfig" /v ' + bypassKeys[b] + ' /t REG_DWORD /d 1 /f');
-      }
-    }
-
-    var userData = winSetup.addChild(new XmlNode('UserData'));
-    var prodKeyElem = userData.addChild(new XmlNode('ProductKey'));
-    if (context.winEditionMode === 'Interactive') {
-      prodKeyElem.addSimpleElement('Key', '00000-00000-00000-00000-00000');
-      prodKeyElem.addSimpleElement('WillShowUI', 'Always');
-    } else if (context.winEditionMode === 'Custom' && context.productKeyVal) {
-      prodKeyElem.addSimpleElement('Key', context.productKeyVal);
-      prodKeyElem.addSimpleElement('WillShowUI', 'OnError');
-    } else if (context.winEditionMode === 'Firmware') {
-      prodKeyElem.addSimpleElement('WillShowUI', 'Never');
-    } else {
-      prodKeyElem.addSimpleElement('Key', context.productKeyVal || '00000-00000-00000-00000-00000');
-      prodKeyElem.addSimpleElement('WillShowUI', 'OnError');
-    }
-    userData.addSimpleElement('AcceptEula', 'true');
-    winSetup.addSimpleElement('UseConfigurationSet', context.useConfigurationSet ? 'true' : 'false');
 
     // 3. pass="generalize"
     var generalizeSettingsElem = root.addChild(new XmlNode('settings', { 'pass': 'generalize' }));
@@ -276,7 +285,7 @@ function generateAutounattendXml(formData) {
     componentsMod.applyToPasses(passSettings);
 
     // 8. Extensions
-    if (context.hasExtractScript || context.embeddedFiles.length > 0) {
+    if (context.hasExtractScript || context.embeddedFiles.length > 0 || diskMod.peScriptCopy) {
       var extensionsElem = root.addChild(new XmlNode('Extensions', {
         'xmlns': 'https://schneegans.de/windows/unattend-generator/'
       }));
@@ -295,6 +304,11 @@ function generateAutounattendXml(formData) {
       for (var f = 0; f < context.embeddedFiles.length; f++) {
         var fileElem = extensionsElem.addChild(new XmlNode('File', { 'path': context.embeddedFiles[f].path }));
         fileElem.addChild(new XmlNode(context.embeddedFiles[f].content, null, null, true));
+      }
+
+      if (diskMod.peScriptCopy) {
+        var peCopyElem = extensionsElem.addChild(new XmlNode('PEScriptCopy'));
+        peCopyElem.addChild(new XmlNode(diskMod.peScriptCopy, null, null, true));
       }
     }
 
