@@ -590,7 +590,7 @@
       return val === 'true' || val === 'on' || val === '1';
     };
 
-    var commitHash = 'f4c8db9f894a4724f87e710da27f3ce75db388d8';
+    var commitHash = '20ca92088aa425cfc3403770af9b8a4e6e0c04a6';
 
     // Script sequences
     var specializeScript = new PowerShellSequence('Running scripts to customize your Windows installation.', 'C:\\Windows\\Setup\\Scripts\\Specialize.log');
@@ -1053,6 +1053,53 @@
       ].join('\r\n'));
     }
 
+    // Wi-Fi Profile (WifiModifier)
+    var wifiModeVal = getVal('WifiMode', 'Interactive');
+    if (wifiModeVal === 'FromProfile') {
+      var rawWifiXml = getVal('WifiProfileXml', '');
+      if (rawWifiXml && rawWifiXml.trim()) {
+        var cleanWifiXml = rawWifiXml.trim().replace(/\r\n/g, '\n').replace(/\r/g, '\n').replace(/\n/g, '\r\n');
+        var wifiXmlFile = embedTextFile('Wifi.xml', cleanWifiXml);
+        specializeScript.append([
+          "$name = 'WlanSvc';",
+          '$start = [datetime]::Now;',
+          '$timeout = $start.AddMinutes( 1 );',
+          '$params = @{',
+          '  Id = 1;',
+          '  ParentId = 0;',
+          '  Activity = "Waiting for service \'${name}\' to start.";',
+          '};',
+          'while( $true ) {',
+          "\tif( $service = Get-Service -Name $name -ErrorAction 'SilentlyContinue' ) {",
+          "\t\tif( $service.Status -eq 'Running' ) {",
+          '\t\t\tbreak;',
+          '\t\t}',
+          '\t}',
+          '\tif( [datetime]::Now -gt $timeout ) {',
+          '\t\t"Service \'${name}\' did not start in time." | Write-Warning;',
+          '\t\tbreak;',
+          '\t}',
+          '\tWrite-Progress @params -PercentComplete $(',
+          '\t\t100 * ( [datetime]::Now - $start ).Ticks / ( $timeout - $start ).Ticks',
+          '\t);',
+          '\tStart-Sleep -Seconds 5;',
+          '}',
+          'Write-Progress @params -Completed;'
+        ].join('\r\n'));
+
+        specializeScript.append('netsh.exe wlan add profile filename="' + wifiXmlFile + '" user=all;');
+
+        var wNameMatch = cleanWifiXml.match(/<name>([^<]+)<\/name>/i);
+        var wProfileName = wNameMatch ? wNameMatch[1].trim() : '';
+        var wModeMatch = cleanWifiXml.match(/<connectionMode>([^<]+)<\/connectionMode>/i);
+        var wIsAuto = wModeMatch && wModeMatch[1].trim().toLowerCase() === 'auto';
+
+        if (wIsAuto && wProfileName) {
+          specializeScript.append('netsh.exe wlan connect name="' + wProfileName + '" ssid="' + wProfileName + '";');
+        }
+      }
+    }
+
     // AppLocker Policy (AppLockerModifier)
     var appLockerMode = getVal('AppLockerMode', 'Skip');
     var appLockerPolicyXml = getVal('AppLockerPolicyXml', '');
@@ -1375,7 +1422,12 @@
       oobeSub.addSimpleElement('ProtectYourPC', '1');
     }
     oobeSub.addSimpleElement('HideEULAPage', 'true');
-    oobeSub.addSimpleElement('HideWirelessSetupInOOBE', 'false');
+    var oobeWifiMode = getVal('WifiMode', 'Interactive');
+    if (oobeWifiMode === 'Skip') {
+      oobeSub.addSimpleElement('HideWirelessSetupInOOBE', 'true');
+    } else if (oobeWifiMode !== 'FromProfile') {
+      oobeSub.addSimpleElement('HideWirelessSetupInOOBE', 'false');
+    }
     oobeSub.addSimpleElement('HideOnlineAccountScreens', 'false');
 
     if (firstLogonFile) {

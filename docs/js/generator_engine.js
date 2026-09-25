@@ -249,7 +249,12 @@ function generateAutounattendXml(formData) {
       oobeSub.addSimpleElement('ProtectYourPC', '1');
     }
     oobeSub.addSimpleElement('HideEULAPage', 'true');
-    oobeSub.addSimpleElement('HideWirelessSetupInOOBE', 'false');
+    var wifiMode = context.getVal('WifiMode', 'Interactive');
+    if (wifiMode === 'Skip') {
+      oobeSub.addSimpleElement('HideWirelessSetupInOOBE', 'true');
+    } else if (wifiMode !== 'FromProfile') {
+      oobeSub.addSimpleElement('HideWirelessSetupInOOBE', 'false');
+    }
     oobeSub.addSimpleElement('HideOnlineAccountScreens', 'false');
 
     if (context.firstLogonFile) {
