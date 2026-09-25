@@ -287,6 +287,89 @@ function runTests() {
   const forbiddenXml = engine.generateAutounattendXml(forbiddenFd);
   assert(!forbiddenXml.includes('<sub/>'), '禁止要素 <settings> を含むコンポーネントマークアップは注入されないこと');
 
+  // --- Test 11: スタートピン留め (StartPinsJson) の検証 ---
+  console.log('\n--- Test 11: スタートピン留め (StartPinsJson) の検証 ---');
+  const samplePinsJson = '{"pinnedList":[{"packageId":"Microsoft.WindowsTerminal_8wekyb3d8bbwe!App"}]}';
+  const startPinsFd = new MockFormData({
+    StartPinsMode: 'Custom',
+    StartPinsJson: samplePinsJson
+  });
+  const startPinsXml = engine.generateAutounattendXml(startPinsFd);
+  assert(startPinsXml.includes('<File path="C:\\Windows\\Setup\\Scripts\\SetStartPins.ps1">'), 'SetStartPins.ps1 が File 要素として埋め込まれていること');
+  assert(startPinsXml.includes('Microsoft.WindowsTerminal'), 'SetStartPins.ps1 に指定 JSON の内容が含まれていること');
+  assert(startPinsXml.includes("&amp; 'C:\\Windows\\Setup\\Scripts\\SetStartPins.ps1';"), 'Specialize.ps1 から SetStartPins.ps1 が呼び出されていること');
+
+  // Empty 指定時
+  const emptyPinsFd = new MockFormData({
+    StartPinsMode: 'Empty'
+  });
+  const emptyPinsXml = engine.generateAutounattendXml(emptyPinsFd);
+  assert(emptyPinsXml.includes('{"pinnedList":[]}'), 'StartPinsMode: Empty 時に空ピンリストが出力されること');
+
+  // Default 指定時
+  const defaultPinsFd = new MockFormData({
+    StartPinsMode: 'Default'
+  });
+  const defaultPinsXml = engine.generateAutounattendXml(defaultPinsFd);
+  assert(!defaultPinsXml.includes('SetStartPins.ps1'), 'StartPinsMode: Default 時に SetStartPins.ps1 が出力されないこと');
+
+  // --- Test 12: タスクバーアイコン (TaskbarIconsXml) の検証 ---
+  console.log('\n--- Test 12: タスクバーアイコン (TaskbarIconsXml) の検証 ---');
+  const sampleTaskbarXml = '<CustomTaskbarLayoutCollection PinListPlacement="Replace"><defaultlayout:TaskbarLayout><taskbar:TaskbarPinList><taskbar:DesktopApp DesktopApplicationLinkPath="%PROGRAMFILES%\\Test.lnk" /></taskbar:TaskbarPinList></defaultlayout:TaskbarLayout></CustomTaskbarLayoutCollection>';
+  const taskbarFd = new MockFormData({
+    TaskbarIconsMode: 'Custom',
+    TaskbarIconsXml: sampleTaskbarXml
+  });
+  const taskbarXml = engine.generateAutounattendXml(taskbarFd);
+  assert(taskbarXml.includes('<File path="C:\\Windows\\Setup\\Scripts\\TaskbarLayoutModification.xml">'), 'TaskbarLayoutModification.xml が File 要素として埋め込まれていること');
+  assert(taskbarXml.includes('<File path="C:\\Windows\\Setup\\Scripts\\UnlockStartLayout.vbs">'), 'UnlockStartLayout.vbs が File 要素として埋め込まれていること');
+  assert(taskbarXml.includes('<File path="C:\\Windows\\Setup\\Scripts\\UnlockStartLayout.xml">'), 'UnlockStartLayout.xml が File 要素として埋め込まれていること');
+  assert(taskbarXml.includes('DisableCloudOptimizedContent'), 'Specialize.ps1 に DisableCloudOptimizedContent ポリシー設定が含まれていること');
+  assert(taskbarXml.includes('StartLayoutFile'), 'DefaultUser.ps1 に StartLayoutFile レジストリ設定が含まれていること');
+  assert(taskbarXml.includes('LockedStartLayout'), 'DefaultUser.ps1 に LockedStartLayout レジストリ設定が含まれていること');
+  assert(taskbarXml.includes("Register-ScheduledTask -TaskName 'UnlockStartLayout'"), 'Specialize.ps1 にタスクスケジューラ登録が含まれていること');
+  assert(taskbarXml.includes("[System.Diagnostics.EventLog]::WriteEntry( 'UnattendGenerator'"), 'UserOnce.ps1 にイベントログ書き込みが含まれていること');
+
+  // Empty 指定時
+  const emptyTaskbarFd = new MockFormData({
+    TaskbarIconsMode: 'Empty'
+  });
+  const emptyTaskbarXml = engine.generateAutounattendXml(emptyTaskbarFd);
+  assert(emptyTaskbarXml.includes('#leaveempty'), 'TaskbarIconsMode: Empty 時に #leaveempty 要素が含まれること');
+
+  // Default 指定時
+  const defaultTaskbarFd = new MockFormData({
+    TaskbarIconsMode: 'Default'
+  });
+  const defaultTaskbarXml = engine.generateAutounattendXml(defaultTaskbarFd);
+  assert(!defaultTaskbarXml.includes('TaskbarLayoutModification.xml'), 'TaskbarIconsMode: Default 時に TaskbarLayoutModification.xml が出力されないこと');
+
+  // --- Test 13: デスクトップ壁紙・ロック画面画像 (WallpaperScript, LockScreenScript) の検証 ---
+  console.log('\n--- Test 13: デスクトップ壁紙・ロック画面画像 の検証 ---');
+  const personalizationFd = new MockFormData({
+    WallpaperMode: 'Script',
+    WallpaperScript: '$url = "https://example.com/wp.jpg"; ( Invoke-WebRequest -Uri $url ).Content;',
+    LockScreenMode: 'Script',
+    LockScreenScript: '[System.IO.File]::ReadAllBytes("D:\\lock.png");'
+  });
+  const personalizationXml = engine.generateAutounattendXml(personalizationFd);
+  assert(personalizationXml.includes('<File path="C:\\Windows\\Setup\\Scripts\\GetWallpaper.ps1">'), 'GetWallpaper.ps1 が File 要素として埋め込まれていること');
+  assert(personalizationXml.includes('<File path="C:\\Windows\\Setup\\Scripts\\SetWallpaper.ps1">'), 'SetWallpaper.ps1 が File 要素として埋め込まれていること');
+  assert(personalizationXml.includes('<File path="C:\\Windows\\Setup\\Scripts\\GetLockScreenImage.ps1">'), 'GetLockScreenImage.ps1 が File 要素として埋め込まれていること');
+  assert(personalizationXml.includes("C:\\Windows\\Setup\\Scripts\\Wallpaper"), 'Specialize.ps1 に壁紙バイナリ保存処理が含まれていること');
+  assert(personalizationXml.includes("Set-WallpaperImage -LiteralPath 'C:\\Windows\\Setup\\Scripts\\Wallpaper';"), 'SetWallpaper.ps1 末尾に Set-WallpaperImage 呼び出しが含まれていること');
+  assert(personalizationXml.includes("&amp; 'C:\\Windows\\Setup\\Scripts\\SetWallpaper.ps1';"), 'UserOnce.ps1 から SetWallpaper.ps1 が呼び出されていること');
+  assert(personalizationXml.includes('LockScreenImagePath'), 'Specialize.ps1 に LockScreenImagePath レジストリ設定が含まれていること');
+
+  // Default 指定時
+  const defaultPersonalizationFd = new MockFormData({
+    WallpaperMode: 'Default',
+    LockScreenMode: 'Default'
+  });
+  const defaultPersonalizationXml = engine.generateAutounattendXml(defaultPersonalizationFd);
+  assert(!defaultPersonalizationXml.includes('GetWallpaper.ps1'), 'WallpaperMode: Default 時に GetWallpaper.ps1 が出力されないこと');
+  assert(!defaultPersonalizationXml.includes('GetLockScreenImage.ps1'), 'LockScreenMode: Default 時に GetLockScreenImage.ps1 が出力されないこと');
+
   console.log('\n====================================================');
   console.log(` テスト結果: ${passed} 項目合格 / ${failed} 項目失敗`);
   console.log('====================================================\n');

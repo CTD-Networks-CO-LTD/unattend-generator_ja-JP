@@ -88,17 +88,151 @@ var SET_COMPUTER_NAME_PS1 = [
     "} *>&1 | Out-String -Width 1KB -Stream >> 'C:\\Windows\\Setup\\Scripts\\SetComputerName.log';"
   ].join('\r\n');
 
+var SET_START_PINS_PS1 = [
+  'if( [System.Environment]::OSVersion.Version.Build -lt 20000 ) {',
+  '\treturn;',
+  '}',
+  "$key = 'Registry::HKLM\\SOFTWARE\\Microsoft\\PolicyManager\\current\\device\\Start';",
+  "New-Item -Path $key -ItemType 'Directory' -ErrorAction 'SilentlyContinue';",
+  "Set-ItemProperty -LiteralPath $key -Name 'ConfigureStartPins' -Value $json -Type 'String';"
+].join('\r\n');
+
+var UNLOCK_START_LAYOUT_VBS = [
+  'HKU = &H80000003',
+  'Set reg = GetObject("winmgmts://./root/default:StdRegProv")',
+  'Set fso = CreateObject("Scripting.FileSystemObject")',
+  '',
+  'If reg.EnumKey(HKU, "", sids) = 0 Then',
+  '\tIf Not IsNull(sids) Then',
+  '\t\tFor Each sid In sids',
+  '\t\t\tkey = sid + "\\Software\\Policies\\Microsoft\\Windows\\Explorer"',
+  '\t\t\tname = "LockedStartLayout"',
+  '\t\t\tIf reg.GetDWORDValue(HKU, key, name, existing) = 0 Then',
+  '\t\t\t\treg.SetDWORDValue HKU, key, name, 0',
+  '\t\t\tEnd If',
+  '\t\tNext',
+  '\tEnd If',
+  'End If'
+].join('\r\n');
+
+var UNLOCK_START_LAYOUT_XML = [
+  '<Task version="1.2" xmlns="http://schemas.microsoft.com/windows/2004/02/mit/task">',
+  '\t<Triggers>',
+  '\t\t<EventTrigger>',
+  '\t\t\t<Enabled>true</Enabled>',
+  '\t\t\t<Subscription>&lt;QueryList&gt;&lt;Query Id="0" Path="Application"&gt;&lt;Select Path="Application"&gt;*[System[Provider[@Name=\'UnattendGenerator\'] and EventID=1]]&lt;/Select&gt;&lt;/Query&gt;&lt;/QueryList&gt;</Subscription>',
+  '\t\t</EventTrigger>',
+  '\t</Triggers>',
+  '\t<Principals>',
+  '\t\t<Principal id="Author">',
+  '\t\t\t<UserId>S-1-5-18</UserId>',
+  '\t\t\t<RunLevel>LeastPrivilege</RunLevel>',
+  '\t\t</Principal>',
+  '\t</Principals>',
+  '\t<Settings>',
+  '\t\t<MultipleInstancesPolicy>IgnoreNew</MultipleInstancesPolicy>',
+  '\t\t<DisallowStartIfOnBatteries>false</DisallowStartIfOnBatteries>',
+  '\t\t<StopIfGoingOnBatteries>false</StopIfGoingOnBatteries>',
+  '\t\t<AllowHardTerminate>true</AllowHardTerminate>',
+  '\t\t<StartWhenAvailable>false</StartWhenAvailable>',
+  '\t\t<RunOnlyIfNetworkAvailable>false</RunOnlyIfNetworkAvailable>',
+  '\t\t<IdleSettings>',
+  '\t\t\t<StopOnIdleEnd>true</StopOnIdleEnd>',
+  '\t\t\t<RestartOnIdle>false</RestartOnIdle>',
+  '\t\t</IdleSettings>',
+  '\t\t<AllowStartOnDemand>true</AllowStartOnDemand>',
+  '\t\t<Enabled>true</Enabled>',
+  '\t\t<Hidden>false</Hidden>',
+  '\t\t<RunOnlyIfIdle>false</RunOnlyIfIdle>',
+  '\t\t<WakeToRun>false</WakeToRun>',
+  '\t\t<ExecutionTimeLimit>PT72H</ExecutionTimeLimit>',
+  '\t\t<Priority>7</Priority>',
+  '\t</Settings>',
+  '\t<Actions Context="Author">',
+  '\t\t<Exec>',
+  '\t\t\t<Command>C:\\Windows\\System32\\wscript.exe</Command>',
+  '\t\t\t<Arguments>C:\\Windows\\Setup\\Scripts\\UnlockStartLayout.vbs</Arguments>',
+  '\t\t</Exec>',
+  '\t</Actions>',
+  '</Task>'
+].join('\r\n');
+
+var SET_WALLPAPER_PS1 = [
+  "Add-Type -TypeDefinition '",
+  '\tusing System.Drawing;',
+  '\tusing System.Runtime.InteropServices;',
+  '\t',
+  '\tpublic static class WallpaperSetter {',
+  '\t\t[DllImport("user32.dll")]',
+  '\t\tprivate static extern bool SetSysColors(',
+  '\t\t\tint cElements, ',
+  '\t\t\tint[] lpaElements,',
+  '\t\t\tint[] lpaRgbValues',
+  '\t\t);',
+  '',
+  '\t\t[DllImport("user32.dll")]',
+  '\t\tprivate static extern bool SystemParametersInfo(',
+  '\t\t\tuint uiAction,',
+  '\t\t\tuint uiParam,',
+  '\t\t\tstring pvParam,',
+  '\t\t\tuint fWinIni',
+  '\t\t);',
+  '',
+  '\t\tpublic static void SetDesktopBackground(Color color) {',
+  '\t\t\tSystemParametersInfo(20, 0, "", 0);',
+  '\t\t\tSetSysColors(1, new int[] { 1 }, new int[] { ColorTranslator.ToWin32(color) });',
+  '\t\t}',
+  '',
+  '\t\tpublic static void SetDesktopImage(string file) {',
+  '\t\t\tSystemParametersInfo(20, 0, file, 0);',
+  '\t\t}',
+  '\t}',
+  "' -ReferencedAssemblies 'System.Drawing';",
+  '',
+  'function Set-WallpaperColor {',
+  '\tparam(',
+  '\t\t[string]',
+  '\t\t$HtmlColor',
+  '\t);',
+  '',
+  '\t$color = [System.Drawing.ColorTranslator]::FromHtml( $HtmlColor );',
+  '\t[WallpaperSetter]::SetDesktopBackground( $color );',
+  "\tSet-ItemProperty -Path 'Registry::HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Wallpapers' -Name 'BackgroundType' -Type 'DWord' -Value 1 -Force;",
+  "\tSet-ItemProperty -Path 'Registry::HKCU\\Control Panel\\Desktop' -Name 'WallPaper' -Type 'String' -Value '' -Force;",
+  '\tSet-ItemProperty -Path \'Registry::HKCU\\Control Panel\\Colors\' -Name \'Background\' -Type \'String\' -Value "$($color.R) $($color.G) $($color.B)" -Force;',
+  '}',
+  '',
+  'function Set-WallpaperImage {',
+  '\tparam(',
+  '\t\t[string]',
+  '\t\t$LiteralPath',
+  '\t);',
+  '',
+  '\tif( $LiteralPath | Test-Path ) {',
+  '\t\t[WallpaperSetter]::SetDesktopImage( $LiteralPath );',
+  "\t\tSet-ItemProperty -Path 'Registry::HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Wallpapers' -Name 'BackgroundType' -Type 'DWord' -Value 0 -Force;",
+  "\t\tSet-ItemProperty -Path 'Registry::HKCU\\Control Panel\\Desktop' -Name 'WallPaper' -Type 'String' -Value $LiteralPath -Force;",
+  '\t} else {',
+  '\t\t"Cannot use \'$LiteralPath\' as a desktop wallpaper because that file does not exist.";',
+  '\t}',
+  '}'
+].join('\r\n');
+
 var REPO_URL = 'https://github.com/CTD-Networks-CO-LTD/unattend-generator_ja-JP';
 var COMMIT_URL_BASE = REPO_URL + '/commit/';
-var COMMIT_HASH = '9fd6c76d8fdc7ba668ae3625e969badf1f8f1993';
+var COMMIT_HASH = 'f4c8db9f894a4724f87e710da27f3ce75db388d8';
 var RELEASE_TAG = 'v1.5.1_20260923';
 var RELEASE_URL = 'https://github.com/CTD-Networks-CO-LTD/unattend-generator_ja-JP/releases/tag/v1.5.1_20260923';
-var COMMIT_DATE = '2026-09-25T09:50:15+09:00';
+var COMMIT_DATE = '2026-09-25T10:00:31+09:00';
 
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
     EXTRACT_SCRIPTS_PS1: EXTRACT_SCRIPTS_PS1,
     SET_COMPUTER_NAME_PS1: SET_COMPUTER_NAME_PS1,
+    SET_START_PINS_PS1: SET_START_PINS_PS1,
+    UNLOCK_START_LAYOUT_VBS: UNLOCK_START_LAYOUT_VBS,
+    UNLOCK_START_LAYOUT_XML: UNLOCK_START_LAYOUT_XML,
+    SET_WALLPAPER_PS1: SET_WALLPAPER_PS1,
     REPO_URL: REPO_URL,
     COMMIT_URL_BASE: COMMIT_URL_BASE,
     COMMIT_HASH: COMMIT_HASH,
@@ -756,6 +890,13 @@ if (typeof module !== 'undefined' && module.exports) {
 /**
  * Optimizations modifier matching baseline_unattend_engine.js
  */
+if (typeof SET_START_PINS_PS1 === 'undefined' && typeof require !== 'undefined') {
+  var constants = require('../core/constants');
+  SET_START_PINS_PS1 = constants.SET_START_PINS_PS1;
+  UNLOCK_START_LAYOUT_VBS = constants.UNLOCK_START_LAYOUT_VBS;
+  UNLOCK_START_LAYOUT_XML = constants.UNLOCK_START_LAYOUT_XML;
+}
+
 function OptimizationsModifier(context) {
   this.context = context;
 }
@@ -912,6 +1053,60 @@ OptimizationsModifier.prototype.process = function () {
       ].join('\r\n'));
       firstLogonScript.invokeFile('C:\\Windows\\Setup\\Scripts\\VirtIoGuestTools.ps1');
     }
+
+    // Taskbar Icons (SetTaskbarIcons)
+    var taskbarMode = ctx.getVal('TaskbarIconsMode', 'Default');
+    var taskbarXml = '';
+    if (taskbarMode === 'Empty') {
+      taskbarXml = [
+        '<LayoutModificationTemplate xmlns="http://schemas.microsoft.com/Start/2014/LayoutModification" xmlns:defaultlayout="http://schemas.microsoft.com/Start/2014/FullDefaultLayout" xmlns:start="http://schemas.microsoft.com/Start/2014/StartLayout" xmlns:taskbar="http://schemas.microsoft.com/Start/2014/TaskbarLayout" Version="1">',
+        '  <CustomTaskbarLayoutCollection PinListPlacement="Replace">',
+        '    <defaultlayout:TaskbarLayout>',
+        '      <taskbar:TaskbarPinList>',
+        '        <taskbar:DesktopApp DesktopApplicationLinkPath="#leaveempty" />',
+        '      </taskbar:TaskbarPinList>',
+        '    </defaultlayout:TaskbarLayout>',
+        '  </CustomTaskbarLayoutCollection>',
+        '</LayoutModificationTemplate>'
+      ].join('\r\n');
+    } else if (taskbarMode === 'Custom') {
+      taskbarXml = ctx.getVal('TaskbarIconsXml', '').trim();
+    }
+
+    if (taskbarXml) {
+      taskbarXml = taskbarXml.replace(/\r\n/g, '\n').replace(/\r/g, '\n').replace(/\n/g, '\r\n');
+      var taskbarPath = ctx.embedTextFile('TaskbarLayoutModification.xml', taskbarXml);
+      specializeScript.append(
+        'reg.exe add "HKLM\\Software\\Policies\\Microsoft\\Windows\\CloudContent" /v "DisableCloudOptimizedContent" /t REG_DWORD /d 1 /f;\r\n' +
+        "[System.Diagnostics.EventLog]::CreateEventSource( 'UnattendGenerator', 'Application' );"
+      );
+      defaultUserScript.append(
+        'reg.exe add "HKU\\DefaultUser\\Software\\Policies\\Microsoft\\Windows\\Explorer" /v "StartLayoutFile" /t REG_SZ /d "' + taskbarPath + '" /f;\r\n' +
+        'reg.exe add "HKU\\DefaultUser\\Software\\Policies\\Microsoft\\Windows\\Explorer" /v "LockedStartLayout" /t REG_DWORD /d 1 /f;'
+      );
+      ctx.embedTextFile('UnlockStartLayout.vbs', UNLOCK_START_LAYOUT_VBS);
+      var unlockXmlPath = ctx.embedTextFile('UnlockStartLayout.xml', UNLOCK_START_LAYOUT_XML);
+      specializeScript.append("Register-ScheduledTask -TaskName 'UnlockStartLayout' -Xml $( Get-Content -LiteralPath '" + unlockXmlPath + "' -Raw );");
+      userOnceScript.append(
+        "[System.Diagnostics.EventLog]::WriteEntry( 'UnattendGenerator', \"User '$env:USERNAME' has requested to unlock the Start menu layout.\", [System.Diagnostics.EventLogEntryType]::Information, 1 );"
+      );
+    }
+
+    // Start Pins (SetStartPins)
+    var startPinsMode = ctx.getVal('StartPinsMode', 'Default');
+    var startPinsJson = '';
+    if (startPinsMode === 'Empty') {
+      startPinsJson = '{"pinnedList":[]}';
+    } else if (startPinsMode === 'Custom') {
+      startPinsJson = ctx.getVal('StartPinsJson', '').trim();
+    }
+
+    if (startPinsJson) {
+      var escapedJson = startPinsJson.replace(/'/g, "''");
+      var startPinsContent = "$json = '" + escapedJson + "';\r\n" + SET_START_PINS_PS1;
+      var startPinsFile = ctx.embedTextFile('SetStartPins.ps1', startPinsContent);
+      specializeScript.invokeFile(startPinsFile);
+    }
     
 };
 
@@ -920,6 +1115,75 @@ if (typeof module !== 'undefined' && module.exports) {
 }
 
   // --- End: modifiers/optimizations.js ---
+
+  // --- Begin: modifiers/personalization.js ---
+/**
+ * Personalization modifier matching C# PersonalizationModifier
+ * Handles WallpaperMode and LockScreenMode custom scripts
+ */
+
+if (typeof SET_WALLPAPER_PS1 === 'undefined' && typeof require !== 'undefined') {
+  var constants = require('../core/constants');
+  SET_WALLPAPER_PS1 = constants.SET_WALLPAPER_PS1;
+}
+
+function PersonalizationModifier(context) {
+  this.context = context;
+}
+
+PersonalizationModifier.prototype.process = function () {
+  var ctx = this.context;
+
+  // Desktop Wallpaper
+  var wallpaperMode = ctx.getVal('WallpaperMode', 'Default');
+  if (wallpaperMode === 'Script') {
+    var wallpaperScript = ctx.getVal('WallpaperScript', '');
+    if (wallpaperScript && wallpaperScript.trim()) {
+      var imageFile = 'C:\\Windows\\Setup\\Scripts\\Wallpaper';
+      var cleanScript = wallpaperScript.trim().replace(/\r\n/g, '\n').replace(/\r/g, '\n').replace(/\n/g, '\r\n');
+      var getterFile = ctx.embedTextFile('GetWallpaper.ps1', cleanScript);
+      ctx.sequences.specialize.append(
+        "try {\r\n" +
+        "  $bytes = & '" + getterFile + "';\r\n" +
+        "  [System.IO.File]::WriteAllBytes( '" + imageFile + "', $bytes );\r\n" +
+        "} catch {\r\n" +
+        "  $_;\r\n" +
+        "}"
+      );
+      var wpScriptContent = SET_WALLPAPER_PS1 + "\r\nSet-WallpaperImage -LiteralPath '" + imageFile + "';";
+      var wpFile = ctx.embedTextFile('SetWallpaper.ps1', wpScriptContent);
+      ctx.sequences.userOnce.invokeFile(wpFile);
+    }
+  }
+
+  // Lock Screen Image
+  var lockScreenMode = ctx.getVal('LockScreenMode', 'Default');
+  if (lockScreenMode === 'Script') {
+    var lockScreenScript = ctx.getVal('LockScreenScript', '');
+    if (lockScreenScript && lockScreenScript.trim()) {
+      var lockImageFile = 'C:\\Windows\\Setup\\Scripts\\LockScreenImage';
+      var cleanLockScript = lockScreenScript.trim().replace(/\r\n/g, '\n').replace(/\r/g, '\n').replace(/\n/g, '\r\n');
+      var lockGetterFile = ctx.embedTextFile('GetLockScreenImage.ps1', cleanLockScript);
+      ctx.sequences.specialize.append(
+        "try {\r\n" +
+        "  $bytes = & '" + lockGetterFile + "';\r\n" +
+        "  [System.IO.File]::WriteAllBytes( '" + lockImageFile + "', $bytes );\r\n" +
+        '  reg.exe add "HKLM\\Software\\Microsoft\\Windows\\CurrentVersion\\PersonalizationCSP" /v LockScreenImagePath /t REG_SZ /d "' + lockImageFile + '" /f;\r\n' +
+        "} catch {\r\n" +
+        "  $_;\r\n" +
+        "}"
+      );
+    }
+  }
+};
+
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = {
+    PersonalizationModifier: PersonalizationModifier
+  };
+}
+
+  // --- End: modifiers/personalization.js ---
 
   // --- Begin: modifiers/bloatware.js ---
 /**
@@ -1489,6 +1753,9 @@ function generateAutounattendXml(formData) {
   if (typeof ComponentsModifier === 'undefined' && typeof require !== 'undefined') {
     ComponentsModifier = require('./modifiers/components').ComponentsModifier;
   }
+  if (typeof PersonalizationModifier === 'undefined' && typeof require !== 'undefined') {
+    PersonalizationModifier = require('./modifiers/personalization').PersonalizationModifier;
+  }
 
   var componentsMod = new ComponentsModifier(context);
 
@@ -1499,6 +1766,7 @@ function generateAutounattendXml(formData) {
     new LockoutModifier(context),
     new UsersModifier(context),
     new OptimizationsModifier(context),
+    new PersonalizationModifier(context),
     new BloatwareModifier(context),
     new LocalesModifier(context),
     new BypassModifier(context),
