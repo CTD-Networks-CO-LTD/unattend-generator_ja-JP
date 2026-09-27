@@ -26,6 +26,9 @@ https://github.com/user-attachments/assets/f9b98d85-3cf4-421b-b8fe-5b79212971d0
 
 https://github.com/user-attachments/assets/2ffeee9d-7f16-4aee-9ece-d4f05dfa9693
 
+> [!IMPORTANT]
+> 初回のOSログイン後に再起動しないと日本語キーボード配列にはなりませんでした。（自動インストールの工程でレジストリの変更を行っている為だと思われます。）
+
 ---
 
 ## `Autounattend.xml`について解説されているサイト等
