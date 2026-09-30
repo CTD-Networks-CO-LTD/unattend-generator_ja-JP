@@ -460,7 +460,7 @@ for /f "tokens=3 delims=." %%v in ('ver') do (
 )
 
 if defined PEDRIVERS_FOLDER (
-    call :print "Loading drivers from $WinPEDriver$ folder"
+    call :print "Loading drivers from %PEDRIVERS_FOLDER%"
     for /R %PEDRIVERS_FOLDER% %%f IN (*.inf) do drvload.exe "%%f"
 )
 
@@ -582,7 +582,7 @@ mkdir W:\Windows\Panther
 copy %XML_FILE% W:\Windows\Panther\unattend.xml
 
 if defined PEDRIVERS_FOLDER (
-    call :print "Adding drivers from $WinPEDriver$ folder to new installation"
+    call :print "Adding drivers from %PEDRIVERS_FOLDER% to new installation"
     dism.exe /Add-Driver /Image:W:\ /Driver:"%PEDRIVERS_FOLDER%" /Recurse
 )
 
@@ -605,7 +605,7 @@ reg.exe UNLOAD HKLM\mount
 
 set "ROBOCOPY_ARGS=/E /XX /COPY:DAT /DCOPY:DAT /R:0"
 if defined OEM_FOLDER (
-    call :print "Copying contents of $OEM$ folder"
+    call :print "Copying contents of %OEM_FOLDER%"
     if exist "%OEM_FOLDER%\$$" robocopy.exe "%OEM_FOLDER%\$$" W:\Windows %ROBOCOPY_ARGS%
     if exist "%OEM_FOLDER%\$1" robocopy.exe "%OEM_FOLDER%\$1" W:\ %ROBOCOPY_ARGS%
     for %%d in (C D E F G H I J K L M N O P Q R S T U V W X Y Z) do (
