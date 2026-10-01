@@ -18,13 +18,15 @@ Modifications Copyright (c) 2026 CTD Networks CO., LTD.
 https://github.com/user-attachments/assets/f9b98d85-3cf4-421b-b8fe-5b79212971d0
 
 **2. サンプル_autounattend.xml（ZIP圧縮）**
-<br>[サンプル_autounattend.xml.zip](https://github.com/user-attachments/files/31733749/_autounattend.xml.zip)
+<br>[サンプル_autounattend.zip](https://github.com/user-attachments/files/32892418/_autounattend.zip)
 > [!WARNING]
 > このサンプルに設定してあるログインパスワード（Passw@rd）は脆弱です。このまま運用に利用しないでください。
 
 **3. Win11Pro自動インストールの様子**
+- Ventoy + Windows 11 Pro 26H2.iso + autounattend.xml
 
-https://github.com/user-attachments/assets/2ffeee9d-7f16-4aee-9ece-d4f05dfa9693
+https://github.com/user-attachments/assets/99337929-7bfb-4dbb-8f77-96cccfdccc48
+
 
 > [!IMPORTANT]
 > 初回のOSログイン後に再起動しないと日本語キーボード配列にはなりませんでした。（自動インストールの工程でレジストリの変更を行っている為だと思われます。）
