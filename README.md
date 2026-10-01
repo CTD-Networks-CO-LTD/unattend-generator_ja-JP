@@ -13,16 +13,16 @@ Modifications Copyright (c) 2026 CTD Networks CO., LTD.
 - [GEAR.indigoBiz による仕様書生成](https://github.com/CTD-Networks-CO-LTD/unattend-generator_ja-JP/tree/master/.gear)
 ---
 
-**1. サンプル_autounattend.xml_生成の様子**
+#### 1. サンプル_autounattend.xml_生成の様子
 
 https://github.com/user-attachments/assets/f9b98d85-3cf4-421b-b8fe-5b79212971d0
 
-**2. サンプル_autounattend.xml（ZIP圧縮）**
-<br>[サンプル_autounattend.zip](https://github.com/user-attachments/files/32892418/_autounattend.zip)
+#### 2. サンプル_autounattend.xml（ZIP圧縮）
+[サンプル_autounattend.zip](https://github.com/user-attachments/files/32892418/_autounattend.zip)
 > [!WARNING]
 > このサンプルに設定してあるログインパスワード（Passw@rd）は脆弱です。このまま運用に利用しないでください。
 
-**3. Win11Pro自動インストールの様子**
+#### 3. Win11Pro自動インストールの様子
 - Ventoy + Windows 11 Pro 26H2.iso + autounattend.xml
 
 https://github.com/user-attachments/assets/99337929-7bfb-4dbb-8f77-96cccfdccc48
