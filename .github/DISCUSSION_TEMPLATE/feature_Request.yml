@@ -1,0 +1,45 @@
+# 管理者および Collaborator のみが選択できるようにする設定手順:
+# - 1. GitHub リポジトリの __[Discussions]__ タブを開きます。
+# - 2. 左サイドバーにある __Categories__ の右側の __⚙️（歯車アイコン / 管理アイコン）__ をクリックします。
+# - 3. 今回のテンプレートに対応するカテゴリ（例: `feature_Request` 等）の __[Edit]__ を開く（未作成の場合は新規作成）。
+# - 4. __Discussion format__ の選択肢で __「Announcement」__ を選択します。
+# - 5. __[Save changes]__ をクリックして保存します。
+
+name: "[追加機能要望] ： （追加したい機能を記載）"
+description: "[追加機能要望] ： 検索のハイライトを非表示にする（すべてのユーザー）"
+title: "[追加機能要望] ： （追加したい機能を記載）"
+labels:
+  - "追加機能要望"
+body:
+  - type: textarea
+    id: feature-description
+    attributes:
+      label: 追加したい機能
+      description: 機能の詳細、設定変更前後のキャプチャ、実行コード等を記載してください。
+      value: |
+        - １. 設定変更前（Windows UI の画面キャプチャ または 記録動画）
+
+        <span />
+
+        - ２. 設定変更後（Windows UI の画面キャプチャ または 記録動画）
+          - 設定に使ったCLI [`.cmd`, `.ps1`, `.reg`, `.vbs`] ※分かる場合
+            - [ ] Windows上で実行
+            - [ ] autounattend.xmlに設定
+             ```
+             （設定したコード）
+             ```
+            - コード実行結果 : [ `成功` / `失敗` ]
+    validations:
+      required: true
+  - type: checkboxes
+    id: session-type
+    attributes:
+      label: セッション区分
+      description: 該当するセッション区分を選択してください。
+      options:
+        - label: 設定先未定
+        - label: Systemスクリプト
+        - label: DefaultUserスクリプト
+        - label: FirstLogonスクリプト
+        - label: UserOnceスクリプト
+
