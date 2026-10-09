@@ -220,13 +220,21 @@ var SET_WALLPAPER_PS1 = [
 
 var REPO_URL = 'https://github.com/CTD-Networks-CO-LTD/unattend-generator_ja-JP';
 var COMMIT_URL_BASE = REPO_URL + '/commit/';
-var COMMIT_HASH = '6de8641313151e4b9f95fdab4a37a701bcb59541';
+var COMMIT_HASH = 'ab617e7135649fc6e221a5d016acb760fe90d0a6';
 var RELEASE_TAG = 'v1.6.1_20261001';
 var RELEASE_URL = 'https://github.com/CTD-Networks-CO-LTD/unattend-generator_ja-JP/releases/tag/v1.6.1_20261001';
-var COMMIT_DATE = '2026-10-08T16:53:11+09:00';
+var COMMIT_DATE = '2026-10-10T06:09:40+09:00';
+
+
+var PAUSE_WINDOWS_UPDATE_XML = "<Task version=\"1.2\" xmlns=\"http://schemas.microsoft.com/windows/2004/02/mit/task\">\n\t<Triggers>\n\t\t<BootTrigger>\n\t\t\t<Repetition>\n\t\t\t\t<Interval>P1D</Interval>\n\t\t\t\t<StopAtDurationEnd>false</StopAtDurationEnd>\n\t\t\t</Repetition>\n\t\t\t<Enabled>true</Enabled>\n\t\t</BootTrigger>\n\t</Triggers>\n\t<Principals>\n\t\t<Principal id=\"Author\">\n\t\t\t<UserId>S-1-5-19</UserId>\n\t\t\t<RunLevel>LeastPrivilege</RunLevel>\n\t\t</Principal>\n\t</Principals>\n\t<Settings>\n\t\t<MultipleInstancesPolicy>IgnoreNew</MultipleInstancesPolicy>\n\t\t<DisallowStartIfOnBatteries>false</DisallowStartIfOnBatteries>\n\t\t<StopIfGoingOnBatteries>false</StopIfGoingOnBatteries>\n\t\t<AllowHardTerminate>true</AllowHardTerminate>\n\t\t<StartWhenAvailable>false</StartWhenAvailable>\n\t\t<RunOnlyIfNetworkAvailable>false</RunOnlyIfNetworkAvailable>\n\t\t<IdleSettings>\n\t\t\t<StopOnIdleEnd>true</StopOnIdleEnd>\n\t\t\t<RestartOnIdle>false</RestartOnIdle>\n\t\t</IdleSettings>\n\t\t<AllowStartOnDemand>true</AllowStartOnDemand>\n\t\t<Enabled>true</Enabled>\n\t\t<Hidden>false</Hidden>\n\t\t<RunOnlyIfIdle>false</RunOnlyIfIdle>\n\t\t<WakeToRun>false</WakeToRun>\n\t\t<ExecutionTimeLimit>PT72H</ExecutionTimeLimit>\n\t\t<Priority>7</Priority>\n\t</Settings>\n\t<Actions Context=\"Author\">\n\t\t<Exec>\n\t\t\t<Command>C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe</Command>\n\t\t\t<Arguments>-WindowStyle Hidden -NoProfile -NonInteractive -Command \"$format = 'yyyy-MM-ddTHH\\:mm\\:ssK'; $now = [datetime]::UtcNow; $start = $now.ToString($format); $end = $now.AddDays(7).ToString($format); $params = @{ LiteralPath = 'Registry::HKLM\\Software\\Microsoft\\WindowsUpdate\\UX\\Settings'; Type = 'String'; Force = $true; Verbose = $true; }; 'PauseFeatureUpdatesStartTime', 'PauseQualityUpdatesStartTime', 'PauseUpdatesStartTime' | foreach { Set-ItemProperty @params -Name $_ -Value $start; }; 'PauseFeatureUpdatesEndTime', 'PauseQualityUpdatesEndTime', 'PauseUpdatesExpiryTime' | foreach { Set-ItemProperty @params -Name $_ -Value $end; };\"</Arguments>\n\t\t</Exec>\n\t</Actions>\n</Task>";
+var MOVE_ACTIVE_HOURS_XML = "<Task version=\"1.2\" xmlns=\"http://schemas.microsoft.com/windows/2004/02/mit/task\">\n\t<Triggers>\n\t\t<BootTrigger>\n\t\t\t<Repetition>\n\t\t\t\t<Interval>PT4H</Interval>\n\t\t\t\t<StopAtDurationEnd>false</StopAtDurationEnd>\n\t\t\t</Repetition>\n\t\t\t<Enabled>true</Enabled>\n\t\t</BootTrigger>\n\t\t<RegistrationTrigger>\n\t\t\t<Repetition>\n\t\t\t\t<Interval>PT4H</Interval>\n\t\t\t\t<StopAtDurationEnd>false</StopAtDurationEnd>\n\t\t\t</Repetition>\n\t\t\t<Enabled>true</Enabled>\n\t\t</RegistrationTrigger>\n\t</Triggers>\n\t<Principals>\n\t\t<Principal id=\"Author\">\n\t\t\t<UserId>S-1-5-19</UserId>\n\t\t\t<RunLevel>LeastPrivilege</RunLevel>\n\t\t</Principal>\n\t</Principals>\n\t<Settings>\n\t\t<MultipleInstancesPolicy>IgnoreNew</MultipleInstancesPolicy>\n\t\t<DisallowStartIfOnBatteries>false</DisallowStartIfOnBatteries>\n\t\t<StopIfGoingOnBatteries>false</StopIfGoingOnBatteries>\n\t\t<AllowHardTerminate>true</AllowHardTerminate>\n\t\t<StartWhenAvailable>false</StartWhenAvailable>\n\t\t<RunOnlyIfNetworkAvailable>false</RunOnlyIfNetworkAvailable>\n\t\t<IdleSettings>\n\t\t\t<StopOnIdleEnd>true</StopOnIdleEnd>\n\t\t\t<RestartOnIdle>false</RestartOnIdle>\n\t\t</IdleSettings>\n\t\t<AllowStartOnDemand>true</AllowStartOnDemand>\n\t\t<Enabled>true</Enabled>\n\t\t<Hidden>false</Hidden>\n\t\t<RunOnlyIfIdle>false</RunOnlyIfIdle>\n\t\t<WakeToRun>false</WakeToRun>\n\t\t<ExecutionTimeLimit>PT72H</ExecutionTimeLimit>\n\t\t<Priority>7</Priority>\n\t</Settings>\n\t<Actions Context=\"Author\">\n\t\t<Exec>\n\t\t\t<Command>%windir%\\System32\\conhost.exe</Command>\n\t\t\t<Arguments>--headless %windir%\\System32\\WindowsPowerShell\\v1.0\\powershell.exe -WindowStyle Hidden -NoProfile -NonInteractive -Command \"$p = @{ LiteralPath = 'Registry::HKLM\\Software\\Microsoft\\WindowsUpdate\\UX\\Settings'; Type = 'DWord'; }; $h = [datetime]::Now.Hour; Set-ItemProperty @p -Name 'ActiveHoursStart' -Value (($h + 23) % 24); Set-ItemProperty @p -Name 'ActiveHoursEnd' -Value (($h + 11) % 24); Set-ItemProperty @p -Name 'SmartActiveHoursState' -Value 0;\"</Arguments>\n\t\t</Exec>\n\t</Actions>\n</Task>";
+var SET_COLOR_THEME_PS1 = "& {\n\t$params = @{\n\t\tLiteralPath = 'Registry::HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize';\n\t\tForce = $true;\n\t\tType = 'DWord';\n\t};\n\tSet-ItemProperty @params -Name 'SystemUsesLightTheme' -Value $lightThemeSystem;\n\tSet-ItemProperty @params -Name 'AppsUseLightTheme' -Value $lightThemeApps;\n\tSet-ItemProperty @params -Name 'ColorPrevalence' -Value $accentColorOnStart;\n\tSet-ItemProperty @params -Name 'EnableTransparency' -Value $enableTransparency;\n};\n& {\n\tAdd-Type -AssemblyName 'System.Drawing';\n\t$accentColor = [System.Drawing.ColorTranslator]::FromHtml( $htmlAccentColor );\n\n\tfunction ConvertTo-DWord {\n\t\tparam(\n\t\t\t[System.Drawing.Color]\n\t\t\t$Color\n\t\t);\n\t\t\t\t\t\t\n\t\t[byte[]] $bytes = @(\n\t\t\t$Color.R;\n\t\t\t$Color.G;\n\t\t\t$Color.B;\n\t\t\t$Color.A;\n\t\t);\n\t\treturn [System.BitConverter]::ToUInt32( $bytes, 0); \n\t}\n\n\t$startColor = [System.Drawing.Color]::FromArgb( 0xD2, $accentColor );\n\tSet-ItemProperty -LiteralPath 'Registry::HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Accent' -Name 'StartColorMenu' -Value( ConvertTo-DWord -Color $accentColor ) -Type 'DWord' -Force;\n\tSet-ItemProperty -LiteralPath 'Registry::HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Accent' -Name 'AccentColorMenu' -Value( ConvertTo-DWord -Color $accentColor ) -Type 'DWord' -Force;\n\tSet-ItemProperty -LiteralPath 'Registry::HKCU\\Software\\Microsoft\\Windows\\DWM' -Name 'AccentColor' -Value( ConvertTo-DWord -Color $accentColor ) -Type 'DWord' -Force;\n\t$params = @{\n\t\tLiteralPath = 'Registry::HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Accent';\n\t\tName = 'AccentPalette';\n\t};\n\t$palette = Get-ItemPropertyValue @params;\n\t$index = 20;\n\t$palette[ $index++ ] = $accentColor.R;\n\t$palette[ $index++ ] = $accentColor.G;\n\t$palette[ $index++ ] = $accentColor.B;\n\t$palette[ $index++ ] = $accentColor.A;\n\tSet-ItemProperty @params -Value $palette -Type 'Binary' -Force;\n};";
 
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
+    PAUSE_WINDOWS_UPDATE_XML: PAUSE_WINDOWS_UPDATE_XML,
+    MOVE_ACTIVE_HOURS_XML: MOVE_ACTIVE_HOURS_XML,
+    SET_COLOR_THEME_PS1: SET_COLOR_THEME_PS1,
     EXTRACT_SCRIPTS_PS1: EXTRACT_SCRIPTS_PS1,
     SET_COMPUTER_NAME_PS1: SET_COMPUTER_NAME_PS1,
     SET_START_PINS_PS1: SET_START_PINS_PS1,
@@ -1366,6 +1374,9 @@ BypassModifier.prototype.process = function () {
   var ctx = this.context;
   ctx.bypassRequirements = ctx.getBool('BypassRequirementsCheck', false);
   ctx.bypassNetwork = ctx.getBool('BypassNetworkCheck', false);
+  if (ctx.bypassNetwork) {
+    ctx.sequences.specialize.append('reg.exe add "HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\OOBE" /v BypassNRO /t REG_DWORD /d 1 /f;');
+  }
 };
 
 if (typeof module !== 'undefined' && module.exports) {
@@ -1603,13 +1614,15 @@ if (typeof module !== 'undefined' && module.exports) {
 
   // --- Begin: modifiers/optimizations.js ---
 /**
- * Optimizations modifier matching baseline_unattend_engine.js
+ * Optimizations modifier matching C# Optimizations.cs and baseline_unattend_engine.js
  */
 if (typeof SET_START_PINS_PS1 === 'undefined' && typeof require !== 'undefined') {
   var constants = require('../core/constants');
   SET_START_PINS_PS1 = constants.SET_START_PINS_PS1;
   UNLOCK_START_LAYOUT_VBS = constants.UNLOCK_START_LAYOUT_VBS;
   UNLOCK_START_LAYOUT_XML = constants.UNLOCK_START_LAYOUT_XML;
+  PAUSE_WINDOWS_UPDATE_XML = constants.PAUSE_WINDOWS_UPDATE_XML;
+  MOVE_ACTIVE_HOURS_XML = constants.MOVE_ACTIVE_HOURS_XML;
 }
 
 function OptimizationsModifier(context) {
@@ -1623,206 +1636,348 @@ OptimizationsModifier.prototype.process = function () {
   var specializeScript = ctx.sequences.specialize;
   var firstLogonScript = ctx.sequences.firstLogon;
 
-  // Optimizations & Registry
-    if (ctx.getBool('ClassicContextMenu', false)) {
-      userOnceScript.append('reg.exe add "HKCU\\Software\\Classes\\CLSID\\{86ca1aa0-34aa-4e8b-a509-50c905bae2a2}\\InprocServer32" /ve /f;');
-      userOnceScript.restartExplorer();
-    }
-    if (ctx.getBool('ShowFileExtensions', false) || ctx.getBool('HideFileExt', false)) {
-      defaultUserScript.append('reg.exe add "HKU\\DefaultUser\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced" /v "HideFileExt" /t REG_DWORD /d 0 /f;');
-    }
-    if (ctx.getBool('DisableAppSuggestions', false)) {
-      defaultUserScript.append([
-        '$names = @(',
-        "  'ContentDeliveryAllowed';",
-        "  'FeatureManagementEnabled';",
-        "  'OEMPreInstalledAppsEnabled';",
-        "  'PreInstalledAppsEnabled';",
-        "  'PreInstalledAppsEverEnabled';",
-        "  'SilentInstalledAppsEnabled';",
-        "  'SoftLandingEnabled';",
-        "  'SubscribedContent-310093Enabled';",
-        "  'SubscribedContent-338387Enabled';",
-        "  'SubscribedContent-338388Enabled';",
-        "  'SubscribedContent-338389Enabled';",
-        "  'SubscribedContent-353698Enabled';",
-        "  'SystemPaneSuggestionsEnabled';",
-        ');',
-        'foreach( $name in $names ) {',
-        '  reg.exe add "HKU\\DefaultUser\\Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager" /v $name /t REG_DWORD /d 0 /f;',
-        '}'
-      ].join('\r\n'));
-      specializeScript.append(
-        'reg.exe add "HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\CloudContent" /v "DisableWindowsConsumerFeatures" /t REG_DWORD /d 1 /f;'
-      );
-    }
-    var hideFiles = ctx.getVal('HideFiles', 'Hidden');
-    if (hideFiles === 'None') {
-      defaultUserScript.append('reg.exe add "HKU\\DefaultUser\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced" /v "Hidden" /t REG_DWORD /d 1 /f;');
-      defaultUserScript.append('reg.exe add "HKU\\DefaultUser\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced" /v "ShowSuperHidden" /t REG_DWORD /d 1 /f;');
-    } else if (hideFiles === 'HiddenSystem') {
-      defaultUserScript.append('reg.exe add "HKU\\DefaultUser\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced" /v "Hidden" /t REG_DWORD /d 1 /f;');
-    }
-    if (ctx.getBool('LeftTaskbar', false)) {
-      defaultUserScript.append('reg.exe add "HKU\\DefaultUser\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced" /v TaskbarAl /t REG_DWORD /d 0 /f;');
-    }
-    if (ctx.getBool('HideTaskViewButton', false)) {
-      defaultUserScript.append('reg.exe add "HKU\\DefaultUser\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced" /v ShowTaskViewButton /t REG_DWORD /d 0 /f;');
-    }
-    if (ctx.getBool('DisableFastStartup', false)) {
-      specializeScript.append('reg.exe add "HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Power" /v HiberbootEnabled /t REG_DWORD /d 0 /f;');
-    }
-    if (ctx.getBool('DisableWidgets', false)) {
-      specializeScript.append('reg.exe add "HKLM\\SOFTWARE\\Policies\\Microsoft\\Dsh" /v AllowNewsAndInterests /t REG_DWORD /d 0 /f;');
-    }
-    if (ctx.getBool('DisableSmartScreen', false)) {
-      specializeScript.append([
-        'reg.exe add "HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer" /v SmartScreenEnabled /t REG_SZ /d "Off" /f;',
-        'reg.exe add "HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\WTDS\\Components" /v ServiceEnabled /t REG_DWORD /d 0 /f;',
-        'reg.exe add "HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\WTDS\\Components" /v NotifyMalicious /t REG_DWORD /d 0 /f;',
-        'reg.exe add "HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\WTDS\\Components" /v NotifyPasswordReuse /t REG_DWORD /d 0 /f;',
-        'reg.exe add "HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\WTDS\\Components" /v NotifyUnsafeApp /t REG_DWORD /d 0 /f;',
-        'reg.exe add "HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows Defender Security Center\\Systray" /v HideSystray /t REG_DWORD /d 1 /f;'
-      ].join('\r\n'));
-      defaultUserScript.append([
-        'reg.exe add "HKU\\DefaultUser\\Software\\Microsoft\\Edge\\SmartScreenEnabled" /ve /t REG_DWORD /d 0 /f;',
-        'reg.exe add "HKU\\DefaultUser\\Software\\Microsoft\\Edge\\SmartScreenPuaEnabled" /ve /t REG_DWORD /d 0 /f;',
-        'reg.exe add "HKU\\DefaultUser\\Software\\Microsoft\\Windows\\CurrentVersion\\AppHost" /v EnableWebContentEvaluation /t REG_DWORD /d 0 /f;',
-        'reg.exe add "HKU\\DefaultUser\\Software\\Microsoft\\Windows\\CurrentVersion\\AppHost" /v PreventOverride /t REG_DWORD /d 0 /f;'
-      ].join('\r\n'));
-    }
-    if (ctx.getBool('DisableUac', false)) {
-      specializeScript.append('reg.exe add "HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Policies\\System" /v EnableLUA /t REG_DWORD /d 0 /f');
-    }
-    if (ctx.getBool('EnableLongPaths', false)) {
-      specializeScript.append('reg.exe add "HKLM\\SYSTEM\\CurrentControlSet\\Control\\FileSystem" /v LongPathsEnabled /t REG_DWORD /d 1 /f');
-    }
-    if (ctx.getBool('EnableRemoteDesktop', false)) {
-      specializeScript.append([
-        'netsh.exe advfirewall firewall set rule group="@FirewallAPI.dll,-28752" new enable=Yes;',
-        'reg.exe add "HKLM\\SYSTEM\\CurrentControlSet\\Control\\Terminal Server" /v fDenyTSConnections /t REG_DWORD /d 0 /f;'
-      ].join('\r\n'));
-    }
-    if (ctx.getBool('PreventDeviceEncryption', false)) {
-      specializeScript.append('reg.exe add "HKLM\\SYSTEM\\CurrentControlSet\\Control\\BitLocker" /v "PreventDeviceEncryption" /t REG_DWORD /d 1 /f;');
-    }
+  // 1. ClassicContextMenu
+  if (ctx.getBool('ClassicContextMenu', false)) {
+    userOnceScript.append('reg.exe add "HKCU\\Software\\Classes\\CLSID\\{86ca1aa0-34aa-4e8b-a509-50c905bae2a2}\\InprocServer32" /ve /f;');
+    userOnceScript.restartExplorer();
+  }
 
-    if (ctx.getBool('MakeEdgeUninstallable', false)) {
-      ctx.embedTextFile('MakeEdgeUninstallable.ps1', [
-        'try {',
-        '	$params = @{',
-        "		LiteralPath = 'C:\\Windows\\System32\\IntegratedServicesRegionPolicySet.json';",
-        "		Encoding = 'Utf8';",
-        '	};',
-        '	$o = Get-Content @params | ConvertFrom-Json;',
-        '	$o.policies | ForEach-Object -Process {',
-        "		if( $_.guid -eq '{1bca278a-5d11-4acf-ad2f-f9ab6d7f93a6}' ) {",
-        "			$_.defaultState = 'enabled';",
-        '		}',
-        '	};',
-        '	$o | ConvertTo-Json -Depth 9 | Out-File @params;',
-        '} catch {',
-        '	$_;',
-        '}'
-      ].join('\r\n'));
-      specializeScript.invokeFile('C:\\Windows\\Setup\\Scripts\\MakeEdgeUninstallable.ps1');
-    }
-    if (ctx.getBool('VBoxGuestAdditions', false)) {
-      ctx.embedTextFile('VBoxGuestAdditions.ps1', [
-        "foreach( $letter in 'DEFGHIJKLMNOPQRSTUVWXYZ'.ToCharArray() ) {",
-        '	$exe = "${letter}:\\VBoxWindowsAdditions.exe";',
-        '	if( Test-Path -LiteralPath $exe ) {',
-        '		$certs = "${letter}:\\cert";',
-        '		Start-Process -FilePath "${certs}\\VBoxCertUtil.exe" -ArgumentList "add-trusted-publisher ${certs}\\vbox*.cer", "--root ${certs}\\vbox*.cer"  -Wait;',
-        "		Start-Process -FilePath $exe -ArgumentList '/with_wddm', '/S' -Wait;",
-        '		return;',
-        '	}',
-        '}',
-        "'VBoxGuestAdditions.iso is not attached to this VM.';"
-      ].join('\r\n'));
-      firstLogonScript.invokeFile('C:\\Windows\\Setup\\Scripts\\VBoxGuestAdditions.ps1');
-    }
-    if (ctx.getBool('VMwareTools', false)) {
-      ctx.embedTextFile('VMwareTools.ps1', [
-        "foreach( $letter in 'DEFGHIJKLMNOPQRSTUVWXYZ'.ToCharArray() ) {",
-        '	$exe = "${letter}:\\setup.exe";',
-        "	if( ( Get-Item -LiteralPath $exe -ErrorAction 'SilentlyContinue' | Select-Object -ExpandProperty 'VersionInfo' | Select-Object -ExpandProperty 'ProductName' ) -eq 'VMware Tools' ) {",
-        "		Start-Process -FilePath $exe -ArgumentList '/s /v /qn REBOOT=R' -Wait;",
-        '		return;',
-        '	}',
-        '}',
-        "'VMware Tools image (windows.iso) is not attached to this VM.';"
-      ].join('\r\n'));
-      firstLogonScript.invokeFile('C:\\Windows\\Setup\\Scripts\\VMwareTools.ps1');
-    }
-    if (ctx.getBool('VirtIoGuestTools', false)) {
-      ctx.embedTextFile('VirtIoGuestTools.ps1', [
-        "foreach( $letter in 'DEFGHIJKLMNOPQRSTUVWXYZ'.ToCharArray() ) {",
-        '	$exe = "${letter}:\\virtio-win-guest-tools.exe";',
-        '	if( Test-Path -LiteralPath $exe ) {',
-        "		Start-Process -FilePath $exe -ArgumentList '/passive', '/norestart' -Wait;",
-        '		return;',
-        '	}',
-        '}',
-        "'VirtIO Guest Tools image (virtio-win-*.iso) is not attached to this VM.';"
-      ].join('\r\n'));
-      firstLogonScript.invokeFile('C:\\Windows\\Setup\\Scripts\\VirtIoGuestTools.ps1');
-    }
+  // 2. ShowFileExtensions
+  if (ctx.getBool('ShowFileExtensions', false) || ctx.getBool('HideFileExt', false)) {
+    defaultUserScript.append('reg.exe add "HKU\\DefaultUser\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced" /v "HideFileExt" /t REG_DWORD /d 0 /f;');
+  }
 
-    // Taskbar Icons (SetTaskbarIcons)
-    var taskbarMode = ctx.getVal('TaskbarIconsMode', 'Default');
-    var taskbarXml = '';
-    if (taskbarMode === 'Empty') {
-      taskbarXml = [
-        '<LayoutModificationTemplate xmlns="http://schemas.microsoft.com/Start/2014/LayoutModification" xmlns:defaultlayout="http://schemas.microsoft.com/Start/2014/FullDefaultLayout" xmlns:start="http://schemas.microsoft.com/Start/2014/StartLayout" xmlns:taskbar="http://schemas.microsoft.com/Start/2014/TaskbarLayout" Version="1">',
-        '  <CustomTaskbarLayoutCollection PinListPlacement="Replace">',
-        '    <defaultlayout:TaskbarLayout>',
-        '      <taskbar:TaskbarPinList>',
-        '        <taskbar:DesktopApp DesktopApplicationLinkPath="#leaveempty" />',
-        '      </taskbar:TaskbarPinList>',
-        '    </defaultlayout:TaskbarLayout>',
-        '  </CustomTaskbarLayoutCollection>',
-        '</LayoutModificationTemplate>'
-      ].join('\r\n');
-    } else if (taskbarMode === 'Custom') {
-      taskbarXml = ctx.getVal('TaskbarIconsXml', '').trim();
-    }
+  // 3. HideFiles
+  var hideFiles = ctx.getVal('HideFiles', 'Hidden');
+  if (hideFiles === 'None') {
+    defaultUserScript.append('reg.exe add "HKU\\DefaultUser\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced" /v "Hidden" /t REG_DWORD /d 1 /f;');
+    defaultUserScript.append('reg.exe add "HKU\\DefaultUser\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced" /v "ShowSuperHidden" /t REG_DWORD /d 1 /f;');
+  } else if (hideFiles === 'HiddenSystem') {
+    defaultUserScript.append('reg.exe add "HKU\\DefaultUser\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced" /v "Hidden" /t REG_DWORD /d 1 /f;');
+  }
 
-    if (taskbarXml) {
-      taskbarXml = taskbarXml.replace(/\r\n/g, '\n').replace(/\r/g, '\n').replace(/\n/g, '\r\n');
-      var taskbarPath = ctx.embedTextFile('TaskbarLayoutModification.xml', taskbarXml);
-      specializeScript.append(
-        'reg.exe add "HKLM\\Software\\Policies\\Microsoft\\Windows\\CloudContent" /v "DisableCloudOptimizedContent" /t REG_DWORD /d 1 /f;\r\n' +
-        "[System.Diagnostics.EventLog]::CreateEventSource( 'UnattendGenerator', 'Application' );"
-      );
-      defaultUserScript.append(
-        'reg.exe add "HKU\\DefaultUser\\Software\\Policies\\Microsoft\\Windows\\Explorer" /v "StartLayoutFile" /t REG_SZ /d "' + taskbarPath + '" /f;\r\n' +
-        'reg.exe add "HKU\\DefaultUser\\Software\\Policies\\Microsoft\\Windows\\Explorer" /v "LockedStartLayout" /t REG_DWORD /d 1 /f;'
-      );
-      ctx.embedTextFile('UnlockStartLayout.vbs', UNLOCK_START_LAYOUT_VBS);
-      var unlockXmlPath = ctx.embedTextFile('UnlockStartLayout.xml', UNLOCK_START_LAYOUT_XML);
-      specializeScript.append("Register-ScheduledTask -TaskName 'UnlockStartLayout' -Xml $( Get-Content -LiteralPath '" + unlockXmlPath + "' -Raw );");
-      userOnceScript.append(
-        "[System.Diagnostics.EventLog]::WriteEntry( 'UnattendGenerator', \"User '$env:USERNAME' has requested to unlock the Start menu layout.\", [System.Diagnostics.EventLogEntryType]::Information, 1 );"
-      );
-    }
+  // 4. DisableWindowsUpdate
+  if (ctx.getBool('DisableWindowsUpdate', false)) {
+    var pauseXml = typeof PAUSE_WINDOWS_UPDATE_XML !== 'undefined' ? PAUSE_WINDOWS_UPDATE_XML : '';
+    var pauseXmlPath = ctx.embedTextFile('PauseWindowsUpdate.xml', pauseXml);
+    specializeScript.append("Register-ScheduledTask -TaskName 'PauseWindowsUpdate' -Xml $( Get-Content -LiteralPath '" + pauseXmlPath + "' -Raw );");
+  }
 
-    // Start Pins (SetStartPins)
-    var startPinsMode = ctx.getVal('StartPinsMode', 'Default');
-    var startPinsJson = '';
-    if (startPinsMode === 'Empty') {
-      startPinsJson = '{"pinnedList":[]}';
-    } else if (startPinsMode === 'Custom') {
-      startPinsJson = ctx.getVal('StartPinsJson', '').trim();
-    }
+  // 5. HideTaskViewButton
+  if (ctx.getBool('HideTaskViewButton', false)) {
+    defaultUserScript.append('reg.exe add "HKU\\DefaultUser\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced" /v ShowTaskViewButton /t REG_DWORD /d 0 /f;');
+  }
 
-    if (startPinsJson) {
-      var escapedJson = startPinsJson.replace(/'/g, "''");
-      var startPinsContent = "$json = '" + escapedJson + "';\r\n" + SET_START_PINS_PS1;
-      var startPinsFile = ctx.embedTextFile('SetStartPins.ps1', startPinsContent);
-      specializeScript.invokeFile(startPinsFile);
+  // 6. DisableSmartScreen
+  if (ctx.getBool('DisableSmartScreen', false)) {
+    specializeScript.append([
+      'reg.exe add "HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer" /v SmartScreenEnabled /t REG_SZ /d "Off" /f;',
+      'reg.exe add "HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\WTDS\\Components" /v ServiceEnabled /t REG_DWORD /d 0 /f;',
+      'reg.exe add "HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\WTDS\\Components" /v NotifyMalicious /t REG_DWORD /d 0 /f;',
+      'reg.exe add "HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\WTDS\\Components" /v NotifyPasswordReuse /t REG_DWORD /d 0 /f;',
+      'reg.exe add "HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\WTDS\\Components" /v NotifyUnsafeApp /t REG_DWORD /d 0 /f;',
+      'reg.exe add "HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows Defender Security Center\\Systray" /v HideSystray /t REG_DWORD /d 1 /f;'
+    ].join('\r\n'));
+    defaultUserScript.append([
+      'reg.exe add "HKU\\DefaultUser\\Software\\Microsoft\\Edge\\SmartScreenEnabled" /ve /t REG_DWORD /d 0 /f;',
+      'reg.exe add "HKU\\DefaultUser\\Software\\Microsoft\\Edge\\SmartScreenPuaEnabled" /ve /t REG_DWORD /d 0 /f;',
+      'reg.exe add "HKU\\DefaultUser\\Software\\Microsoft\\Windows\\CurrentVersion\\AppHost" /v EnableWebContentEvaluation /t REG_DWORD /d 0 /f;',
+      'reg.exe add "HKU\\DefaultUser\\Software\\Microsoft\\Windows\\CurrentVersion\\AppHost" /v PreventOverride /t REG_DWORD /d 0 /f;'
+    ].join('\r\n'));
+  }
+
+  // 7. DisableUac
+  if (ctx.getBool('DisableUac', false)) {
+    specializeScript.append('reg.exe add "HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Policies\\System" /v EnableLUA /t REG_DWORD /d 0 /f');
+  }
+
+  // 8. EnableLongPaths
+  if (ctx.getBool('EnableLongPaths', false)) {
+    specializeScript.append('reg.exe add "HKLM\\SYSTEM\\CurrentControlSet\\Control\\FileSystem" /v LongPathsEnabled /t REG_DWORD /d 1 /f');
+  }
+
+  // 9. EnableRemoteDesktop
+  if (ctx.getBool('EnableRemoteDesktop', false)) {
+    specializeScript.append([
+      'netsh.exe advfirewall firewall set rule group="@FirewallAPI.dll,-28752" new enable=Yes;',
+      'reg.exe add "HKLM\\SYSTEM\\CurrentControlSet\\Control\\Terminal Server" /v fDenyTSConnections /t REG_DWORD /d 0 /f;'
+    ].join('\r\n'));
+  }
+
+  // 10. PreventAutomaticReboot
+  if (ctx.getBool('PreventAutomaticReboot', false)) {
+    specializeScript.append([
+      'reg.exe add "HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\WindowsUpdate\\AU" /v AUOptions /t REG_DWORD /d 4 /f;',
+      'reg.exe add "HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\WindowsUpdate\\AU" /v NoAutoRebootWithLoggedOnUsers /t REG_DWORD /d 1 /f;'
+    ].join('\r\n'));
+    var moveXml = typeof MOVE_ACTIVE_HOURS_XML !== 'undefined' ? MOVE_ACTIVE_HOURS_XML : '';
+    var moveXmlPath = ctx.embedTextFile('MoveActiveHours.xml', moveXml);
+    specializeScript.append("Register-ScheduledTask -TaskName 'MoveActiveHours' -Xml $( Get-Content -LiteralPath '" + moveXmlPath + "' -Raw );");
+  }
+
+  // 11. DisableFastStartup
+  if (ctx.getBool('DisableFastStartup', false)) {
+    specializeScript.append('reg.exe add "HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Power" /v HiberbootEnabled /t REG_DWORD /d 0 /f;');
+  }
+
+  // 12. DisableSystemRestore
+  if (ctx.getBool('DisableSystemRestore', false)) {
+    firstLogonScript.append("Disable-ComputerRestore -Drive 'C:\\';");
+  }
+
+  // 13. DisableWidgets
+  if (ctx.getBool('DisableWidgets', false)) {
+    specializeScript.append('reg.exe add "HKLM\\SOFTWARE\\Policies\\Microsoft\\Dsh" /v AllowNewsAndInterests /t REG_DWORD /d 0 /f;');
+  }
+
+  // 14. DisableAppSuggestions
+  if (ctx.getBool('DisableAppSuggestions', false)) {
+    defaultUserScript.append([
+      '$names = @(',
+      "  'ContentDeliveryAllowed';",
+      "  'FeatureManagementEnabled';",
+      "  'OEMPreInstalledAppsEnabled';",
+      "  'PreInstalledAppsEnabled';",
+      "  'PreInstalledAppsEverEnabled';",
+      "  'SilentInstalledAppsEnabled';",
+      "  'SoftLandingEnabled';",
+      "  'SubscribedContentEnabled';",
+      "  'SubscribedContent-310093Enabled';",
+      "  'SubscribedContent-338387Enabled';",
+      "  'SubscribedContent-338388Enabled';",
+      "  'SubscribedContent-338389Enabled';",
+      "  'SubscribedContent-338393Enabled';",
+      "  'SubscribedContent-353694Enabled';",
+      "  'SubscribedContent-353696Enabled';",
+      "  'SubscribedContent-353698Enabled';",
+      "  'SystemPaneSuggestionsEnabled';",
+      ');',
+      'foreach( $name in $names ) {',
+      '  reg.exe add "HKU\\DefaultUser\\Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager" /v $name /t REG_DWORD /d 0 /f;',
+      '}'
+    ].join('\r\n'));
+    specializeScript.append(
+      'reg.exe add "HKLM\\Software\\Policies\\Microsoft\\Windows\\CloudContent" /v "DisableWindowsConsumerFeatures" /t REG_DWORD /d 1 /f;'
+    );
+  }
+
+  // 15. VM Tools
+  if (ctx.getBool('VBoxGuestAdditions', false)) {
+    ctx.embedTextFile('VBoxGuestAdditions.ps1', [
+      "foreach( $letter in 'DEFGHIJKLMNOPQRSTUVWXYZ'.ToCharArray() ) {",
+      '\t$exe = "${letter}:\\VBoxWindowsAdditions.exe";',
+      '\tif( Test-Path -LiteralPath $exe ) {',
+      '\t\t$certs = "${letter}:\\cert";',
+      '\t\tStart-Process -FilePath "${certs}\\VBoxCertUtil.exe" -ArgumentList "add-trusted-publisher ${certs}\\vbox*.cer", "--root ${certs}\\vbox*.cer"  -Wait;',
+      "\t\tStart-Process -FilePath $exe -ArgumentList '/with_wddm', '/S' -Wait;",
+      '\t\treturn;',
+      '\t}',
+      '}',
+      "'VBoxGuestAdditions.iso is not attached to this VM.';"
+    ].join('\r\n'));
+    firstLogonScript.invokeFile('C:\\Windows\\Setup\\Scripts\\VBoxGuestAdditions.ps1');
+  }
+  if (ctx.getBool('VMwareTools', false)) {
+    ctx.embedTextFile('VMwareTools.ps1', [
+      "foreach( $letter in 'DEFGHIJKLMNOPQRSTUVWXYZ'.ToCharArray() ) {",
+      '\t$exe = "${letter}:\\setup.exe";',
+      "\tif( ( Get-Item -LiteralPath $exe -ErrorAction 'SilentlyContinue' | Select-Object -ExpandProperty 'VersionInfo' | Select-Object -ExpandProperty 'ProductName' ) -eq 'VMware Tools' ) {",
+      "\t\tStart-Process -FilePath $exe -ArgumentList '/s /v /qn REBOOT=R' -Wait;",
+      '\t\treturn;',
+      '\t}',
+      '}',
+      "'VMware Tools image (windows.iso) is not attached to this VM.';"
+    ].join('\r\n'));
+    firstLogonScript.invokeFile('C:\\Windows\\Setup\\Scripts\\VMwareTools.ps1');
+  }
+  if (ctx.getBool('VirtIoGuestTools', false)) {
+    ctx.embedTextFile('VirtIoGuestTools.ps1', [
+      "foreach( $letter in 'DEFGHIJKLMNOPQRSTUVWXYZ'.ToCharArray() ) {",
+      '\t$exe = "${letter}:\\virtio-win-guest-tools.exe";',
+      '\tif( Test-Path -LiteralPath $exe ) {',
+      "\t\tStart-Process -FilePath $exe -ArgumentList '/passive', '/norestart' -Wait;",
+      '\t\treturn;',
+      '\t}',
+      '}',
+      "'VirtIO Guest Tools image (virtio-win-*.iso) is not attached to this VM.';"
+    ].join('\r\n'));
+    firstLogonScript.invokeFile('C:\\Windows\\Setup\\Scripts\\VirtIoGuestTools.ps1');
+  }
+
+  // 16. PreventDeviceEncryption
+  if (ctx.getBool('PreventDeviceEncryption', false)) {
+    specializeScript.append('reg.exe add "HKLM\\SYSTEM\\CurrentControlSet\\Control\\BitLocker" /v "PreventDeviceEncryption" /t REG_DWORD /d 1 /f;');
+  }
+
+  // 17. LeftTaskbar
+  if (ctx.getBool('LeftTaskbar', false)) {
+    defaultUserScript.append('reg.exe add "HKU\\DefaultUser\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced" /v TaskbarAl /t REG_DWORD /d 0 /f;');
+  }
+
+  // 18. HideEdgeFre
+  if (ctx.getBool('HideEdgeFre', false)) {
+    specializeScript.append('reg.exe add "HKLM\\Software\\Policies\\Microsoft\\Edge" /v HideFirstRunExperience /t REG_DWORD /d 1 /f;');
+  }
+
+  // 19. MakeEdgeUninstallable
+  if (ctx.getBool('MakeEdgeUninstallable', false)) {
+    ctx.embedTextFile('MakeEdgeUninstallable.ps1', [
+      'try {',
+      '\t$params = @{',
+      "\t\tLiteralPath = 'C:\\Windows\\System32\\IntegratedServicesRegionPolicySet.json';",
+      "\t\tEncoding = 'Utf8';",
+      '\t};',
+      '\t$o = Get-Content @params | ConvertFrom-Json;',
+      '\t$o.policies | ForEach-Object -Process {',
+      "\t\tif( $_.guid -eq '{1bca278a-5d11-4acf-ad2f-f9ab6d7f93a6}' ) {",
+      "\t\t\t$_.defaultState = 'enabled';",
+      '\t\t}',
+      '\t};',
+      '\t$o | ConvertTo-Json -Depth 9 | Out-File @params;',
+      '} catch {',
+      '\t$_;',
+      '}'
+    ].join('\r\n'));
+    specializeScript.invokeFile('C:\\Windows\\Setup\\Scripts\\MakeEdgeUninstallable.ps1');
+  }
+
+  // 20. LaunchToThisPC
+  if (ctx.getBool('LaunchToThisPC', false)) {
+    userOnceScript.append("Set-ItemProperty -LiteralPath 'Registry::HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced' -Name 'LaunchTo' -Type 'DWord' -Value 1;");
+  }
+
+  // 21. TaskbarSearch
+  var taskbarSearch = ctx.getVal('TaskbarSearch', 'Box');
+  var taskbarSearchMap = { 'Hide': 0, 'Icon': 1, 'Box': 2, 'Label': 3 };
+  if (taskbarSearch in taskbarSearchMap && taskbarSearch !== 'Box') {
+    userOnceScript.append("Set-ItemProperty -LiteralPath 'Registry::HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Search' -Name 'SearchboxTaskbarMode' -Type 'DWord' -Value " + taskbarSearchMap[taskbarSearch] + ";");
+    userOnceScript.restartExplorer();
+  }
+
+  // 22. StartPins
+  var startPinsMode = ctx.getVal('StartPinsMode', 'Default');
+  var startPinsJson = '';
+  if (startPinsMode === 'Empty') {
+    startPinsJson = '{"pinnedList":[]}';
+  } else if (startPinsMode === 'Custom') {
+    startPinsJson = ctx.getVal('StartPinsJson', '').trim();
+  }
+  if (startPinsJson) {
+    var escapedJson = startPinsJson.replace(/'/g, "''");
+    var startPinsContent = "$json = '" + escapedJson + "';\r\n" + SET_START_PINS_PS1;
+    var startPinsFile = ctx.embedTextFile('SetStartPins.ps1', startPinsContent);
+    specializeScript.invokeFile(startPinsFile);
+  }
+
+  // 23. TaskbarIcons
+  var taskbarMode = ctx.getVal('TaskbarIconsMode', 'Default');
+  var taskbarXml = '';
+  if (taskbarMode === 'Empty') {
+    taskbarXml = [
+      '<LayoutModificationTemplate xmlns="http://schemas.microsoft.com/Start/2014/LayoutModification" xmlns:defaultlayout="http://schemas.microsoft.com/Start/2014/FullDefaultLayout" xmlns:start="http://schemas.microsoft.com/Start/2014/StartLayout" xmlns:taskbar="http://schemas.microsoft.com/Start/2014/TaskbarLayout" Version="1">',
+      '  <CustomTaskbarLayoutCollection PinListPlacement="Replace">',
+      '    <defaultlayout:TaskbarLayout>',
+      '      <taskbar:TaskbarPinList>',
+      '        <taskbar:DesktopApp DesktopApplicationLinkPath="#leaveempty" />',
+      '      </taskbar:TaskbarPinList>',
+      '    </defaultlayout:TaskbarLayout>',
+      '  </CustomTaskbarLayoutCollection>',
+      '</LayoutModificationTemplate>'
+    ].join('\r\n');
+  } else if (taskbarMode === 'Custom') {
+    taskbarXml = ctx.getVal('TaskbarIconsXml', '').trim();
+  }
+  if (taskbarXml) {
+    taskbarXml = taskbarXml.replace(/\r\n/g, '\n').replace(/\r/g, '\n').replace(/\n/g, '\r\n');
+    var taskbarPath = ctx.embedTextFile('TaskbarLayoutModification.xml', taskbarXml);
+    specializeScript.append(
+      'reg.exe add "HKLM\\Software\\Policies\\Microsoft\\Windows\\CloudContent" /v "DisableCloudOptimizedContent" /t REG_DWORD /d 1 /f;\r\n' +
+      "[System.Diagnostics.EventLog]::CreateEventSource( 'UnattendGenerator', 'Application' );"
+    );
+    defaultUserScript.append(
+      'reg.exe add "HKU\\DefaultUser\\Software\\Policies\\Microsoft\\Windows\\Explorer" /v "StartLayoutFile" /t REG_SZ /d "' + taskbarPath + '" /f;\r\n' +
+      'reg.exe add "HKU\\DefaultUser\\Software\\Policies\\Microsoft\\Windows\\Explorer" /v "LockedStartLayout" /t REG_DWORD /d 1 /f;'
+    );
+    ctx.embedTextFile('UnlockStartLayout.vbs', UNLOCK_START_LAYOUT_VBS);
+    var unlockXmlPath = ctx.embedTextFile('UnlockStartLayout.xml', UNLOCK_START_LAYOUT_XML);
+    specializeScript.append("Register-ScheduledTask -TaskName 'UnlockStartLayout' -Xml $( Get-Content -LiteralPath '" + unlockXmlPath + "' -Raw );");
+    userOnceScript.append(
+      "[System.Diagnostics.EventLog]::WriteEntry( 'UnattendGenerator', \"User '$env:USERNAME' has requested to unlock the Start menu layout.\", [System.Diagnostics.EventLogEntryType]::Information, 1 );"
+    );
+  }
+
+  // 24. DisablePointerPrecision
+  if (ctx.getBool('DisablePointerPrecision', false)) {
+    defaultUserScript.append([
+      '$params = @{',
+      "  LiteralPath = 'Registry::HKU\\DefaultUser\\Control Panel\\Mouse';",
+      "  Type = 'String';",
+      "  Value = 0;",
+      "  Force = $true;",
+      '};',
+      "Set-ItemProperty @params -Name 'MouseSpeed';",
+      "Set-ItemProperty @params -Name 'MouseThreshold1';",
+      "Set-ItemProperty @params -Name 'MouseThreshold2';"
+    ].join('\r\n'));
+  }
+
+  // 25. DisableBingResults
+  if (ctx.getBool('DisableBingResults', false)) {
+    defaultUserScript.append('reg.exe add "HKU\\DefaultUser\\Software\\Policies\\Microsoft\\Windows\\Explorer" /v DisableSearchBoxSuggestions /t REG_DWORD /d 1 /f;');
+  }
+
+  // 26. EffectsMode
+  var effectsMode = ctx.getVal('EffectsMode', 'Default');
+  var effectKeys = [
+    'ControlAnimations', 'AnimateMinMax', 'TaskbarAnimations', 'DWMAeroPeekEnabled',
+    'MenuAnimation', 'TooltipAnimation', 'SelectionFade', 'DWMSaveThumbnailEnabled',
+    'CursorShadow', 'ListviewShadow', 'ThumbnailsOrIcon', 'ListviewAlphaSelect',
+    'DragFullWindows', 'ComboBoxAnimation', 'FontSmoothing', 'ListBoxSmoothScrolling', 'DropShadow'
+  ];
+  if (effectsMode === 'Custom' || effectsMode === 'Appearance' || effectsMode === 'Performance') {
+    var fxVal = effectsMode === 'Appearance' ? 1 : (effectsMode === 'Performance' ? 2 : 3);
+    var fxLines = [];
+    for (var e = 0; e < effectKeys.length; e++) {
+      var k = effectKeys[e];
+      var enabled = effectsMode === 'Appearance' ? true : (effectsMode === 'Performance' ? false : ctx.getBool(k, false));
+      fxLines.push('Set-ItemProperty -LiteralPath "Registry::HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\VisualEffects\\' + k + '" -Name \'DefaultValue\' -Value ' + (enabled ? 1 : 0) + ' -Type \'DWord\' -Force;');
     }
-    
+    specializeScript.append(fxLines.join('\r\n'));
+    userOnceScript.append("Set-ItemProperty -LiteralPath 'Registry::HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\VisualEffects' -Name 'VisualFXSetting' -Type 'DWord' -Value " + fxVal + " -Force;");
+  }
+
+  // 27. DesktopIconsMode
+  var desktopIconsMode = ctx.getVal('DesktopIconsMode', 'Default');
+  if (desktopIconsMode === 'Custom') {
+    var iconDefs = [
+      { id: 'IconControlPanel', guid: '{5399e694-6ce5-4d6c-8fce-1d8870fdcba0}' },
+      { id: 'IconDesktop', guid: '{b4bfcc3a-db2c-424c-b029-7fe99a87c641}' },
+      { id: 'IconDocuments', guid: '{a8cdff1c-4878-43be-b5fd-f8091c1c60d0}' },
+      { id: 'IconDownloads', guid: '{374de290-123f-4565-9164-39c4925e467b}' },
+      { id: 'IconGallery', guid: '{e88865ea-0e1c-4e20-9aa6-edcd0212c87c}' },
+      { id: 'IconHome', guid: '{f874310e-b6b7-47dc-bc84-b9e6b38f5903}' },
+      { id: 'IconMusic', guid: '{1cf1260c-4dd0-4ebb-811f-33c572699fde}' },
+      { id: 'IconNetwork', guid: '{f02c1a0d-be21-4350-88b0-7367fc96ef3c}' },
+      { id: 'IconPictures', guid: '{3add1653-eb32-4cb0-bbd7-dfa0abb5acca}' },
+      { id: 'IconRecycleBin', guid: '{645ff040-5081-101b-9f08-00aa002f954e}' },
+      { id: 'IconThisPC', guid: '{20d04fe0-3aea-1069-a2d8-08002b30309d}' },
+      { id: 'IconUserFiles', guid: '{59031a47-3f72-44a7-89c5-5595fe6b30ee}' },
+      { id: 'IconVideos', guid: '{a0953c92-50dc-43bf-be83-3742fed03c9c}' }
+    ];
+    var iconLines = [];
+    var iconKeys = ['ClassicStartMenu', 'NewStartPanel'];
+    for (var ik = 0; ik < iconKeys.length; ik++) {
+      var ip = "Registry::HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\HideDesktopIcons\\" + iconKeys[ik];
+      iconLines.push("New-Item -Path '" + ip + "' -Force;");
+      for (var id = 0; id < iconDefs.length; id++) {
+        var ic = iconDefs[id];
+        var iconEnabled = ctx.getBool(ic.id, false);
+        iconLines.push("Set-ItemProperty -Path '" + ip + "' -Name '" + ic.guid + "' -Value " + (iconEnabled ? 0 : 1) + " -Type 'DWord';");
+      }
+    }
+    userOnceScript.append(iconLines.join('\r\n'));
+    userOnceScript.restartExplorer();
+  }
 };
 
 if (typeof module !== 'undefined' && module.exports) {
@@ -1834,12 +1989,13 @@ if (typeof module !== 'undefined' && module.exports) {
   // --- Begin: modifiers/personalization.js ---
 /**
  * Personalization modifier matching C# PersonalizationModifier
- * Handles WallpaperMode and LockScreenMode custom scripts
+ * Handles ColorMode, WallpaperMode and LockScreenMode
  */
 
 if (typeof SET_WALLPAPER_PS1 === 'undefined' && typeof require !== 'undefined') {
   var constants = require('../core/constants');
   SET_WALLPAPER_PS1 = constants.SET_WALLPAPER_PS1;
+  SET_COLOR_THEME_PS1 = constants.SET_COLOR_THEME_PS1;
 }
 
 function PersonalizationModifier(context) {
@@ -1848,8 +2004,37 @@ function PersonalizationModifier(context) {
 
 PersonalizationModifier.prototype.process = function () {
   var ctx = this.context;
+  var userOnceScript = ctx.sequences.userOnce;
+  var defaultUserScript = ctx.sequences.defaultUser;
+  var specializeScript = ctx.sequences.specialize;
 
-  // Desktop Wallpaper
+  // 1. Color Settings
+  var colorMode = ctx.getVal('ColorMode', 'Default');
+  if (colorMode === 'Custom') {
+    var sysTheme = ctx.getVal('SystemColorTheme', 'Dark') === 'Light' ? 1 : 0;
+    var appsTheme = ctx.getVal('AppsColorTheme', 'Dark') === 'Light' ? 1 : 0;
+    var accentOnStart = ctx.getBool('AccentColorOnStart', false) ? 1 : 0;
+    var enableTrans = ctx.getBool('EnableTransparency', false) ? 1 : 0;
+    var htmlColor = ctx.getVal('AccentColor', '#0078D7').toUpperCase();
+    var accentOnBorders = ctx.getBool('AccentColorOnBorders', false) ? 1 : 0;
+
+    var headerLines = [
+      '$lightThemeSystem = ' + sysTheme + ';',
+      '$lightThemeApps = ' + appsTheme + ';',
+      '$accentColorOnStart = ' + accentOnStart + ';',
+      '$enableTransparency = ' + enableTrans + ';',
+      "$htmlAccentColor = '" + htmlColor + "';"
+    ].join('\r\n');
+
+    var colorThemeContent = headerLines + '\r\n' + (typeof SET_COLOR_THEME_PS1 !== 'undefined' ? SET_COLOR_THEME_PS1 : '');
+    var colorThemeFile = ctx.embedTextFile('SetColorTheme.ps1', colorThemeContent);
+
+    defaultUserScript.append('reg.exe add "HKU\\DefaultUser\\Software\\Microsoft\\Windows\\DWM" /v ColorPrevalence /t REG_DWORD /d ' + accentOnBorders + ' /f;');
+    userOnceScript.invokeFile('C:\\Windows\\Setup\\Scripts\\SetColorTheme.ps1');
+    userOnceScript.restartExplorer();
+  }
+
+  // 2. Desktop Wallpaper
   var wallpaperMode = ctx.getVal('WallpaperMode', 'Default');
   if (wallpaperMode === 'Script') {
     var wallpaperScript = ctx.getVal('WallpaperScript', '');
@@ -1857,7 +2042,7 @@ PersonalizationModifier.prototype.process = function () {
       var imageFile = 'C:\\Windows\\Setup\\Scripts\\Wallpaper';
       var cleanScript = wallpaperScript.trim().replace(/\r\n/g, '\n').replace(/\r/g, '\n').replace(/\n/g, '\r\n');
       var getterFile = ctx.embedTextFile('GetWallpaper.ps1', cleanScript);
-      ctx.sequences.specialize.append(
+      specializeScript.append(
         "try {\r\n" +
         "  $bytes = & '" + getterFile + "';\r\n" +
         "  [System.IO.File]::WriteAllBytes( '" + imageFile + "', $bytes );\r\n" +
@@ -1865,13 +2050,18 @@ PersonalizationModifier.prototype.process = function () {
         "  $_;\r\n" +
         "}"
       );
-      var wpScriptContent = SET_WALLPAPER_PS1 + "\r\nSet-WallpaperImage -LiteralPath '" + imageFile + "';";
+      var wpScriptContent = (typeof SET_WALLPAPER_PS1 !== 'undefined' ? SET_WALLPAPER_PS1 : '') + "\r\nSet-WallpaperImage -LiteralPath '" + imageFile + "';";
       var wpFile = ctx.embedTextFile('SetWallpaper.ps1', wpScriptContent);
-      ctx.sequences.userOnce.invokeFile(wpFile);
+      userOnceScript.invokeFile(wpFile);
     }
+  } else if (wallpaperMode === 'Solid') {
+    var wallpaperColor = ctx.getVal('WallpaperColor', '#000000');
+    var wpSolidContent = (typeof SET_WALLPAPER_PS1 !== 'undefined' ? SET_WALLPAPER_PS1 : '') + "\r\nSet-WallpaperColor -HtmlColor '" + wallpaperColor + "';";
+    var wpSolidFile = ctx.embedTextFile('SetWallpaper.ps1', wpSolidContent);
+    userOnceScript.invokeFile(wpSolidFile);
   }
 
-  // Lock Screen Image
+  // 3. Lock Screen Image
   var lockScreenMode = ctx.getVal('LockScreenMode', 'Default');
   if (lockScreenMode === 'Script') {
     var lockScreenScript = ctx.getVal('LockScreenScript', '');
@@ -1879,7 +2069,7 @@ PersonalizationModifier.prototype.process = function () {
       var lockImageFile = 'C:\\Windows\\Setup\\Scripts\\LockScreenImage';
       var cleanLockScript = lockScreenScript.trim().replace(/\r\n/g, '\n').replace(/\r/g, '\n').replace(/\n/g, '\r\n');
       var lockGetterFile = ctx.embedTextFile('GetLockScreenImage.ps1', cleanLockScript);
-      ctx.sequences.specialize.append(
+      specializeScript.append(
         "try {\r\n" +
         "  $bytes = & '" + lockGetterFile + "';\r\n" +
         "  [System.IO.File]::WriteAllBytes( '" + lockImageFile + "', $bytes );\r\n" +
@@ -1902,8 +2092,12 @@ if (typeof module !== 'undefined' && module.exports) {
 
   // --- Begin: modifiers/bloatware.js ---
 /**
- * Bloatware modifier matching baseline_unattend_engine.js
+ * Bloatware modifier matching C# Bloatware.cs
  */
+var BLOATWARE_DATA = [{"id":"Remove3DViewer","steps":[{"type":"package","selector":"Microsoft.Microsoft3DViewer"}]},{"id":"RemoveBingSearch","steps":[{"type":"package","selector":"Microsoft.BingSearch"}]},{"id":"RemoveCalculator","steps":[{"type":"package","selector":"Microsoft.WindowsCalculator"}]},{"id":"RemoveCamera","steps":[{"type":"package","selector":"Microsoft.WindowsCamera"}]},{"id":"RemoveClipchamp","steps":[{"type":"package","selector":"Clipchamp.Clipchamp"}]},{"id":"RemoveClock","steps":[{"type":"package","selector":"Microsoft.WindowsAlarms"}]},{"id":"RemoveCopilot","steps":[{"type":"package","selector":"Microsoft.Copilot"},{"type":"custom"}]},{"id":"RemoveCortana","steps":[{"type":"package","selector":"Microsoft.549981C3F5F10"}]},{"id":"RemoveDevHome","steps":[{"type":"custom"},{"type":"package","selector":"Microsoft.Windows.DevHome"}]},{"id":"RemoveFamily","steps":[{"type":"package","selector":"MicrosoftCorporationII.MicrosoftFamily"}]},{"id":"RemoveFeedbackHub","steps":[{"type":"package","selector":"Microsoft.WindowsFeedbackHub"}]},{"id":"RemoveGameAssist","steps":[{"type":"package","selector":"Microsoft.Edge.GameAssist"}]},{"id":"RemoveGetHelp","steps":[{"type":"package","selector":"Microsoft.GetHelp"}]},{"id":"RemoveGetStarted","steps":[{"type":"package","selector":"Microsoft.Getstarted"}]},{"id":"RemoveHandwriting","steps":[{"type":"capability","selector":"Language.Handwriting"}]},{"id":"RemoveInternetExplorer","steps":[{"type":"capability","selector":"Browser.InternetExplorer"},{"type":"custom"}]},{"id":"RemoveMailCalendar","steps":[{"type":"package","selector":"microsoft.windowscommunicationsapps"}]},{"id":"RemoveMaps","steps":[{"type":"package","selector":"Microsoft.WindowsMaps"}]},{"id":"RemoveMathInputPanel","steps":[{"type":"capability","selector":"MathRecognizer"}]},{"id":"RemoveMediaFeatures","steps":[{"type":"feature","selector":"MediaPlayback"}]},{"id":"RemoveMixedReality","steps":[{"type":"package","selector":"Microsoft.MixedReality.Portal"}]},{"id":"RemoveNews","steps":[{"type":"package","selector":"Microsoft.BingNews"}]},{"id":"RemoveNotepad","steps":[{"type":"package","selector":"Microsoft.WindowsNotepad"},{"type":"custom"}]},{"id":"RemoveNotepadClassic","steps":[{"type":"capability","selector":"Microsoft.Windows.Notepad"},{"type":"capability","selector":"Microsoft.Windows.Notepad.System"}]},{"id":"RemoveOffice365","steps":[{"type":"package","selector":"Microsoft.MicrosoftOfficeHub"}]},{"id":"RemoveOneDrive","steps":[{"type":"custom"}]},{"id":"RemoveOneNote","steps":[{"type":"package","selector":"Microsoft.Office.OneNote"}]},{"id":"RemoveOneSync","steps":[{"type":"capability","selector":"OneCoreUAP.OneSync"}]},{"id":"RemoveOpenSSHClient","steps":[{"type":"capability","selector":"OpenSSH.Client"}]},{"id":"RemoveOutlook","steps":[{"type":"custom"},{"type":"package","selector":"Microsoft.OutlookForWindows"}]},{"id":"RemovePaint","steps":[{"type":"capability","selector":"Microsoft.Windows.MSPaint"},{"type":"package","selector":"Microsoft.Paint"}]},{"id":"RemovePaint3D","steps":[{"type":"package","selector":"Microsoft.MSPaint"}]},{"id":"RemovePeople","steps":[{"type":"package","selector":"Microsoft.People"}]},{"id":"RemovePhotos","steps":[{"type":"package","selector":"Microsoft.Windows.Photos"}]},{"id":"RemovePowerAutomate","steps":[{"type":"package","selector":"Microsoft.PowerAutomateDesktop"}]},{"id":"RemovePowerShell2","steps":[{"type":"feature","selector":"MicrosoftWindowsPowerShellV2Root"}]},{"id":"RemovePowerShellISE","steps":[{"type":"capability","selector":"Microsoft.Windows.PowerShell.ISE"}]},{"id":"RemoveQuickAssist","steps":[{"type":"capability","selector":"App.Support.QuickAssist"},{"type":"package","selector":"MicrosoftCorporationII.QuickAssist"}]},{"id":"RemoveRdpClient","steps":[{"type":"feature","selector":"Microsoft-RemoteDesktopConnection"}]},{"id":"RemoveRecall","steps":[{"type":"feature","selector":"Recall"}]},{"id":"RemoveSkype","steps":[{"type":"package","selector":"Microsoft.SkypeApp"}]},{"id":"RemoveSnippingTool","steps":[{"type":"package","selector":"Microsoft.ScreenSketch"},{"type":"feature","selector":"Microsoft-SnippingTool"},{"type":"capability","selector":"Microsoft.Windows.SnippingTool"}]},{"id":"RemoveSolitaire","steps":[{"type":"package","selector":"Microsoft.MicrosoftSolitaireCollection"}]},{"id":"RemoveSpeech","steps":[{"type":"capability","selector":"Language.Speech"},{"type":"capability","selector":"Language.TextToSpeech"}]},{"id":"RemoveStepsRecorder","steps":[{"type":"capability","selector":"App.StepsRecorder"}]},{"id":"RemoveStickyNotes","steps":[{"type":"package","selector":"Microsoft.MicrosoftStickyNotes"}]},{"id":"RemoveStore","steps":[{"type":"package","selector":"Microsoft.WindowsStore"},{"type":"package","selector":"Microsoft.StorePurchaseApp"}]},{"id":"RemoveTeams","steps":[{"type":"custom"},{"type":"package","selector":"MicrosoftTeams"},{"type":"package","selector":"MSTeams"}]},{"id":"RemoveToDo","steps":[{"type":"package","selector":"Microsoft.Todos"}]},{"id":"RemoveVoiceRecorder","steps":[{"type":"package","selector":"Microsoft.WindowsSoundRecorder"}]},{"id":"RemoveWallet","steps":[{"type":"package","selector":"Microsoft.Wallet"}]},{"id":"RemoveWeather","steps":[{"type":"package","selector":"Microsoft.BingWeather"}]},{"id":"RemoveWindowsHello","steps":[{"type":"capability","selector":"Hello.Face.18967"},{"type":"capability","selector":"Hello.Face.Migration.18967"},{"type":"capability","selector":"Hello.Face.20134"}]},{"id":"RemoveWindowsMediaPlayer","steps":[{"type":"capability","selector":"Media.WindowsMediaPlayer"}]},{"id":"RemoveWindowsTerminal","steps":[{"type":"package","selector":"Microsoft.WindowsTerminal"}]},{"id":"RemoveWordPad","steps":[{"type":"capability","selector":"Microsoft.Windows.WordPad"}]},{"id":"RemoveXboxApps","steps":[{"type":"package","selector":"Microsoft.Xbox.TCUI"},{"type":"package","selector":"Microsoft.XboxApp"},{"type":"package","selector":"Microsoft.XboxGameOverlay"},{"type":"package","selector":"Microsoft.XboxGamingOverlay"},{"type":"package","selector":"Microsoft.XboxIdentityProvider"},{"type":"package","selector":"Microsoft.XboxSpeechToTextOverlay"},{"type":"package","selector":"Microsoft.GamingApp"},{"type":"custom"}]},{"id":"RemoveYourPhone","steps":[{"type":"package","selector":"Microsoft.YourPhone"}]},{"id":"RemoveZuneMusic","steps":[{"type":"package","selector":"Microsoft.ZuneMusic"}]},{"id":"RemoveZuneVideo","steps":[{"type":"package","selector":"Microsoft.ZuneVideo"}]}];
+
+var REMOVE_BLOATWARE_SCRIPT = '$installed = & $getCommand;\r\nforeach( $selector in $selectors ) {\r\n	$result = [ordered] @{\r\n		Selector = $selector;\r\n	};\r\n	if( $found = $installed | Where-Object -FilterScript $filterCommand ) {\r\n		$result.Output = $found | & $removeCommand;\r\n		if( $? ) {\r\n			$result.Message = "${type} removed.";\r\n		} else {\r\n			$result.Message = "${type} not removed.";\r\n			$result.Error = $Error[0];\r\n		}\r\n	} else {\r\n		$result.Message = "${type} not installed.";\r\n	}\r\n	$result | ConvertTo-Json -Depth 3 -Compress;\r\n}';
+
 function BloatwareModifier(context) {
   this.context = context;
 }
@@ -1914,91 +2108,145 @@ BloatwareModifier.prototype.process = function () {
   var defaultUserScript = ctx.sequences.defaultUser;
   var specializeScript = ctx.sequences.specialize;
 
-  // Bloatware removal
-    var bloatwareMap = [
-      { key: 'Remove3DViewer', patterns: ['*Microsoft.Microsoft3DViewer*'] },
-      { key: 'RemoveBingSearch', patterns: ['*Microsoft.BingSearch*'] },
-      { key: 'RemoveCalculator', patterns: ['*Microsoft.WindowsCalculator*'] },
-      { key: 'RemoveCamera', patterns: ['*Microsoft.WindowsCamera*'] },
-      { key: 'RemoveClipchamp', patterns: ['*Clipchamp.Clipchamp*'] },
-      { key: 'RemoveClock', patterns: ['*Microsoft.WindowsAlarms*'] },
-      { key: 'RemoveCopilot', patterns: ['*Microsoft.Copilot*'] },
-      { key: 'RemoveCortana', patterns: ['*Microsoft.549981C3F5F10*'] },
-      { key: 'RemoveDevHome', patterns: ['*Microsoft.Windows.DevHome*'] },
-      { key: 'RemoveFamily', patterns: ['*MicrosoftCorporationII.MicrosoftFamily*'] },
-      { key: 'RemoveFeedbackHub', patterns: ['*Microsoft.WindowsFeedbackHub*'] },
-      { key: 'RemoveGameAssist', patterns: ['*Microsoft.Edge.GameAssist*'] },
-      { key: 'RemoveGetHelp', patterns: ['*Microsoft.GetHelp*'] },
-      { key: 'RemoveMailCalendar', patterns: ['*microsoft.windowscommunicationsapps*'] },
-      { key: 'RemoveMaps', patterns: ['*Microsoft.WindowsMaps*'] },
-      { key: 'RemoveMixedReality', patterns: ['*Microsoft.MixedReality.Portal*'] },
-      { key: 'RemoveNews', patterns: ['*Microsoft.BingNews*'] },
-      { key: 'RemoveOffice365', patterns: ['*Microsoft.MicrosoftOfficeHub*'] },
-      { key: 'RemoveOneDrive', patterns: ['*OneDrive*'] },
-      { key: 'RemoveOneNote', patterns: ['*Microsoft.Office.OneNote*'] },
-      { key: 'RemoveOutlook', patterns: ['*Microsoft.OutlookForWindows*'] },
-      { key: 'RemovePaint', patterns: ['*Microsoft.Paint*'] },
-      { key: 'RemovePeople', patterns: ['*Microsoft.People*'] },
-      { key: 'RemovePhotos', patterns: ['*Microsoft.Windows.Photos*'] },
-      { key: 'RemovePowerAutomate', patterns: ['*Microsoft.PowerAutomateDesktop*'] },
-      { key: 'RemoveQuickAssist', patterns: ['*MicrosoftCorporationII.QuickAssist*'] },
-      { key: 'RemoveSkype', patterns: ['*Microsoft.SkypeApp*'] },
-      { key: 'RemoveSnippingTool', patterns: ['*Microsoft.ScreenSketch*', '*Microsoft.Windows.SnippingTool*'] },
-      { key: 'RemoveSolitaire', patterns: ['*Microsoft.MicrosoftSolitaireCollection*'] },
-      { key: 'RemoveStickyNotes', patterns: ['*Microsoft.MicrosoftStickyNotes*'] },
-      { key: 'RemoveTeams', patterns: ['*MicrosoftTeams*', '*MSTeams*'] },
-      { key: 'RemoveGetStarted', patterns: ['*Microsoft.Getstarted*'] },
-      { key: 'RemoveToDo', patterns: ['*Microsoft.Todos*'] },
-      { key: 'RemoveVoiceRecorder', patterns: ['*Microsoft.WindowsSoundRecorder*'] },
-      { key: 'RemoveWallet', patterns: ['*Microsoft.Wallet*'] },
-      { key: 'RemoveWeather', patterns: ['*Microsoft.BingWeather*'] },
-      { key: 'RemoveWindowsTerminal', patterns: ['*Microsoft.WindowsTerminal*'] },
-      { key: 'RemoveXboxApps', patterns: ['*Microsoft.Xbox*', '*Microsoft.GamingApp*'] },
-      { key: 'RemoveYourPhone', patterns: ['*Microsoft.YourPhone*'] },
-      { key: 'RemoveZuneMusic', patterns: ['*Microsoft.ZuneMusic*'] }
-    ];
+  var packageSelectors = [];
+  var capabilitySelectors = [];
+  var featureSelectors = [];
 
-    var selectedBloatwarePatterns = [];
-    bloatwareMap.forEach(function (item) {
-      if (ctx.getBool(item.key, false)) {
-        selectedBloatwarePatterns.push.apply(selectedBloatwarePatterns, item.patterns);
+  for (var i = 0; i < BLOATWARE_DATA.length; i++) {
+    var bw = BLOATWARE_DATA[i];
+    if (!ctx.getBool(bw.id, false)) {
+      continue;
+    }
+    for (var s = 0; s < bw.steps.length; s++) {
+      var step = bw.steps[s];
+      if (step.type === 'package') {
+        packageSelectors.push(step.selector);
+      } else if (step.type === 'capability') {
+        capabilitySelectors.push(step.selector);
+      } else if (step.type === 'feature') {
+        featureSelectors.push(step.selector);
+      } else if (step.type === 'custom') {
+        if (bw.id === 'RemoveOneDrive') {
+          specializeScript.append([
+            '@(',
+            "  'C:\\Users\\Default\\AppData\\Roaming\\Microsoft\\Windows\\Start Menu\\Programs\\OneDrive.lnk';",
+            "  'C:\\Windows\\System32\\OneDriveSetup.exe';",
+            "  'C:\\Windows\\SysWOW64\\OneDriveSetup.exe';",
+            ") | Where-Object -FilterScript { [System.IO.File]::Exists( $_ ); } | Remove-Item -Verbose -ErrorAction 'Continue';"
+          ].join('\r\n'));
+          defaultUserScript.append("Remove-ItemProperty -LiteralPath 'Registry::HKU\\DefaultUser\\Software\\Microsoft\\Windows\\CurrentVersion\\Run' -Name 'OneDriveSetup' -Force -ErrorAction 'Continue';");
+        } else if (bw.id === 'RemoveTeams') {
+          specializeScript.append('reg.exe add "HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Communications" /v ConfigureChatAutoInstall /t REG_DWORD /d 0 /f;');
+        } else if (bw.id === 'RemoveNotepad') {
+          specializeScript.append([
+            'reg.exe add "HKCR\\.txt\\ShellNew" /v ItemName /t REG_EXPAND_SZ /d "@C:\\Windows\\system32\\notepad.exe,-470" /f;',
+            'reg.exe add "HKCR\\.txt\\ShellNew" /v NullFile /t REG_SZ /f;',
+            'reg.exe add "HKCR\\txtfilelegacy" /v FriendlyTypeName /t REG_EXPAND_SZ /d "@C:\\Windows\\system32\\notepad.exe,-469" /f;',
+            'reg.exe add "HKCR\\txtfilelegacy" /ve /t REG_SZ /d "Text Document" /f;'
+          ].join('\r\n'));
+          defaultUserScript.append('reg.exe add "HKU\\DefaultUser\\Software\\Microsoft\\Notepad" /v ShowStoreBanner /t REG_DWORD /d 0 /f;');
+        } else if (bw.id === 'RemoveOutlook') {
+          specializeScript.append("Remove-Item -LiteralPath 'Registry::HKLM\\Software\\Microsoft\\WindowsUpdate\\Orchestrator\\UScheduler_Oobe\\OutlookUpdate' -Force -ErrorAction 'SilentlyContinue';");
+        } else if (bw.id === 'RemoveDevHome') {
+          specializeScript.append("Remove-Item -LiteralPath 'Registry::HKLM\\Software\\Microsoft\\WindowsUpdate\\Orchestrator\\UScheduler_Oobe\\DevHomeUpdate' -Force -ErrorAction 'SilentlyContinue';");
+        } else if (bw.id === 'RemoveCopilot') {
+          userOnceScript.append("Get-AppxPackage -Name 'Microsoft.Windows.Ai.Copilot.Provider' | Remove-AppxPackage;");
+          defaultUserScript.append('reg.exe add "HKU\\DefaultUser\\Software\\Policies\\Microsoft\\Windows\\WindowsCopilot" /v TurnOffWindowsCopilot /t REG_DWORD /d 1 /f;');
+        } else if (bw.id === 'RemoveXboxApps') {
+          defaultUserScript.append('reg.exe add "HKU\\DefaultUser\\Software\\Microsoft\\Windows\\CurrentVersion\\GameDVR" /v AppCaptureEnabled /t REG_DWORD /d 0 /f;');
+        } else if (bw.id === 'RemoveInternetExplorer') {
+          defaultUserScript.append('reg.exe add "HKU\\DefaultUser\\Software\\Microsoft\\Internet Explorer\\LowRegistry\\Audio\\PolicyConfig\\PropertyStore" /f;');
+        }
       }
-    });
+    }
+  }
 
-    if (selectedBloatwarePatterns.length > 0) {
-      var removePkgLines = [
-        '$patterns = @(' + selectedBloatwarePatterns.map(function (p) { return "'" + p + "'"; }).join(', ') + ');',
-        'foreach( $pattern in $patterns ) {',
-        '  Get-AppxProvisionedPackage -Online | Where-Object { $_.PackageName -like $pattern } | Remove-AppxProvisionedPackage -Online -AllUsers -ErrorAction SilentlyContinue;',
-        '}'
-      ];
-      ctx.embedTextFile('RemovePackage.ps1', removePkgLines.join('\r\n'));
-      specializeScript.invokeFile('C:\\Windows\\Setup\\Scripts\\RemovePackage.ps1');
+  function buildRemoveScript(selectors, getCmd, filterCmd, removeCmd, type) {
+    var lines = ['$selectors = @('];
+    for (var k = 0; k < selectors.length; k++) {
+      lines.push("\t'" + selectors[k] + "';");
     }
+    lines.push(');');
+    lines.push('$getCommand = ' + getCmd + ';');
+    lines.push('$filterCommand = ' + filterCmd + ';');
+    lines.push('$removeCommand = ' + removeCmd + ';');
+    lines.push("$type = '" + type + "';");
+    return lines.join('\r\n') + '\r\n' + REMOVE_BLOATWARE_SCRIPT;
+  }
 
-    if (ctx.getBool('RemoveCopilot', false)) {
-      userOnceScript.append("Get-AppxPackage -Name 'Microsoft.Windows.Ai.Copilot.Provider' | Remove-AppxPackage;");
-      defaultUserScript.append('reg.exe add "HKU\\DefaultUser\\Software\\Policies\\Microsoft\\Windows\\WindowsCopilot" /v TurnOffWindowsCopilot /t REG_DWORD /d 1 /f;');
-    }
-    if (ctx.getBool('RemoveXboxApps', false)) {
-      defaultUserScript.append('reg.exe add "HKU\\DefaultUser\\Software\\Microsoft\\Windows\\CurrentVersion\\GameDVR" /v AppCaptureEnabled /t REG_DWORD /d 0 /f;');
-    }
-    if (ctx.getBool('RemoveTeams', false)) {
-      specializeScript.append('reg.exe add "HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Communications" /v ConfigureChatAutoInstall /t REG_DWORD /d 0 /f;');
-    }
-    if (ctx.getBool('RemoveOneDrive', false)) {
-      specializeScript.append([
-        '@(',
-        "  'C:\\Users\\Default\\AppData\\Roaming\\Microsoft\\Windows\\Start Menu\\Programs\\OneDrive.lnk';",
-        "  'C:\\Windows\\System32\\OneDriveSetup.exe';",
-        "  'C:\\Windows\\SysWOW64\\OneDriveSetup.exe';",
-        ") | Where-Object -FilterScript { [System.IO.File]::Exists( $_ ); } | Remove-Item -Verbose -ErrorAction 'Continue';"
-      ].join('\r\n'));
-      defaultUserScript.append("Remove-ItemProperty -LiteralPath 'Registry::HKU\\DefaultUser\\Software\\Microsoft\\Windows\\CurrentVersion\\Run' -Name 'OneDriveSetup' -Force -ErrorAction 'Continue';");
-    }
+  if (packageSelectors.length > 0) {
+    var pkgGet = ['{', '  Get-AppxProvisionedPackage -Online;', '}'].join('\r\n');
+    var pkgFilter = ['{', '  $_.DisplayName -eq $selector;', '}'].join('\r\n');
+    var pkgRemove = [
+      '{',
+      '  [CmdletBinding()]',
+      '  param(',
+      '    [Parameter( Mandatory, ValueFromPipeline )]',
+      '    $InputObject',
+      '  );',
+      '  process {',
+      "    $InputObject | Remove-AppxProvisionedPackage -AllUsers -Online -ErrorAction 'Continue';",
+      '  }',
+      '}'
+    ].join('\r\n');
+    var pkgScript = buildRemoveScript(packageSelectors, pkgGet, pkgFilter, pkgRemove, 'Package');
+    ctx.embedTextFile('RemovePackage.ps1', pkgScript);
+    specializeScript.invokeFile('C:\\Windows\\Setup\\Scripts\\RemovePackage.ps1');
+  }
 
+  if (capabilitySelectors.length > 0) {
+    var capGet = [
+      '{',
+      '  Get-WindowsCapability -Online | Where-Object -Property \'State\' -NotIn -Value @(',
+      "    'NotPresent';",
+      "    'Removed';",
+      '  );',
+      '}'
+    ].join('\r\n');
+    var capFilter = ['{', "  ($_.Name -split '~')[0] -eq $selector;", '}'].join('\r\n');
+    var capRemove = [
+      '{',
+      '  [CmdletBinding()]',
+      '  param(',
+      '    [Parameter( Mandatory, ValueFromPipeline )]',
+      '    $InputObject',
+      '  );',
+      '  process {',
+      "    $InputObject | Remove-WindowsCapability -Online -ErrorAction 'Continue';",
+      '  }',
+      '}'
+    ].join('\r\n');
+    var capScript = buildRemoveScript(capabilitySelectors, capGet, capFilter, capRemove, 'Capability');
+    ctx.embedTextFile('RemoveCapability.ps1', capScript);
+    specializeScript.invokeFile('C:\\Windows\\Setup\\Scripts\\RemoveCapability.ps1');
+  }
 
-    
+  if (featureSelectors.length > 0) {
+    var featGet = [
+      '{',
+      '  Get-WindowsOptionalFeature -Online | Where-Object -Property \'State\' -NotIn -Value @(',
+      "    'Disabled';",
+      "    'DisabledWithPayloadRemoved';",
+      '  );',
+      '}'
+    ].join('\r\n');
+    var featFilter = ['{', '  $_.FeatureName -eq $selector;', '}'].join('\r\n');
+    var featRemove = [
+      '{',
+      '  [CmdletBinding()]',
+      '  param(',
+      '    [Parameter( Mandatory, ValueFromPipeline )]',
+      '    $InputObject',
+      '  );',
+      '  process {',
+      "    $InputObject | Disable-WindowsOptionalFeature -Online -Remove -NoRestart -ErrorAction 'Continue';",
+      '  }',
+      '}'
+    ].join('\r\n');
+    var featScript = buildRemoveScript(featureSelectors, featGet, featFilter, featRemove, 'Feature');
+    ctx.embedTextFile('RemoveFeature.ps1', featScript);
+    specializeScript.invokeFile('C:\\Windows\\Setup\\Scripts\\RemoveFeature.ps1');
+  }
 };
 
 if (typeof module !== 'undefined' && module.exports) {
@@ -2231,7 +2479,9 @@ function finalizePowerShellSequences(ctx) {
   var userOnceFile = null;
   if (!userOnceScript.isEmpty()) {
     userOnceFile = ctx.embedTextFile('UserOnce.ps1', userOnceScript.getScript());
-    var cmdEscaped = ('powershell.exe -WindowStyle "Normal" -ExecutionPolicy "Unrestricted" -NoProfile -File "' + userOnceFile + '"').replace(/"/g, '\\\"');
+    var hidePowerShellWindows = ctx.getBool('HidePowerShellWindows', false);
+    var windowStyle = hidePowerShellWindows ? 'Hidden' : 'Normal';
+    var cmdEscaped = ('powershell.exe -WindowStyle "' + windowStyle + '" -ExecutionPolicy "Unrestricted" -NoProfile -File "' + userOnceFile + '"').replace(/"/g, '\\""');
     defaultUserScript.append('reg.exe add "HKU\\DefaultUser\\Software\\Microsoft\\Windows\\CurrentVersion\\RunOnce" /v "UnattendedSetup" /t REG_SZ /d "' + cmdEscaped + '" /f;');
   }
 
@@ -2540,19 +2790,19 @@ function generateAutounattendXml(formData) {
   // Execute modifier pipeline in C# matching sequence
   var modifiers = [
     new ComputerNameModifier(context),
-    new PasswordExpirationModifier(context),
-    new LockoutModifier(context),
-    new UsersModifier(context),
-    new OptimizationsModifier(context),
-    new PersonalizationModifier(context),
-    new BloatwareModifier(context),
-    new LocalesModifier(context),
-    diskMod,
     new BypassModifier(context),
     new ProductKeyModifier(context),
-    new TimeZoneModifier(context),
+    new LocalesModifier(context),
+    diskMod,
+    new UsersModifier(context),
+    new BloatwareModifier(context),
     new ExpressSettingsModifier(context),
     new WifiModifier(context),
+    new LockoutModifier(context),
+    new PasswordExpirationModifier(context),
+    new OptimizationsModifier(context),
+    new PersonalizationModifier(context),
+    new TimeZoneModifier(context),
     new AppLockerModifier(context),
     new ScriptsModifier(context),
     new DeleteModifier(context),
@@ -2617,16 +2867,6 @@ function generateAutounattendXml(formData) {
         'versionScope': 'nonSxS'
       }));
 
-      if (context.bypassRequirements) {
-        var peRunSync = winSetup.addChild(new XmlNode('RunSynchronous'));
-        var bypassKeys = ['BypassTPMCheck', 'BypassSecureBootCheck', 'BypassRAMCheck'];
-        for (var b = 0; b < bypassKeys.length; b++) {
-          var syncCmd = peRunSync.addChild(new XmlNode('RunSynchronousCommand', { 'wcm:action': 'add' }));
-          syncCmd.addSimpleElement('Order', String(b + 1));
-          syncCmd.addSimpleElement('Path', 'reg.exe add "HKLM\\SYSTEM\\Setup\\LabConfig" /v ' + bypassKeys[b] + ' /t REG_DWORD /d 1 /f');
-        }
-      }
-
       var userData = winSetup.addChild(new XmlNode('UserData'));
       var prodKeyElem = userData.addChild(new XmlNode('ProductKey'));
       if (context.winEditionMode === 'Interactive') {
@@ -2643,6 +2883,16 @@ function generateAutounattendXml(formData) {
       }
       userData.addSimpleElement('AcceptEula', 'true');
       winSetup.addSimpleElement('UseConfigurationSet', context.useConfigurationSet ? 'true' : 'false');
+
+      if (context.bypassRequirements) {
+        var peRunSync = winSetup.addChild(new XmlNode('RunSynchronous'));
+        var bypassKeys = ['BypassTPMCheck', 'BypassSecureBootCheck', 'BypassRAMCheck'];
+        for (var b = 0; b < bypassKeys.length; b++) {
+          var syncCmd = peRunSync.addChild(new XmlNode('RunSynchronousCommand', { 'wcm:action': 'add' }));
+          syncCmd.addSimpleElement('Order', String(b + 1));
+          syncCmd.addSimpleElement('Path', 'reg.exe add "HKLM\\SYSTEM\\Setup\\LabConfig" /v ' + bypassKeys[b] + ' /t REG_DWORD /d 1 /f');
+        }
+      }
     }
 
     // 3. pass="generalize"
@@ -2650,7 +2900,11 @@ function generateAutounattendXml(formData) {
 
     // 4. pass="specialize"
     var specSettingsElem = root.addChild(new XmlNode('settings', { 'pass': 'specialize' }));
-    if (context.specCompName || (context.tzMode === 'Explicit' && context.tzId)) {
+    var hidePowerShellWindows = context.getBool('HidePowerShellWindows', false);
+    var windowStyle = hidePowerShellWindows ? 'Hidden' : 'Normal';
+
+    var needProductKeyInSpecialize = (context.peMode === 'Default' && context.winEditionMode === 'Custom' && context.productKeyVal);
+    if (context.specCompName || (context.tzMode === 'Explicit' && context.tzId) || needProductKeyInSpecialize) {
       var specShell = specSettingsElem.addChild(new XmlNode('component', {
         'name': 'Microsoft-Windows-Shell-Setup',
         'processorArchitecture': context.arch,
@@ -2663,6 +2917,9 @@ function generateAutounattendXml(formData) {
       }
       if (context.tzMode === 'Explicit' && context.tzId) {
         specShell.addSimpleElement('TimeZone', context.tzId);
+      }
+      if (needProductKeyInSpecialize) {
+        specShell.addSimpleElement('ProductKey', context.productKeyVal);
       }
     }
 
@@ -2679,12 +2936,12 @@ function generateAutounattendXml(formData) {
       if (context.hasExtractScript) {
         var extractCmd = runSync.addChild(new XmlNode('RunSynchronousCommand', { 'wcm:action': 'add' }));
         extractCmd.addSimpleElement('Order', String(orderNum++));
-        extractCmd.addSimpleElement('Path', 'powershell.exe -WindowStyle "Normal" -NoProfile -Command "$xml = [xml]::new(); $xml.Load(\'C:\\Windows\\Panther\\unattend.xml\'); $sb = [scriptblock]::Create( $xml.unattend.Extensions.ExtractScript ); Invoke-Command -ScriptBlock $sb -ArgumentList $xml;"');
+        extractCmd.addSimpleElement('Path', 'powershell.exe -WindowStyle "' + windowStyle + '" -NoProfile -Command "$xml = [xml]::new(); $xml.Load(\'C:\\Windows\\Panther\\unattend.xml\'); $sb = [scriptblock]::Create( $xml.unattend.Extensions.ExtractScript ); Invoke-Command -ScriptBlock $sb -ArgumentList $xml;"');
       }
       if (context.specializeFile) {
         var specCmd = runSync.addChild(new XmlNode('RunSynchronousCommand', { 'wcm:action': 'add' }));
         specCmd.addSimpleElement('Order', String(orderNum++));
-        specCmd.addSimpleElement('Path', 'powershell.exe -WindowStyle "Normal" -ExecutionPolicy "Unrestricted" -NoProfile -File "' + context.specializeFile + '"');
+        specCmd.addSimpleElement('Path', 'powershell.exe -WindowStyle "' + windowStyle + '" -ExecutionPolicy "Unrestricted" -NoProfile -File "' + context.specializeFile + '"');
       }
       if (context.defaultUserFile) {
         var loadCmd = runSync.addChild(new XmlNode('RunSynchronousCommand', { 'wcm:action': 'add' }));
@@ -2693,7 +2950,7 @@ function generateAutounattendXml(formData) {
 
         var duCmd = runSync.addChild(new XmlNode('RunSynchronousCommand', { 'wcm:action': 'add' }));
         duCmd.addSimpleElement('Order', String(orderNum++));
-        duCmd.addSimpleElement('Path', 'powershell.exe -WindowStyle "Normal" -ExecutionPolicy "Unrestricted" -NoProfile -File "' + context.defaultUserFile + '"');
+        duCmd.addSimpleElement('Path', 'powershell.exe -WindowStyle "' + windowStyle + '" -ExecutionPolicy "Unrestricted" -NoProfile -File "' + context.defaultUserFile + '"');
 
         var unloadCmd = runSync.addChild(new XmlNode('RunSynchronousCommand', { 'wcm:action': 'add' }));
         unloadCmd.addSimpleElement('Order', String(orderNum++));
@@ -2800,7 +3057,7 @@ function generateAutounattendXml(formData) {
       var firstLogonCommands = oobeShell.addChild(new XmlNode('FirstLogonCommands'));
       var syncCmdOobe = firstLogonCommands.addChild(new XmlNode('SynchronousCommand', { 'wcm:action': 'add' }));
       syncCmdOobe.addSimpleElement('Order', '1');
-      syncCmdOobe.addSimpleElement('CommandLine', 'powershell.exe -WindowStyle "Normal" -ExecutionPolicy "Unrestricted" -NoProfile -File "' + context.firstLogonFile + '"');
+      syncCmdOobe.addSimpleElement('CommandLine', 'powershell.exe -WindowStyle "' + windowStyle + '" -ExecutionPolicy "Unrestricted" -NoProfile -File "' + context.firstLogonFile + '"');
     }
 
     var passSettings = {
