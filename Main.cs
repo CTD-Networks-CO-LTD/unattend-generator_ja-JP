@@ -187,11 +187,6 @@ public class CommandBuilder(bool hidePowerShellWindows)
     return @$"cscript.exe //E:vbscript ""{filepath}""";
   }
 
-  public string InvokeJScript(string filepath)
-  {
-    return @$"cscript.exe //E:jscript ""{filepath}""";
-  }
-
   public List<string> WriteToFilePE(string path, IEnumerable<string> lines)
   {
     if (path.Any(char.IsWhiteSpace))

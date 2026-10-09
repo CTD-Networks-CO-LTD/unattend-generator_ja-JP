@@ -7,7 +7,7 @@ namespace Schneegans.Unattend;
 
 public enum ScriptType
 {
-  Cmd, Ps1, Reg, Vbs, Js
+  Cmd, Ps1, Reg, Vbs
 }
 
 public enum ScriptPhase
@@ -194,7 +194,6 @@ public static class CommandHelper
       ScriptType.Ps1 => builder.InvokePowerShellScript(info.FilePath),
       ScriptType.Reg => builder.RegistryCommand(@$"import ""{info.FilePath}"""),
       ScriptType.Vbs => builder.InvokeVBScript(info.FilePath),
-      ScriptType.Js => builder.InvokeJScript(info.FilePath),
       _ => throw new NotSupportedException(),
     };
   }
