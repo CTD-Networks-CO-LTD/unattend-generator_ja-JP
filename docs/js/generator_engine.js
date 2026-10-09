@@ -23,19 +23,19 @@ function generateAutounattendXml(formData) {
   // Execute modifier pipeline in C# matching sequence
   var modifiers = [
     new ComputerNameModifier(context),
-    new PasswordExpirationModifier(context),
-    new LockoutModifier(context),
-    new UsersModifier(context),
-    new OptimizationsModifier(context),
-    new PersonalizationModifier(context),
-    new BloatwareModifier(context),
-    new LocalesModifier(context),
-    diskMod,
     new BypassModifier(context),
     new ProductKeyModifier(context),
-    new TimeZoneModifier(context),
+    new LocalesModifier(context),
+    diskMod,
+    new UsersModifier(context),
+    new BloatwareModifier(context),
     new ExpressSettingsModifier(context),
     new WifiModifier(context),
+    new LockoutModifier(context),
+    new PasswordExpirationModifier(context),
+    new OptimizationsModifier(context),
+    new PersonalizationModifier(context),
+    new TimeZoneModifier(context),
     new AppLockerModifier(context),
     new ScriptsModifier(context),
     new DeleteModifier(context),
@@ -100,16 +100,6 @@ function generateAutounattendXml(formData) {
         'versionScope': 'nonSxS'
       }));
 
-      if (context.bypassRequirements) {
-        var peRunSync = winSetup.addChild(new XmlNode('RunSynchronous'));
-        var bypassKeys = ['BypassTPMCheck', 'BypassSecureBootCheck', 'BypassRAMCheck'];
-        for (var b = 0; b < bypassKeys.length; b++) {
-          var syncCmd = peRunSync.addChild(new XmlNode('RunSynchronousCommand', { 'wcm:action': 'add' }));
-          syncCmd.addSimpleElement('Order', String(b + 1));
-          syncCmd.addSimpleElement('Path', 'reg.exe add "HKLM\\SYSTEM\\Setup\\LabConfig" /v ' + bypassKeys[b] + ' /t REG_DWORD /d 1 /f');
-        }
-      }
-
       var userData = winSetup.addChild(new XmlNode('UserData'));
       var prodKeyElem = userData.addChild(new XmlNode('ProductKey'));
       if (context.winEditionMode === 'Interactive') {
@@ -126,6 +116,16 @@ function generateAutounattendXml(formData) {
       }
       userData.addSimpleElement('AcceptEula', 'true');
       winSetup.addSimpleElement('UseConfigurationSet', context.useConfigurationSet ? 'true' : 'false');
+
+      if (context.bypassRequirements) {
+        var peRunSync = winSetup.addChild(new XmlNode('RunSynchronous'));
+        var bypassKeys = ['BypassTPMCheck', 'BypassSecureBootCheck', 'BypassRAMCheck'];
+        for (var b = 0; b < bypassKeys.length; b++) {
+          var syncCmd = peRunSync.addChild(new XmlNode('RunSynchronousCommand', { 'wcm:action': 'add' }));
+          syncCmd.addSimpleElement('Order', String(b + 1));
+          syncCmd.addSimpleElement('Path', 'reg.exe add "HKLM\\SYSTEM\\Setup\\LabConfig" /v ' + bypassKeys[b] + ' /t REG_DWORD /d 1 /f');
+        }
+      }
     }
 
     // 3. pass="generalize"
@@ -133,7 +133,11 @@ function generateAutounattendXml(formData) {
 
     // 4. pass="specialize"
     var specSettingsElem = root.addChild(new XmlNode('settings', { 'pass': 'specialize' }));
-    if (context.specCompName || (context.tzMode === 'Explicit' && context.tzId)) {
+    var hidePowerShellWindows = context.getBool('HidePowerShellWindows', false);
+    var windowStyle = hidePowerShellWindows ? 'Hidden' : 'Normal';
+
+    var needProductKeyInSpecialize = (context.peMode === 'Default' && context.winEditionMode === 'Custom' && context.productKeyVal);
+    if (context.specCompName || (context.tzMode === 'Explicit' && context.tzId) || needProductKeyInSpecialize) {
       var specShell = specSettingsElem.addChild(new XmlNode('component', {
         'name': 'Microsoft-Windows-Shell-Setup',
         'processorArchitecture': context.arch,
@@ -146,6 +150,9 @@ function generateAutounattendXml(formData) {
       }
       if (context.tzMode === 'Explicit' && context.tzId) {
         specShell.addSimpleElement('TimeZone', context.tzId);
+      }
+      if (needProductKeyInSpecialize) {
+        specShell.addSimpleElement('ProductKey', context.productKeyVal);
       }
     }
 
@@ -162,12 +169,12 @@ function generateAutounattendXml(formData) {
       if (context.hasExtractScript) {
         var extractCmd = runSync.addChild(new XmlNode('RunSynchronousCommand', { 'wcm:action': 'add' }));
         extractCmd.addSimpleElement('Order', String(orderNum++));
-        extractCmd.addSimpleElement('Path', 'powershell.exe -WindowStyle "Normal" -NoProfile -Command "$xml = [xml]::new(); $xml.Load(\'C:\\Windows\\Panther\\unattend.xml\'); $sb = [scriptblock]::Create( $xml.unattend.Extensions.ExtractScript ); Invoke-Command -ScriptBlock $sb -ArgumentList $xml;"');
+        extractCmd.addSimpleElement('Path', 'powershell.exe -WindowStyle "' + windowStyle + '" -NoProfile -Command "$xml = [xml]::new(); $xml.Load(\'C:\\Windows\\Panther\\unattend.xml\'); $sb = [scriptblock]::Create( $xml.unattend.Extensions.ExtractScript ); Invoke-Command -ScriptBlock $sb -ArgumentList $xml;"');
       }
       if (context.specializeFile) {
         var specCmd = runSync.addChild(new XmlNode('RunSynchronousCommand', { 'wcm:action': 'add' }));
         specCmd.addSimpleElement('Order', String(orderNum++));
-        specCmd.addSimpleElement('Path', 'powershell.exe -WindowStyle "Normal" -ExecutionPolicy "Unrestricted" -NoProfile -File "' + context.specializeFile + '"');
+        specCmd.addSimpleElement('Path', 'powershell.exe -WindowStyle "' + windowStyle + '" -ExecutionPolicy "Unrestricted" -NoProfile -File "' + context.specializeFile + '"');
       }
       if (context.defaultUserFile) {
         var loadCmd = runSync.addChild(new XmlNode('RunSynchronousCommand', { 'wcm:action': 'add' }));
@@ -176,7 +183,7 @@ function generateAutounattendXml(formData) {
 
         var duCmd = runSync.addChild(new XmlNode('RunSynchronousCommand', { 'wcm:action': 'add' }));
         duCmd.addSimpleElement('Order', String(orderNum++));
-        duCmd.addSimpleElement('Path', 'powershell.exe -WindowStyle "Normal" -ExecutionPolicy "Unrestricted" -NoProfile -File "' + context.defaultUserFile + '"');
+        duCmd.addSimpleElement('Path', 'powershell.exe -WindowStyle "' + windowStyle + '" -ExecutionPolicy "Unrestricted" -NoProfile -File "' + context.defaultUserFile + '"');
 
         var unloadCmd = runSync.addChild(new XmlNode('RunSynchronousCommand', { 'wcm:action': 'add' }));
         unloadCmd.addSimpleElement('Order', String(orderNum++));
@@ -283,7 +290,7 @@ function generateAutounattendXml(formData) {
       var firstLogonCommands = oobeShell.addChild(new XmlNode('FirstLogonCommands'));
       var syncCmdOobe = firstLogonCommands.addChild(new XmlNode('SynchronousCommand', { 'wcm:action': 'add' }));
       syncCmdOobe.addSimpleElement('Order', '1');
-      syncCmdOobe.addSimpleElement('CommandLine', 'powershell.exe -WindowStyle "Normal" -ExecutionPolicy "Unrestricted" -NoProfile -File "' + context.firstLogonFile + '"');
+      syncCmdOobe.addSimpleElement('CommandLine', 'powershell.exe -WindowStyle "' + windowStyle + '" -ExecutionPolicy "Unrestricted" -NoProfile -File "' + context.firstLogonFile + '"');
     }
 
     var passSettings = {

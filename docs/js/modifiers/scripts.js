@@ -110,7 +110,9 @@ function finalizePowerShellSequences(ctx) {
   var userOnceFile = null;
   if (!userOnceScript.isEmpty()) {
     userOnceFile = ctx.embedTextFile('UserOnce.ps1', userOnceScript.getScript());
-    var cmdEscaped = ('powershell.exe -WindowStyle "Normal" -ExecutionPolicy "Unrestricted" -NoProfile -File "' + userOnceFile + '"').replace(/"/g, '\\\"');
+    var hidePowerShellWindows = ctx.getBool('HidePowerShellWindows', false);
+    var windowStyle = hidePowerShellWindows ? 'Hidden' : 'Normal';
+    var cmdEscaped = ('powershell.exe -WindowStyle "' + windowStyle + '" -ExecutionPolicy "Unrestricted" -NoProfile -File "' + userOnceFile + '"').replace(/"/g, '\\""');
     defaultUserScript.append('reg.exe add "HKU\\DefaultUser\\Software\\Microsoft\\Windows\\CurrentVersion\\RunOnce" /v "UnattendedSetup" /t REG_SZ /d "' + cmdEscaped + '" /f;');
   }
 

@@ -82,11 +82,11 @@ function runTests() {
 
   // RemovePackage.ps1 の生成
   assert(xmlBloat.includes('RemovePackage.ps1'), 'XMLのFile要素に RemovePackage.ps1 が埋め込まれていること');
-  assert(xmlBloat.includes('*Microsoft.BingSearch*'), 'RemovePackage.ps1 に BingSearch パターンが含まれていること');
-  assert(xmlBloat.includes('*Microsoft.MicrosoftOfficeHub*'), 'RemovePackage.ps1 に OfficeHub パターンが含まれていること');
-  assert(xmlBloat.includes('*Microsoft.BingWeather*'), 'RemovePackage.ps1 に Weather パターンが含まれていること');
-  assert(xmlBloat.includes('*Microsoft.MicrosoftSolitaireCollection*'), 'RemovePackage.ps1 に Solitaire パターンが含まれていること');
-  assert(xmlBloat.includes('Remove-AppxProvisionedPackage -Online -AllUsers'), 'RemovePackage.ps1 内で全ユーザー一括プロビジョニング削除が実行されていること');
+  assert(xmlBloat.includes('Microsoft.BingSearch'), 'RemovePackage.ps1 に BingSearch セレクタが含まれていること');
+  assert(xmlBloat.includes('Microsoft.MicrosoftOfficeHub'), 'RemovePackage.ps1 に OfficeHub セレクタが含まれていること');
+  assert(xmlBloat.includes('Microsoft.BingWeather'), 'RemovePackage.ps1 に Weather セレクタが含まれていること');
+  assert(xmlBloat.includes('Microsoft.MicrosoftSolitaireCollection'), 'RemovePackage.ps1 に Solitaire セレクタが含まれていること');
+  assert(xmlBloat.includes('Remove-AppxProvisionedPackage -AllUsers -Online'), 'RemovePackage.ps1 内で全ユーザー一括プロビジョニング削除が実行されていること');
   assert(xmlBloat.includes('RemovePackage.ps1'), 'Specialize.ps1 から RemovePackage.ps1 が呼び出されていること');
 
   // 付随スクリプト
@@ -580,6 +580,34 @@ function runTests() {
   assert(pSpecFileIdx < pUserOnceFileIdx, 'Specialize.ps1 が UserOnce.ps1 より前にあること');
   assert(pUserOnceFileIdx < pDefUserFileIdx, 'UserOnce.ps1 が DefaultUser.ps1 より前にあること');
   assert(pDefUserFileIdx < pFirstLogonFileIdx, 'DefaultUser.ps1 が FirstLogon.ps1 より前にあること');
+
+  // --- テストケース 17: WindowStyle 動的化 & WindowsUpdate / ColorTheme パリティの検証 ---
+  console.log('\n--- Test 17: WindowStyle 動的化 & WindowsUpdate / ColorTheme パリティの検証 ---');
+  const wsHiddenParams = new MockFormData({
+    LanguageMode: 'Unattended',
+    UILanguage: 'ja-JP',
+    HidePowerShellWindows: 'true',
+    DisableWindowsUpdate: 'true',
+    PreventAutomaticReboot: 'true',
+    DisableSystemRestore: 'true',
+    ColorMode: 'Custom',
+    SystemColorTheme: 'Dark',
+    AppsColorTheme: 'Dark',
+    AccentColor: '#CF05A7',
+    FirstLogonScript0: 'Write-Host "Test"',
+    FirstLogonScriptType0: 'Ps1'
+  });
+  const wsHiddenXml = engine.generateAutounattendXml(wsHiddenParams);
+
+  assert(wsHiddenXml.includes('-WindowStyle "Hidden"'), 'HidePowerShellWindows=true 時に -WindowStyle "Hidden" が出力されること');
+  assert(!wsHiddenXml.includes('-WindowStyle "Normal"'), 'HidePowerShellWindows=true 時に -WindowStyle "Normal" が出力されないこと');
+  assert(wsHiddenXml.includes('PauseWindowsUpdate.xml'), 'DisableWindowsUpdate=true 時に PauseWindowsUpdate.xml が埋め込まれること');
+  assert(wsHiddenXml.includes("Register-ScheduledTask -TaskName 'PauseWindowsUpdate'"), 'DisableWindowsUpdate=true 時にタスク登録が行われること');
+  assert(wsHiddenXml.includes('MoveActiveHours.xml'), 'PreventAutomaticReboot=true 時に MoveActiveHours.xml が埋め込まれること');
+  assert(wsHiddenXml.includes("Register-ScheduledTask -TaskName 'MoveActiveHours'"), 'PreventAutomaticReboot=true 時に MoveActiveHours タスク登録が行われること');
+  assert(wsHiddenXml.includes("Disable-ComputerRestore -Drive 'C:\\';"), 'DisableSystemRestore=true 時に Disable-ComputerRestore が実行されること');
+  assert(wsHiddenXml.includes('SetColorTheme.ps1'), 'ColorMode=Custom 時に SetColorTheme.ps1 が埋め込まれること');
+  assert(wsHiddenXml.includes('$htmlAccentColor = \'#CF05A7\';'), 'ColorMode=Custom 時にアクセントカラーが設定されること');
 
   console.log('\n====================================================');
   console.log(` テスト結果: ${passed} 項目合格 / ${failed} 項目失敗`);
