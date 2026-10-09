@@ -135,24 +135,6 @@ if (fs.existsSync(constantsPath)) {
   console.log('  -> Synchronized ' + constantsPath);
 }
 
-// 4. Synchronize test_tools/baseline_unattend_engine.js
-if (fs.existsSync(baselinePath)) {
-  let baselineContent = fs.readFileSync(baselinePath, 'utf8');
-  if (commitHash) {
-    baselineContent = baselineContent.replace(
-      /var commitHash = '[^']*';/,
-      "var commitHash = '" + commitHash + "';"
-    );
-  }
-  if (repoUrl) {
-    baselineContent = baselineContent.replace(
-      /https:\/\/github\.com\/[^/]+\/[^/]+\/commit\//g,
-      commitUrlBase
-    );
-  }
-  fs.writeFileSync(baselinePath, baselineContent, 'utf8');
-  console.log('  -> Synchronized ' + baselinePath);
-}
 // 5. Synchronize docs/sections/header.html
 if (fs.existsSync(headerPath)) {
   let headerContent = fs.readFileSync(headerPath, 'utf8');
@@ -294,3 +276,8 @@ bundle += '})(typeof window !== \'undefined\' ? window : globalThis);\r\n';
 
 fs.writeFileSync(targetPath, bundle, 'utf8');
 console.log('Successfully generated ' + targetPath + ' (' + bundle.length + ' chars).');
+
+if (fs.existsSync(path.dirname(baselinePath))) {
+  fs.copyFileSync(targetPath, baselinePath);
+  console.log('  -> Synchronized ' + baselinePath);
+}
