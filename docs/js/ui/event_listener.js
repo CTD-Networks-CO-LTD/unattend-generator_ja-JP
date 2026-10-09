@@ -98,8 +98,24 @@ function importXmlFile(file, callback, targetForm) {
         }
 
         var finalQuery = params ? params.toString() : query;
-        if (ok && typeof window !== 'undefined' && window.history && window.history.replaceState) {
-          window.history.replaceState(null, '', '?' + finalQuery);
+        if (ok) {
+          // 1. セッションストレージに設定状態をキャッシュ保存
+          if (typeof window !== 'undefined' && window.sessionStorage) {
+            try {
+              window.sessionStorage.setItem('unattend_generator_session_state', finalQuery);
+            } catch (se) {
+              console.warn('sessionStorage 保存に失敗しました:', se);
+            }
+          }
+          // 2. URLクエリ長制御: 2000文字以内の場合のみURLに反映、超過時はクエリを除去してリロード時のHTTP 414エラーを防止
+          if (typeof window !== 'undefined' && window.history && window.history.replaceState) {
+            if (finalQuery.length <= 2000) {
+              window.history.replaceState(null, '', '?' + finalQuery);
+            } else {
+              var cleanUrl = (window.location && window.location.pathname) ? window.location.pathname : './';
+              window.history.replaceState(null, '', cleanUrl);
+            }
+          }
         }
       } else {
         if (!xmlDoc) {
@@ -136,14 +152,26 @@ function importXmlFile(file, callback, targetForm) {
 }
 
 
-// Restore form state from window.location.search
+// Restore form state from window.location.search or sessionStorage fallback
 function restoreFromUrlQuery(targetForm) {
-  if (typeof window === 'undefined' || !window.location || !window.location.search) {
+  if (typeof window === 'undefined') {
     return false;
   }
-  var search = window.location.search;
+  var form = targetForm || getMainForm();
+  var search = (window.location && window.location.search) ? window.location.search : '';
   if (search.length > 1) {
-    return applyQueryToForm(search, targetForm || getMainForm());
+    return applyQueryToForm(search, form);
+  }
+  // URLクエリがない場合、sessionStorageのキャッシュから自動復元
+  if (window.sessionStorage) {
+    try {
+      var cached = window.sessionStorage.getItem('unattend_generator_session_state');
+      if (cached && cached.length > 0) {
+        return applyQueryToForm(cached, form);
+      }
+    } catch (e) {
+      console.warn('sessionStorage からの復元に失敗しました:', e);
+    }
   }
   return false;
 }
@@ -159,6 +187,20 @@ function initEngine() {
 
     var formaction = btn.getAttribute('formaction') || '';
     var text = (btn.textContent || btn.value || '').trim();
+
+    // Check if button is "Reset form to default values" or preset button
+    var isResetButton = text.indexOf('Reset form to default values') !== -1 ||
+                        text.indexOf('デフォルト値にリセット') !== -1;
+    var isPresetButton = isResetButton ||
+                         text.indexOf('Configure for minimal output') !== -1 ||
+                         text.indexOf('Just create one local user account') !== -1;
+    if (isPresetButton) {
+      if (typeof window !== 'undefined' && window.sessionStorage) {
+        try {
+          window.sessionStorage.removeItem('unattend_generator_session_state');
+        } catch (re) {}
+      }
+    }
 
     // Check if button is "Import file"
     var isImportButton = text.indexOf('Import file') !== -1 ||
@@ -250,8 +292,29 @@ function initEngine() {
     }
   }, false);
 
-  // 4. Restore initial form state from URL query if present
-  restoreFromUrlQuery();
+  // 4. Restore initial form state from URL query or sessionStorage fallback
+  var hasSearch = typeof window !== 'undefined' && window.location && window.location.search && window.location.search.length > 1;
+  var hasSession = false;
+  try {
+    hasSession = typeof window !== 'undefined' && window.sessionStorage && !!window.sessionStorage.getItem('unattend_generator_session_state');
+  } catch (e) {
+    hasSession = false;
+  }
+  if (hasSearch || hasSession) {
+    var restoreAttempts = 0;
+    var tryRestore = function () {
+      restoreAttempts++;
+      var mainForm = getMainForm();
+      if (mainForm && mainForm.elements && mainForm.elements.length > 10) {
+        restoreFromUrlQuery(mainForm);
+      } else if (restoreAttempts < 50) {
+        setTimeout(tryRestore, 100);
+      }
+    };
+    tryRestore();
+  } else {
+    restoreFromUrlQuery();
+  }
 
   // 5. Update header relative commit time
   updateHeaderCommitTime();

@@ -337,10 +337,24 @@ function generateAutounattendXml(formData) {
         var v = entry.value[1];
         var encK = encodeURIComponent(k).replace(/%20/g, '+').replace(/[!'()*]/g, function (c) { return '%' + c.charCodeAt(0).toString(16).toUpperCase(); });
         var encV = encodeURIComponent(v).replace(/%20/g, '+').replace(/[!'()*]/g, function (c) { return '%' + c.charCodeAt(0).toString(16).toUpperCase(); });
+        // XML 1.0 コメント仕様準拠: 二重ハイフン (--) は XML コメント内で禁止されているためエスケープ
+        encK = encK.replace(/--/g, '%2D%2D');
+        encV = encV.replace(/--/g, '%2D%2D');
         qParams.push(encK + '=' + encV);
         entry = it.next();
       }
       queryString = qParams.join('&');
+    }
+
+    if (queryString) {
+      // 連続ハイフンが奇数個含まれる場合も含め、XML コメント内での '--' を完全に排除
+      while (queryString.indexOf('--') !== -1) {
+        queryString = queryString.replace(/--/g, '%2D%2D');
+      }
+      // コメント閉じタグ '--->' となるのを防ぐため、末尾のハイフンもエスケープ
+      if (queryString.endsWith('-')) {
+        queryString = queryString.substring(0, queryString.length - 1) + '%2D';
+      }
     }
 
     var xmlHeader = '<?xml version="1.0" encoding="utf-8"?>\r\n';
