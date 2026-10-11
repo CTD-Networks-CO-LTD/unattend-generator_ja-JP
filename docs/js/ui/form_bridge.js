@@ -126,6 +126,26 @@ function applyQueryToForm(queryString, targetForm) {
     }
   });
 
+  // 7. Auto-unhide rows/items that have non-empty values
+  var allInputs = form.querySelectorAll('input, select, textarea');
+  allInputs.forEach(function (elem) {
+    if (elem.value && elem.value.trim() !== '') {
+      var container = elem.closest('tr.Hidden, li.Hidden');
+      if (container) {
+        container.classList.remove('Hidden');
+      }
+    }
+  });
+
+  // Update disabled state for AddMore buttons if all items are revealed
+  var addMoreButtons = form.querySelectorAll('input.AddMore');
+  addMoreButtons.forEach(function (btn) {
+    var hasHidden = btn.previousElementSibling ? btn.previousElementSibling.querySelector('.Hidden') : null;
+    if (!hasHidden) {
+      btn.disabled = true;
+    }
+  });
+
   return true;
 }
 

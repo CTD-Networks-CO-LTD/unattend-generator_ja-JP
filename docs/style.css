@@ -409,3 +409,12 @@ span.Guide {
 #goog-gt-tt {
   display: none !important;
 }
+
+.Hidden {
+  display: none;
+}
+
+input.AddMore {
+  display: block;
+  margin: 10px;
+}

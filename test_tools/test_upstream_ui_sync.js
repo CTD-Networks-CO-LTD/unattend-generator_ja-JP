@@ -26,6 +26,19 @@ assert('index.html: change() has null guard', indexHtml.includes('function chang
 assert('index.html: whenEvent() has null guard', indexHtml.includes('function whenEvent(types, elements, callback) {\n        if (!elements) return;'));
 assert('index.html: DiskAssertionMode has null guard', indexHtml.includes('if (partitionInteractive && assertionSkip) {'));
 assert('index.html: TargetDiskScript length validator added', indexHtml.includes('textarea[name="TargetDiskScript"]'));
+assert('index.html: contains .Hidden { display: none; } style', indexHtml.includes('.Hidden {\n  display: none;\n}'));
+assert('index.html: contains input.AddMore style', indexHtml.includes('input.AddMore {'));
+assert('index.html: contains input.AddMore click handler', indexHtml.includes("whenClicked(document.querySelectorAll('input.AddMore')"));
+
+// 1.1 docs/style.css
+const styleCss = fs.readFileSync(path.join(repoRoot, 'docs/style.css'), 'utf8').replace(/\r\n/g, '\n');
+assert('style.css: contains .Hidden { display: none; }', styleCss.includes('.Hidden {\n  display: none;\n}'));
+assert('style.css: contains input.AddMore style', styleCss.includes('input.AddMore {'));
+
+// 1.2 docs/js/ui/form_bridge.js
+const formBridgeJs = fs.readFileSync(path.join(repoRoot, 'docs/js/ui/form_bridge.js'), 'utf8').replace(/\r\n/g, '\n');
+assert('form_bridge.js: auto-unhide filled .Hidden container', formBridgeJs.includes("container.classList.remove('Hidden')"));
+assert('form_bridge.js: update AddMore button state', formBridgeJs.includes("btn.disabled = true"));
 
 // 2. build/sync_upstream_site.js
 const syncJs = fs.readFileSync(path.join(repoRoot, 'build/sync_upstream_site.js'), 'utf8').replace(/\r\n/g, '\n');
