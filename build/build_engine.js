@@ -146,13 +146,13 @@ if (fs.existsSync(headerPath)) {
   }
   if (releaseTag && releaseUrl) {
     headerContent = headerContent.replace(
-      /<a id="header-release-link" href="[^"]*">[^<]*<\/a>/,
+      /<a id="header-release-link"[^>]*>[^<]*<\/a>/,
       '<a id="header-release-link" href="' + releaseUrl + '">' + releaseTag + '</a>'
     );
   }
   if (shortHash && commitUrl) {
     headerContent = headerContent.replace(
-      /<a id="header-commit-link" href="[^"]*">[^<]*<\/a>/,
+      /<a id="header-commit-link"[^>]*>[^<]*<\/a>/,
       '<a id="header-commit-link" href="' + commitUrl + '">' + shortHash + '</a>'
     );
   }
