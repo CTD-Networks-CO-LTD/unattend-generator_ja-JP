@@ -180,11 +180,11 @@ jobs:
                 mkdir -p _tag_clean
                 cp -r ./_tag_docs/docs/* _tag_clean/
                 rm -rf _tag_clean/preview
-                # タグ展開成果物のヘッダー内の release リンクが古い表記の場合、該当タグ名に更新
-                if [ -f "_tag_clean/sections/header.html" ]; then
-                  sed -i -E "s|releases/tag/[^\"]*|releases/tag/${LATEST_TAG}|g" _tag_clean/sections/header.html || true
-                  sed -i -E "s|id=\"header-release-link\">[^<]*<|id=\"header-release-link\">${LATEST_TAG}<|g" _tag_clean/sections/header.html || true
-                fi
+                # タグ展開成果物のメタデータ（リリース名、コミット情報等）を最新タグに合わせて同期
+                echo "Synchronizing release tag and commit metadata in staged tag docs..."
+                TAG_COMMIT=$(git rev-list -n 1 "$LATEST_TAG" 2>/dev/null || echo "")
+                node build/sync_tag_docs.js "_tag_clean" "$LATEST_TAG" "$TAG_COMMIT" "${{ github.repository }}"
+
                 cp -r _tag_clean/* _site/
                 echo "Successfully staged stable release $LATEST_TAG to root (/)."
               else
