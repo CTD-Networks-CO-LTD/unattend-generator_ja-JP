@@ -7,7 +7,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <link rel="stylesheet" href="style.css?v=248744e" />
+  <link rel="stylesheet" href="style.css?v=0fb5e07" />
       <link rel="icon" type="image/png" href="favicon.png" />
   <script type="text/javascript">'use strict';
 {
@@ -660,6 +660,50 @@
                 }
             });
         }
+        {
+            whenClicked(document.querySelectorAll('input.AddMore'), (event) => {
+                const eventTarget = event.target;
+                const getTargetContainer = function (target) {
+                    if (target.previousElementSibling && target.previousElementSibling.matches('table, ol')) {
+                        return target.previousElementSibling;
+                    }
+                    let wrapper = target.parentElement;
+                    while (wrapper && wrapper.tagName === 'FONT') {
+                        if (wrapper.previousElementSibling && wrapper.previousElementSibling.matches('table, ol')) {
+                            return wrapper.previousElementSibling;
+                        }
+                        wrapper = wrapper.parentElement;
+                    }
+                    let sib = (wrapper || target).previousElementSibling;
+                    while (sib) {
+                        if (sib.matches('table, ol')) return sib;
+                        const inner = sib.querySelector('table, ol');
+                        if (inner) return inner;
+                        sib = sib.previousElementSibling;
+                    }
+                    return null;
+                };
+                const container = getTargetContainer(eventTarget);
+                const next = function () {
+                    return container ? container.querySelector('.Hidden') : null;
+                };
+                for (const i of Array(3)) {
+                    const n = next();
+                    if (n) {
+                        n.classList.remove('Hidden');
+                    }
+                    else {
+                        break;
+                    }
+                }
+                {
+                    const n = next();
+                    if (!n) {
+                        eventTarget.disabled = true;
+                    }
+                }
+            });
+        }
     };
         async function loadSections() {
         const sectionFiles = [
@@ -1165,6 +1209,15 @@ td.Submits button {
   div.Effects label {
     width: 32ch;
   }
+}
+
+.Hidden {
+  display: none;
+}
+
+input.AddMore {
+  display: block;
+  margin: 10px;
 }</style>
 
   <!-- Google Translate Element for Automatic Translation -->
@@ -1197,8 +1250,8 @@ td.Submits button {
     })();
   </script>
   <script type="text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
-  <script type="text/javascript" src="unattend_config.js?v=248744e"></script>
-  <script type="text/javascript" src="unattend_engine.js?v=248744e"></script>
+  <script type="text/javascript" src="unattend_config.js?v=0fb5e07"></script>
+  <script type="text/javascript" src="unattend_engine.js?v=0fb5e07"></script>
 </head>
 <body>
   <div id="app-header" data-src="sections/header.html"></div>
