@@ -105,17 +105,20 @@ sequenceDiagram
         GHA_Pages->>GHA_Pages: COMMIT_HASH="${{ github.sha }}" node build/build_engine.js
         GHA_Pages->>GHA_Pages: node test_tools/test_engine_parity.js & test_feature_parity.js (品質保証)
         GHA_Pages->>GHA_Pages: master の docs を _src_clean にステージング
-        GHA_Pages->>GHA_Pages: 最新リリースタグの docs を _site/ (ルート) へ配置・維持
+        GHA_Pages->>GHA_Pages: 最新リリースタグの docs を _tag_clean に展開
+        GHA_Pages->>GHA_Pages: node build/sync_tag_docs.js (タグ・コミットメタデータ完全同期)
+        GHA_Pages->>GHA_Pages: 同期済みタグ資材を _site/ (ルート) へ配置・維持
         GHA_Pages->>GHA_Pages: master の docs を _site/preview/ へ配置
         GHA_Pages->>GHA_Pages: actions/upload-pages-artifact@v5
         GHA_Pages->>Pages_Preview: actions/deploy-pages@v5
         Note over Pages_Preview: master の最新プレビューサイト公開<br/>https://ctd-networks-co-ltd.github.io/unattend-generator_ja-JP/preview/
-        Note over Pages_Prod: 本番環境は既存の安定リリース版が維持される
+        Note over Pages_Prod: 本番環境は最新リリースタグの安定版がメタデータ同期のうえ維持される
     end
 
     Note over Dev, Repo: 3. GitHub リリース公開 (Release published)
     Dev->>Repo: GitHub Releases から master を latest としてリリース公開
     Repo->>GHA_Pages: トリガー発火 (release: published)
+    GHA_Pages->>GHA_Pages: workflow_dispatch (target=release) トランポリン自動発火
     GHA_Pages->>GHA_Pages: actions/checkout@v6
     GHA_Pages->>GHA_Pages: 最新 docs を _site/ (ルート) および _site/preview/ の両方へステージング
     GHA_Pages->>Pages_Prod: actions/deploy-pages@v5
@@ -137,8 +140,9 @@ sequenceDiagram
 | **`docs/unattend_engine.js`** | 統合バンドル JS<br/>(配信用成果物) | `docs/js/` 配下の全モジュールを 1 ファイルにバンドルした実行ファイル | GitHub Pages 上での `405 Method Not Allowed` を防止。ブラウザ内で直接 `autounattend.xml` を組み立て即座にダウンロード |
 | **`build/build_engine.js`**<br/>**`build/build_engine.ps1`** | ビルド＆バンドラー<br/>(Node.js / PowerShell) | 分割モジュール（`docs/js/`）を `docs/unattend_engine.js` に自動バンドル | 最新の Git コミットハッシュ、リポジトリ URL、リリースタグ、コミット日時を抽出し、`constants.js` やヘッダーに自動同期 |
 | **`build/sync_modifiers.js`** | 自動同期・差分検知ツール<br/>(Node.js スクリプト) | C#（`modifier/*.cs`）と JS（`docs/js/modifiers/*.js`）の同期検証（`--check`）、マッピング一覧表示（`--list`）、および新規 Modifier 追加時の JS スタブ自動生成・登録（`--generate`）を担当 | C# 側の変更や新規追加に対して JS 側の更新漏れ・デグレを未然に防ぎ、完全なパリティを自動維持 |
-| **`test_tools/test_engine_parity.js`** | パリティ検証テスト<br/>(Node.js スクリプト) | モジュール分割版とベースラインエンジンの生成結果を比較 | 10 種類の代表的ユースケースで Byte-exact（1バイトの狂いもない完全一致）を検証 |
-| **`test_tools/test_feature_parity.js`** | 機能検証テスト<br/>(Node.js スクリプト) | C# と JS の機能格差解消およびスマートクォート排除の網羅テスト | 54 項目に及ぶ機能パリティ、構文安全性、自リポジトリ URL リンクを自動検収 |
+| **`build/sync_tag_docs.js`** | メタデータ同期ツール<br/>(Node.js スクリプト) | プレビューデプロイ時にルート（`/`）へ配置する安定版タグ展開資材（`_tag_clean`）に対し、属性順序非依存でヘッダー（リリースリンク、コミットリンク、コミット更新日時）およびエンジン定数（`RELEASE_TAG`, `COMMIT_HASH` 等）を最新リリース情報に完全同期 | PRマージ時の push デプロイに伴う本番サイトのバージョン表示先祖返り・巻き戻りを恒久防止 |
+| **`test_tools/test_engine_parity.js`** | パリティ検証テスト<br/>(Node.js スクリプト) | モジュール分割版とベースラインエンジンの生成結果を比較 | 12 種類の代表的ユースケースで Byte-exact（1バイトの狂いもない完全一致）を検証 |
+| **`test_tools/test_feature_parity.js`** | 機能検証テスト<br/>(Node.js スクリプト) | C# と JS の機能格差解消およびスマートクォート排除の網羅テスト | 175 項目に及ぶ機能パリティ、構文安全性、自リポジトリ URL リンクを自動検収 |
 
 #### 2. ビルド＆自動バンドラー（build_engine.js / build_engine.ps1）
 
@@ -156,8 +160,8 @@ sequenceDiagram
 | ワークフロー定義 | 種別 | トリガー条件 | 実行内容・役割 |
 | :--- | :--- | :--- | :--- |
 | **`.github/workflows/dotnet.yml`** | CI<br/>(継続的インテグレーション) | `master` への push、Pull Request | **C# Core ビルド＆単体テスト（アップストリーム完全一致）**:<br/>1. .NET 10 環境で `UnattendGenerator.csproj` を依存関係復元・ビルド（`dotnet build`）および単体テスト（`dotnet test`）を実行。<br/>2. ビルド成果物のアップロード（`actions/upload-artifact@v7`）。<br/>※アップストリーム本家の `dotnet.yml` と完全同一構成を維持しコンフリクトを防止。 |
-| **`.github/workflows/verify-engine.yml`** | CI<br/>(品質保証・パリティ検証) | `master`/`main` への push / PR、手動実行 (`workflow_dispatch`) | **Fork独自 JS パリティ自動検証・並列 CI パイプライン**:<br/>1. PR 起票時および push 契機で標準セキュリティサンドボックス内で安全に並列実行。<br/>2. Node.js 24 環境で `node build/sync_modifiers.js --check` による C#/JS 同期検査を実行。<br/>3. `node build/build_engine.js` でエンジンを再バンドル。<br/>4. `test_engine_parity.js`（Byte-exact 10件）および `test_feature_parity.js`（機能54項目）を実行し、パリティ完全一致を検証。 |
-| **`.github/workflows/deploy-pages.yml`** | CD<br/>(継続的デプロイ) | `docs/**`, `modifier/**`, `resource/**`, `build/**`, `*.cs`, `UnattendGenerator.csproj` パスの変更 push、GitHub リリース公開 (`release: published`)、手動実行 (`workflow_dispatch`) | **GitHub Pages 自動配信＆プレビュー/本番完全分離 (Node 24 対応)**:<br/>1. Node.js 24 をセットアップ。<br/>2. デプロイ前ゲートとして `node build/sync_modifiers.js --check`、`node build/build_engine.js`、パリティテスト（`test_engine_parity.js`, `test_feature_parity.js`）を実行。<br/>3. **master push 時**: 最新リリースタグの資材を `/`（ルート）に維持しつつ、master の最新資材を `/preview/` へプレビュー自動デプロイ。<br/>4. **リリース公開時**: master の最新資材を `/` および `/preview/` の両方へ本番公開反映。<br/>`actions/upload-pages-artifact@v5` と `actions/deploy-pages@v5` を使用。 |
+| **`.github/workflows/verify-engine.yml`** | CI<br/>(品質保証・パリティ検証) | `master`/`main` への push / PR、手動実行 (`workflow_dispatch`) | **Fork独自 JS パリティ自動検証・並列 CI パイプライン**:<br/>1. PR 起票時および push 契機で標準セキュリティサンドボックス内で安全に並列実行。<br/>2. Node.js 24 環境で `node build/sync_modifiers.js --check` による C#/JS 同期検査を実行。<br/>3. `node build/build_engine.js` でエンジンを再バンドル。<br/>4. `test_engine_parity.js`（Byte-exact 12件）および `test_feature_parity.js`（機能175項目）を実行し、パリティ完全一致を検証。 |
+| **`.github/workflows/deploy-pages.yml`** | CD<br/>(継続的デプロイ) | `docs/**`, `modifier/**`, `resource/**`, `build/**`, `*.cs`, `UnattendGenerator.csproj` パスの変更 push、GitHub リリース公開 (`release: published`)、手動実行 (`workflow_dispatch`) | **GitHub Pages 自動配信＆プレビュー/本番完全分離 (Node 24 対応)**:<br/>1. Node.js 24 をセットアップ。<br/>2. デプロイ前ゲートとして `node build/sync_modifiers.js --check`、`node build/build_engine.js`、パリティテスト（`test_engine_parity.js`, `test_feature_parity.js`）を実行。<br/>3. **master push 時**: 最新リリースタグの資材を展開し、`node build/sync_tag_docs.js` でヘッダーや定数のメタデータを完全同期した上で `/`（ルート）に維持。master の最新資材を `/preview/` へプレビュー自動デプロイ。<br/>4. **リリース公開時**: トランポリンジョブ（`workflow_dispatch target=release`）により、master の最新資材を `/` および `/preview/` の両方へ本番公開反映。<br/>`actions/upload-pages-artifact@v5` と `actions/deploy-pages@v5` を使用。 |
 
 ---
 
@@ -332,9 +336,9 @@ C# の `modifier/` ディレクトリ配下に定義されている各修飾子�
 C# から JavaScript への移植における挙動の等価性（パリティ）を保証するため、リポジトリ内に 2 つの自動テストスイートが配置されています。
 
 1. **Byte-exact パリティ検証 (`test_tools/test_engine_parity.js`)**:
-   代表的な 10 種類のテストケース（デフォルト、日本語 106/109 キーボード、英語 US、アカウント設定、不要アプリ削除、高速スタートアップ無効化等）において、ベースラインエンジンとモジュール分割バンドル版エンジンの出力 XML を文字単位・バイト単位で比較。差異 0 バイト（完全一致）を検証。
+   代表的な 12 種類のテストケース（デフォルト、日本語 106/109 キーボード、英語 US、アカウント設定、不要アプリ削除、高速スタートアップ無効化、カスタムスクリプト全フェーズ・全形式等）において、ベースラインエンジンとモジュール分割バンドル版エンジンの出力 XML を文字単位・バイト単位で比較。差異 0 バイト（完全一致: 12 PASSED / 0 FAILED）を検証。
 2. **機能パリティ・スマートクォート検証 (`test_tools/test_feature_parity.js`)**:
-   全 54 項目に及ぶ詳細テスト。全角引用符（スマートクォート: `’` `”` 等）の排除、高速スタートアップ無効化の出力確認、自リポジトリ URL リンクの完全性、ヘッダー動的相対時間計算ロジック等を検証。
+   全 175 項目に及ぶ詳細テスト。全角引用符（スマートクォート: `’` `”` 等）の排除、高速スタートアップ無効化の出力確認、自リポジトリ URL リンクの完全性、ヘッダー動的相対時間計算ロジック、Wi-Fi/PEステージスクリプト等（175 PASSED / 0 FAILED）を検証。
 
 ### 4.5 C# ソースコード変更・新規追加時の自動同期・検証パイプライン（sync_modifiers.js）
 
@@ -356,9 +360,9 @@ C# の `modifier/*.cs` が更新・追加された際に、JavaScript 側（`doc
 1. **CD トリガー拡張**:
    `modifier/**` や `build/**`、`resource/**`、`*.cs` の変更 push により `deploy-pages.yml` が自動起動。
 2. **自動ビルド＆テストゲート**:
-   デプロイ前に `sync_modifiers.js --check`、`build_engine.js` による最新メタデータ注入バンドル、およびパリティテスト（10件 Byte-exact + 54項目 機能テスト）を順次実行。1件でも不合格の場合はデプロイを即座に中断。
+   デプロイ前に `sync_modifiers.js --check`、`build_engine.js` による最新メタデータ注入バンドル、およびパリティテスト（12件 Byte-exact + 175項目 機能テスト）を順次実行。1件でも不合格の場合はデプロイを即座に中断。
 3. **プレビュー即時反映と本番保護**:
-   パリティテストに合格した最新 master 資材のみがプレビュー環境（`/preview/`）へ自動デプロイされ、本番環境（ルート `/`）は最新安定リリース資材のまま厳格に保護。
+   パリティテストに合格した最新 master 資材のみがプレビュー環境（`/preview/`）へ自動デプロイされ、本番環境（ルート `/`）は最新安定リリース資材を `build/sync_tag_docs.js` によりメタデータ完全同期した上で厳格に保護・維持。
 
 ---
 *Document updated for CTD-Networks-CO-LTD/unattend-generator_ja-JP.*
