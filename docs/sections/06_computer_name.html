@@ -5,7 +5,7 @@
           <div class="IndentContainer">
             <label class="radio">
               <input type="radio" name="ComputerNameMode" value="Random" checked="checked" />
-              <span>Let Windows generate a random computer name like <code translate="no" class="notranslate" class="nowrap">DESKTOP-ZFAH8Z2</code></span>
+              <span>Let Windows generate a random computer name like <code translate="no" class="nowrap notranslate">DESKTOP-ZFAH8Z2</code></span>
             </label>
           </div>
 
@@ -21,13 +21,20 @@
 
           <div class="IndentContainer">
             <label class="radio">
+              <input type="radio" name="ComputerNameMode" value="Prompt" />
+              <span class="New">Enter a computer name via an interactive prompt at runtime</span>
+            </label>
+          </div>
+
+          <div class="IndentContainer">
+            <label class="radio">
               <input type="radio" name="ComputerNameMode" value="Script" />
               <span>Provide a Windows PowerShell script to set the computer name dynamically:</span>
             </label>
             <fieldset>
               <textarea translate="no" class="notranslate" rows="5" name="ComputerNameScript" data-required="true" spellcheck="false" wrap="off">return 'DESKTOP-{0:D3}' -f ( Get-Random -Minimum 0 -Maximum 999 );</textarea>
 
-              <span>Your script will be evaluated during Windows Setup. The script must return a single string, which must be a <a href="https://learn.microsoft.com/en-us/windows-hardware/customize/desktop/unattend/microsoft-windows-shell-setup-computername">valid computer name</a>. You can also use a script such as <code translate="no" class="notranslate">return Read-Host -Prompt 'Enter computer name';</code> to create an interactive prompt.</span>
+              <span>Your script will be evaluated during Windows Setup. The script must return a single string, which must be a <a href="https://learn.microsoft.com/en-us/windows-hardware/customize/desktop/unattend/microsoft-windows-shell-setup-computername">valid computer name</a>.</span>
             </fieldset>
           </div>
 
