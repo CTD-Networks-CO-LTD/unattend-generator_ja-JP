@@ -234,16 +234,55 @@ function applyXmlDomToForm(xmlDoc, targetForm) {
   var compName = xmlDoc.querySelector('ComputerName');
   if (compName && compName.textContent) {
     var compNameVal = compName.textContent.trim();
-    var rCompCustom = form.querySelector('input[name="ComputerNameMode"][value="Custom"]');
-    if (rCompCustom) {
-      rCompCustom.checked = true;
-      rCompCustom.dispatchEvent(new Event('change', { bubbles: true }));
-    }
-    var inpCompName = form.querySelector('input[name="ComputerName"]');
-    if (inpCompName) {
-      inpCompName.value = compNameVal;
-      inpCompName.dispatchEvent(new Event('input', { bubbles: true }));
-      inpCompName.dispatchEvent(new Event('change', { bubbles: true }));
+    if (compNameVal === 'TEMPNAME') {
+      var getterScript = null;
+      var fileNodes = xmlDoc.querySelectorAll('File');
+      for (var fIdx = 0; fIdx < fileNodes.length; fIdx++) {
+        var filePath = fileNodes[fIdx].getAttribute('path') || '';
+        if (filePath.indexOf('GetComputerName.ps1') !== -1) {
+          getterScript = fileNodes[fIdx].textContent.trim();
+          break;
+        }
+      }
+      var isPrompt = false;
+      if (getterScript) {
+        var normGetter = getterScript.replace(/\r\n/g, '\n').trim();
+        var normPrompt = (typeof COMPUTER_NAME_PROMPT_PS1 !== 'undefined' ? COMPUTER_NAME_PROMPT_PS1 : '').replace(/\r\n/g, '\n').trim();
+        if (normGetter === normPrompt || normGetter.indexOf('Test-ComputerName') !== -1) {
+          isPrompt = true;
+        }
+      }
+      if (isPrompt) {
+        var rCompPrompt = form.querySelector('input[name="ComputerNameMode"][value="Prompt"]');
+        if (rCompPrompt) {
+          rCompPrompt.checked = true;
+          rCompPrompt.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+      } else if (getterScript) {
+        var rCompScript = form.querySelector('input[name="ComputerNameMode"][value="Script"]');
+        if (rCompScript) {
+          rCompScript.checked = true;
+          rCompScript.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+        var taCompScript = form.querySelector('textarea[name="ComputerNameScript"]');
+        if (taCompScript) {
+          taCompScript.value = getterScript;
+          taCompScript.dispatchEvent(new Event('input', { bubbles: true }));
+          taCompScript.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+      }
+    } else {
+      var rCompCustom = form.querySelector('input[name="ComputerNameMode"][value="Custom"]');
+      if (rCompCustom) {
+        rCompCustom.checked = true;
+        rCompCustom.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+      var inpCompName = form.querySelector('input[name="ComputerName"]');
+      if (inpCompName) {
+        inpCompName.value = compNameVal;
+        inpCompName.dispatchEvent(new Event('input', { bubbles: true }));
+        inpCompName.dispatchEvent(new Event('change', { bubbles: true }));
+      }
     }
   }
 
@@ -402,6 +441,67 @@ function overrideFormFromXmlDom(xmlDoc, targetForm, params) {
       if (params) params.set('ProductKey', prodKey);
     }
   }
+  // 3. ComputerName: override ComputerName from XML body
+  var compNameNode = xmlDoc.querySelector('ComputerName');
+  if (compNameNode && compNameNode.textContent) {
+    var compNameVal = compNameNode.textContent.trim();
+    if (compNameVal === 'TEMPNAME') {
+      var getterScript = null;
+      var fileNodes = xmlDoc.querySelectorAll('File');
+      for (var fIdx = 0; fIdx < fileNodes.length; fIdx++) {
+        var filePath = fileNodes[fIdx].getAttribute('path') || '';
+        if (filePath.indexOf('GetComputerName.ps1') !== -1) {
+          getterScript = fileNodes[fIdx].textContent.trim();
+          break;
+        }
+      }
+      var isPrompt = false;
+      if (getterScript) {
+        var normGetter = getterScript.replace(/\r\n/g, '\n').trim();
+        var normPrompt = (typeof COMPUTER_NAME_PROMPT_PS1 !== 'undefined' ? COMPUTER_NAME_PROMPT_PS1 : '').replace(/\r\n/g, '\n').trim();
+        if (normGetter === normPrompt || normGetter.indexOf('Test-ComputerName') !== -1) {
+          isPrompt = true;
+        }
+      }
+      if (isPrompt) {
+        var rCompPrompt = form.querySelector('input[name="ComputerNameMode"][value="Prompt"]');
+        if (rCompPrompt) {
+          rCompPrompt.checked = true;
+          rCompPrompt.dispatchEvent(new Event('change', { bubbles: true }));
+          if (params) params.set('ComputerNameMode', 'Prompt');
+        }
+      } else if (getterScript) {
+        var rCompScript = form.querySelector('input[name="ComputerNameMode"][value="Script"]');
+        if (rCompScript) {
+          rCompScript.checked = true;
+          rCompScript.dispatchEvent(new Event('change', { bubbles: true }));
+          if (params) params.set('ComputerNameMode', 'Script');
+        }
+        var taCompScript = form.querySelector('textarea[name="ComputerNameScript"]');
+        if (taCompScript) {
+          taCompScript.value = getterScript;
+          taCompScript.dispatchEvent(new Event('input', { bubbles: true }));
+          taCompScript.dispatchEvent(new Event('change', { bubbles: true }));
+          if (params) params.set('ComputerNameScript', getterScript);
+        }
+      }
+    } else {
+      var rCompCustom = form.querySelector('input[name="ComputerNameMode"][value="Custom"]');
+      if (rCompCustom) {
+        rCompCustom.checked = true;
+        rCompCustom.dispatchEvent(new Event('change', { bubbles: true }));
+        if (params) params.set('ComputerNameMode', 'Custom');
+      }
+      var inpCompName = form.querySelector('input[name="ComputerName"]');
+      if (inpCompName) {
+        inpCompName.value = compNameVal;
+        inpCompName.dispatchEvent(new Event('input', { bubbles: true }));
+        inpCompName.dispatchEvent(new Event('change', { bubbles: true }));
+        if (params) params.set('ComputerName', compNameVal);
+      }
+    }
+  }
+
 
   return true;
 }

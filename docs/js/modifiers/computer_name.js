@@ -1,6 +1,12 @@
 /**
  * Computer name modifier matching baseline_unattend_engine.js
  */
+if (typeof COMPUTER_NAME_PROMPT_PS1 === 'undefined' && typeof require !== 'undefined') {
+  var constants = require('../core/constants');
+  SET_COMPUTER_NAME_PS1 = constants.SET_COMPUTER_NAME_PS1;
+  COMPUTER_NAME_PROMPT_PS1 = constants.COMPUTER_NAME_PROMPT_PS1;
+}
+
 function ComputerNameModifier(context) {
   this.context = context;
 }
@@ -14,9 +20,10 @@ ComputerNameModifier.prototype.process = function () {
 
   if (compNameMode === 'Custom' && customCompName) {
     specCompName = customCompName;
-  } else if (compNameMode === 'Script' && compNameScript) {
+  } else if (compNameMode === 'Prompt' || (compNameMode === 'Script' && compNameScript)) {
     specCompName = 'TEMPNAME';
-    var getterFile = ctx.embedTextFile('GetComputerName.ps1', compNameScript);
+    var scriptToEmbed = (compNameMode === 'Prompt') ? COMPUTER_NAME_PROMPT_PS1 : compNameScript;
+    var getterFile = ctx.embedTextFile('GetComputerName.ps1', scriptToEmbed);
     var setterFile = ctx.embedTextFile('SetComputerName.ps1', SET_COMPUTER_NAME_PS1);
     ctx.sequences.specialize.append([
       "[string] $newName = & '" + getterFile + "';",

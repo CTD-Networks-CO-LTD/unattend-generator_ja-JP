@@ -149,6 +149,12 @@ const testCases = [
       UserOnceScript1: 'echo UserOnceCmd',
       UserOnceScriptType1: 'Cmd'
     }
+  },
+  {
+    name: 'Case 13: Interactive prompt for computer name (Prompt mode parity)',
+    params: {
+      ComputerNameMode: 'Prompt'
+    }
   }
 ];
 
