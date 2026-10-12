@@ -125,6 +125,27 @@ function checkSync() {
     }
   }
 
+  // Check required script resource synchronization (e.g. ComputerNamePrompt.ps1)
+  const REQUIRED_SCRIPT_RESOURCES = {
+    'ComputerNamePrompt.ps1': 'COMPUTER_NAME_PROMPT_PS1',
+    'SetComputerName.ps1': 'SET_COMPUTER_NAME_PS1',
+    'SetStartPins.ps1': 'SET_START_PINS_PS1',
+    'SetColorTheme.ps1': 'SET_COLOR_THEME_PS1',
+    'SetWallpaper.ps1': 'SET_WALLPAPER_PS1'
+  };
+
+  const missingResources = [];
+  const constantsFile = path.join(docsJsDir, 'core', 'constants.js');
+  if (fs.existsSync(constantsFile)) {
+    const constantsContent = fs.readFileSync(constantsFile, 'utf8');
+    for (const [resFile, constName] of Object.entries(REQUIRED_SCRIPT_RESOURCES)) {
+      if (!constantsContent.includes(constName)) {
+        missingResources.push({ resource: resFile, expectedConst: constName });
+        hasError = true;
+      }
+    }
+  }
+
   // Also check if any JS modifier in docs/js/modifiers/*.js is missing from bundler
   if (fs.existsSync(jsModifiersDir)) {
     const jsFiles = fs.readdirSync(jsModifiersDir).filter(f => f.endsWith('.js'));
@@ -162,6 +183,13 @@ function checkSync() {
     console.error('\n[ERROR] JS modifier(s) missing from build/build_engine.js moduleFiles:');
     for (const b of missingInBundler) {
       console.error(`  - ${b.js}`);
+    }
+  }
+
+  if (missingResources.length > 0) {
+    console.error('\n[ERROR] Script resource(s) missing from docs/js/core/constants.js:');
+    for (const r of missingResources) {
+      console.error(`  - "${r.resource}" (expected constant: ${r.expectedConst})`);
     }
   }
 

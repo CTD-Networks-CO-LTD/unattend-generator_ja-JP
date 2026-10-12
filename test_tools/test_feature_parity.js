@@ -609,6 +609,52 @@ function runTests() {
   assert(wsHiddenXml.includes('SetColorTheme.ps1'), 'ColorMode=Custom 時に SetColorTheme.ps1 が埋め込まれること');
   assert(wsHiddenXml.includes('$htmlAccentColor = \'#CF05A7\';'), 'ColorMode=Custom 時にアクセントカラーが設定されること');
 
+  // --- テストケース 18: ComputerNameMode (Prompt / Script / Custom / Random) の機能パリティ検証 ---
+  console.log('\n--- Test 18: ComputerNameMode (Prompt / Script / Custom / Random) の機能パリティ検証 ---');
+  const promptParams = new MockFormData({
+    ProcessorArchitecture: 'amd64',
+    ComputerNameMode: 'Prompt'
+  });
+  const promptXml = engine.generateAutounattendXml(promptParams);
+
+  assert(promptXml.includes('<ComputerName>TEMPNAME</ComputerName>'), 'ComputerNameMode=Prompt 時に <ComputerName>TEMPNAME</ComputerName> が出力されること');
+  assert(promptXml.includes('C:\\Windows\\Setup\\Scripts\\GetComputerName.ps1'), 'ComputerNameMode=Prompt 時に GetComputerName.ps1 が埋め込まれること');
+  assert(promptXml.includes('C:\\Windows\\Setup\\Scripts\\SetComputerName.ps1'), 'ComputerNameMode=Prompt 時に SetComputerName.ps1 が埋め込まれること');
+  assert(promptXml.includes("Add-Type -AssemblyName 'Microsoft.VisualBasic';"), 'GetComputerName.ps1 に VisualBasic アセンブリ読み込みが含まれること');
+  assert(promptXml.includes('Test-ComputerName'), 'GetComputerName.ps1 に Test-ComputerName 関数が含まれること');
+  assert(promptXml.includes('[Microsoft.VisualBasic.Interaction]::InputBox'), 'GetComputerName.ps1 に InputBox が含まれること');
+  assert(promptXml.includes("[string] $newName = &amp; 'C:\\Windows\\Setup\\Scripts\\GetComputerName.ps1';"), 'Specialize.ps1 に GetComputerName.ps1 実行処理が含まれること');
+  assert(promptXml.includes('SetComputerName.ps1'), 'Specialize.ps1 に SetComputerName.ps1 実行処理が含まれること');
+
+  // Script モードの検証
+  const scriptParams = new MockFormData({
+    ProcessorArchitecture: 'amd64',
+    ComputerNameMode: 'Script',
+    ComputerNameScript: "return 'MY-PC-01';"
+  });
+  const scriptXml = engine.generateAutounattendXml(scriptParams);
+  assert(scriptXml.includes('<ComputerName>TEMPNAME</ComputerName>'), 'ComputerNameMode=Script 時に <ComputerName>TEMPNAME</ComputerName> が出力されること');
+  assert(scriptXml.includes("return 'MY-PC-01';"), 'ComputerNameMode=Script 時にカスタムスクリプトが GetComputerName.ps1 に埋め込まれること');
+
+  // Custom モードの検証
+  const customParams = new MockFormData({
+    ProcessorArchitecture: 'amd64',
+    ComputerNameMode: 'Custom',
+    ComputerName: 'MY-STATIC-PC'
+  });
+  const customXml = engine.generateAutounattendXml(customParams);
+  assert(customXml.includes('<ComputerName>MY-STATIC-PC</ComputerName>'), 'ComputerNameMode=Custom 時に <ComputerName>MY-STATIC-PC</ComputerName> が出力されること');
+  assert(!customXml.includes('GetComputerName.ps1'), 'ComputerNameMode=Custom 時に GetComputerName.ps1 が埋め込まれないこと');
+
+  // Random モードの検証
+  const randomParams = new MockFormData({
+    ProcessorArchitecture: 'amd64',
+    ComputerNameMode: 'Random'
+  });
+  const randomXml = engine.generateAutounattendXml(randomParams);
+  assert(!randomXml.includes('<ComputerName>'), 'ComputerNameMode=Random 時に <ComputerName> 要素が出力されないこと');
+  assert(!randomXml.includes('GetComputerName.ps1'), 'ComputerNameMode=Random 時に GetComputerName.ps1 が埋め込まれないこと');
+
   console.log('\n====================================================');
   console.log(` テスト結果: ${passed} 項目合格 / ${failed} 項目失敗`);
   console.log('====================================================\n');

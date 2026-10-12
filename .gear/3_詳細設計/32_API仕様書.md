@@ -169,7 +169,8 @@
   - `Locale`: `ja-JP`
   - `Keyboard`: `00000411`
   - `ProcessorArchitecture`: `amd64`
-  - `ComputerName`: `WIN11-PC`
+  - `ComputerNameMode`: `Random` / `Custom` / `Prompt` / `Script`（`Prompt` 指定時は対話型InputBoxスクリプトを自動生成）
+  - `ComputerName`: `WIN11-PC`（`Custom` 指定時）
   - `AccountName0`: `AdminUser`
   - `AccountPassword0`: `P@ssw0rd!`
 - **レスポンスボディ (200 OK)**:

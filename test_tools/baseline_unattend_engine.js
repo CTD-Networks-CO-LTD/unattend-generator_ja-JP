@@ -88,6 +88,48 @@ var SET_COMPUTER_NAME_PS1 = [
     "} *>&1 | Out-String -Width 1KB -Stream >> 'C:\\Windows\\Setup\\Scripts\\SetComputerName.log';"
   ].join('\r\n');
 
+var COMPUTER_NAME_PROMPT_PS1 = [
+  "Add-Type -AssemblyName 'Microsoft.VisualBasic';",
+  "function Test-ComputerName {",
+  "\t[CmdletBinding()]",
+  "\tparam(",
+  "\t\t[string]",
+  "\t\t$Value",
+  "\t);",
+  "\t",
+  "\tif( [string]::IsNullOrWhiteSpace( $Value ) ) {",
+  "\t\treturn $false;",
+  "\t}",
+  "\t",
+  "\tif( $Value.Length -gt 15 ) {",
+  "\t\treturn $false;",
+  "\t}",
+  "\t",
+  "\tif( $Value -match '\\s' ) {",
+  "\t\treturn $false;",
+  "\t}",
+  "\t",
+  "\tif( $Value -match '^\\d+$' ) {",
+  "\t\treturn $false;",
+  "\t}",
+  "",
+  "\tif( $Value.IndexOfAny( '{|}~[\\]^\'\':;<=>?@!\"#$%`()+/.,*&'.ToCharArray() ) -gt -1 ) {",
+  "\t\treturn $false;",
+  "\t}",
+  "\t",
+  "\treturn $true;",
+  "}",
+  "while( $true ) {",
+  "\t$title = 'Computer name';",
+  "\t$candidate = [Microsoft.VisualBasic.Interaction]::InputBox( 'Enter a valid computer name:', $title, $candidate );",
+  "\tif( Test-ComputerName -Value $candidate ) {",
+  "\t\treturn $candidate;",
+  "\t} else {",
+  "\t\t[Microsoft.VisualBasic.Interaction]::MsgBox( \"'${candidate}' is not a valid computer name.\", 'Critical, OkOnly', $title ) | Out-Null;",
+  "\t}",
+  "}"
+].join('\r\n');
+
 var SET_START_PINS_PS1 = [
   'if( [System.Environment]::OSVersion.Version.Build -lt 20000 ) {',
   '\treturn;',
@@ -220,10 +262,10 @@ var SET_WALLPAPER_PS1 = [
 
 var REPO_URL = 'https://github.com/CTD-Networks-CO-LTD/unattend-generator_ja-JP';
 var COMMIT_URL_BASE = REPO_URL + '/commit/';
-var COMMIT_HASH = 'cc38e40884e9d20984f4f8d2e1bf0b0a90d43680';
+var COMMIT_HASH = '3134e78651fd2d629325151a9a4849e8ab79fe40';
 var RELEASE_TAG = 'v1.6.1_20261001';
 var RELEASE_URL = 'https://github.com/CTD-Networks-CO-LTD/unattend-generator_ja-JP/releases/tag/v1.6.1_20261001';
-var COMMIT_DATE = '2026-10-12T05:24:59+09:00';
+var COMMIT_DATE = '2026-10-12T10:00:31+09:00';
 
 
 var PAUSE_WINDOWS_UPDATE_XML = "<Task version=\"1.2\" xmlns=\"http://schemas.microsoft.com/windows/2004/02/mit/task\">\n\t<Triggers>\n\t\t<BootTrigger>\n\t\t\t<Repetition>\n\t\t\t\t<Interval>P1D</Interval>\n\t\t\t\t<StopAtDurationEnd>false</StopAtDurationEnd>\n\t\t\t</Repetition>\n\t\t\t<Enabled>true</Enabled>\n\t\t</BootTrigger>\n\t</Triggers>\n\t<Principals>\n\t\t<Principal id=\"Author\">\n\t\t\t<UserId>S-1-5-19</UserId>\n\t\t\t<RunLevel>LeastPrivilege</RunLevel>\n\t\t</Principal>\n\t</Principals>\n\t<Settings>\n\t\t<MultipleInstancesPolicy>IgnoreNew</MultipleInstancesPolicy>\n\t\t<DisallowStartIfOnBatteries>false</DisallowStartIfOnBatteries>\n\t\t<StopIfGoingOnBatteries>false</StopIfGoingOnBatteries>\n\t\t<AllowHardTerminate>true</AllowHardTerminate>\n\t\t<StartWhenAvailable>false</StartWhenAvailable>\n\t\t<RunOnlyIfNetworkAvailable>false</RunOnlyIfNetworkAvailable>\n\t\t<IdleSettings>\n\t\t\t<StopOnIdleEnd>true</StopOnIdleEnd>\n\t\t\t<RestartOnIdle>false</RestartOnIdle>\n\t\t</IdleSettings>\n\t\t<AllowStartOnDemand>true</AllowStartOnDemand>\n\t\t<Enabled>true</Enabled>\n\t\t<Hidden>false</Hidden>\n\t\t<RunOnlyIfIdle>false</RunOnlyIfIdle>\n\t\t<WakeToRun>false</WakeToRun>\n\t\t<ExecutionTimeLimit>PT72H</ExecutionTimeLimit>\n\t\t<Priority>7</Priority>\n\t</Settings>\n\t<Actions Context=\"Author\">\n\t\t<Exec>\n\t\t\t<Command>C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe</Command>\n\t\t\t<Arguments>-WindowStyle Hidden -NoProfile -NonInteractive -Command \"$format = 'yyyy-MM-ddTHH\\:mm\\:ssK'; $now = [datetime]::UtcNow; $start = $now.ToString($format); $end = $now.AddDays(7).ToString($format); $params = @{ LiteralPath = 'Registry::HKLM\\Software\\Microsoft\\WindowsUpdate\\UX\\Settings'; Type = 'String'; Force = $true; Verbose = $true; }; 'PauseFeatureUpdatesStartTime', 'PauseQualityUpdatesStartTime', 'PauseUpdatesStartTime' | foreach { Set-ItemProperty @params -Name $_ -Value $start; }; 'PauseFeatureUpdatesEndTime', 'PauseQualityUpdatesEndTime', 'PauseUpdatesExpiryTime' | foreach { Set-ItemProperty @params -Name $_ -Value $end; };\"</Arguments>\n\t\t</Exec>\n\t</Actions>\n</Task>";
@@ -237,6 +279,7 @@ if (typeof module !== 'undefined' && module.exports) {
     SET_COLOR_THEME_PS1: SET_COLOR_THEME_PS1,
     EXTRACT_SCRIPTS_PS1: EXTRACT_SCRIPTS_PS1,
     SET_COMPUTER_NAME_PS1: SET_COMPUTER_NAME_PS1,
+    COMPUTER_NAME_PROMPT_PS1: COMPUTER_NAME_PROMPT_PS1,
     SET_START_PINS_PS1: SET_START_PINS_PS1,
     UNLOCK_START_LAYOUT_VBS: UNLOCK_START_LAYOUT_VBS,
     UNLOCK_START_LAYOUT_XML: UNLOCK_START_LAYOUT_XML,
@@ -1411,6 +1454,12 @@ if (typeof module !== 'undefined' && module.exports) {
 /**
  * Computer name modifier matching baseline_unattend_engine.js
  */
+if (typeof COMPUTER_NAME_PROMPT_PS1 === 'undefined' && typeof require !== 'undefined') {
+  var constants = require('../core/constants');
+  SET_COMPUTER_NAME_PS1 = constants.SET_COMPUTER_NAME_PS1;
+  COMPUTER_NAME_PROMPT_PS1 = constants.COMPUTER_NAME_PROMPT_PS1;
+}
+
 function ComputerNameModifier(context) {
   this.context = context;
 }
@@ -1424,9 +1473,10 @@ ComputerNameModifier.prototype.process = function () {
 
   if (compNameMode === 'Custom' && customCompName) {
     specCompName = customCompName;
-  } else if (compNameMode === 'Script' && compNameScript) {
+  } else if (compNameMode === 'Prompt' || (compNameMode === 'Script' && compNameScript)) {
     specCompName = 'TEMPNAME';
-    var getterFile = ctx.embedTextFile('GetComputerName.ps1', compNameScript);
+    var scriptToEmbed = (compNameMode === 'Prompt') ? COMPUTER_NAME_PROMPT_PS1 : compNameScript;
+    var getterFile = ctx.embedTextFile('GetComputerName.ps1', scriptToEmbed);
     var setterFile = ctx.embedTextFile('SetComputerName.ps1', SET_COMPUTER_NAME_PS1);
     ctx.sequences.specialize.append([
       "[string] $newName = & '" + getterFile + "';",
@@ -3389,16 +3439,55 @@ function applyXmlDomToForm(xmlDoc, targetForm) {
   var compName = xmlDoc.querySelector('ComputerName');
   if (compName && compName.textContent) {
     var compNameVal = compName.textContent.trim();
-    var rCompCustom = form.querySelector('input[name="ComputerNameMode"][value="Custom"]');
-    if (rCompCustom) {
-      rCompCustom.checked = true;
-      rCompCustom.dispatchEvent(new Event('change', { bubbles: true }));
-    }
-    var inpCompName = form.querySelector('input[name="ComputerName"]');
-    if (inpCompName) {
-      inpCompName.value = compNameVal;
-      inpCompName.dispatchEvent(new Event('input', { bubbles: true }));
-      inpCompName.dispatchEvent(new Event('change', { bubbles: true }));
+    if (compNameVal === 'TEMPNAME') {
+      var getterScript = null;
+      var fileNodes = xmlDoc.querySelectorAll('File');
+      for (var fIdx = 0; fIdx < fileNodes.length; fIdx++) {
+        var filePath = fileNodes[fIdx].getAttribute('path') || '';
+        if (filePath.indexOf('GetComputerName.ps1') !== -1) {
+          getterScript = fileNodes[fIdx].textContent.trim();
+          break;
+        }
+      }
+      var isPrompt = false;
+      if (getterScript) {
+        var normGetter = getterScript.replace(/\r\n/g, '\n').trim();
+        var normPrompt = (typeof COMPUTER_NAME_PROMPT_PS1 !== 'undefined' ? COMPUTER_NAME_PROMPT_PS1 : '').replace(/\r\n/g, '\n').trim();
+        if (normGetter === normPrompt || normGetter.indexOf('Test-ComputerName') !== -1) {
+          isPrompt = true;
+        }
+      }
+      if (isPrompt) {
+        var rCompPrompt = form.querySelector('input[name="ComputerNameMode"][value="Prompt"]');
+        if (rCompPrompt) {
+          rCompPrompt.checked = true;
+          rCompPrompt.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+      } else if (getterScript) {
+        var rCompScript = form.querySelector('input[name="ComputerNameMode"][value="Script"]');
+        if (rCompScript) {
+          rCompScript.checked = true;
+          rCompScript.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+        var taCompScript = form.querySelector('textarea[name="ComputerNameScript"]');
+        if (taCompScript) {
+          taCompScript.value = getterScript;
+          taCompScript.dispatchEvent(new Event('input', { bubbles: true }));
+          taCompScript.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+      }
+    } else {
+      var rCompCustom = form.querySelector('input[name="ComputerNameMode"][value="Custom"]');
+      if (rCompCustom) {
+        rCompCustom.checked = true;
+        rCompCustom.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+      var inpCompName = form.querySelector('input[name="ComputerName"]');
+      if (inpCompName) {
+        inpCompName.value = compNameVal;
+        inpCompName.dispatchEvent(new Event('input', { bubbles: true }));
+        inpCompName.dispatchEvent(new Event('change', { bubbles: true }));
+      }
     }
   }
 
@@ -3557,6 +3646,67 @@ function overrideFormFromXmlDom(xmlDoc, targetForm, params) {
       if (params) params.set('ProductKey', prodKey);
     }
   }
+  // 3. ComputerName: override ComputerName from XML body
+  var compNameNode = xmlDoc.querySelector('ComputerName');
+  if (compNameNode && compNameNode.textContent) {
+    var compNameVal = compNameNode.textContent.trim();
+    if (compNameVal === 'TEMPNAME') {
+      var getterScript = null;
+      var fileNodes = xmlDoc.querySelectorAll('File');
+      for (var fIdx = 0; fIdx < fileNodes.length; fIdx++) {
+        var filePath = fileNodes[fIdx].getAttribute('path') || '';
+        if (filePath.indexOf('GetComputerName.ps1') !== -1) {
+          getterScript = fileNodes[fIdx].textContent.trim();
+          break;
+        }
+      }
+      var isPrompt = false;
+      if (getterScript) {
+        var normGetter = getterScript.replace(/\r\n/g, '\n').trim();
+        var normPrompt = (typeof COMPUTER_NAME_PROMPT_PS1 !== 'undefined' ? COMPUTER_NAME_PROMPT_PS1 : '').replace(/\r\n/g, '\n').trim();
+        if (normGetter === normPrompt || normGetter.indexOf('Test-ComputerName') !== -1) {
+          isPrompt = true;
+        }
+      }
+      if (isPrompt) {
+        var rCompPrompt = form.querySelector('input[name="ComputerNameMode"][value="Prompt"]');
+        if (rCompPrompt) {
+          rCompPrompt.checked = true;
+          rCompPrompt.dispatchEvent(new Event('change', { bubbles: true }));
+          if (params) params.set('ComputerNameMode', 'Prompt');
+        }
+      } else if (getterScript) {
+        var rCompScript = form.querySelector('input[name="ComputerNameMode"][value="Script"]');
+        if (rCompScript) {
+          rCompScript.checked = true;
+          rCompScript.dispatchEvent(new Event('change', { bubbles: true }));
+          if (params) params.set('ComputerNameMode', 'Script');
+        }
+        var taCompScript = form.querySelector('textarea[name="ComputerNameScript"]');
+        if (taCompScript) {
+          taCompScript.value = getterScript;
+          taCompScript.dispatchEvent(new Event('input', { bubbles: true }));
+          taCompScript.dispatchEvent(new Event('change', { bubbles: true }));
+          if (params) params.set('ComputerNameScript', getterScript);
+        }
+      }
+    } else {
+      var rCompCustom = form.querySelector('input[name="ComputerNameMode"][value="Custom"]');
+      if (rCompCustom) {
+        rCompCustom.checked = true;
+        rCompCustom.dispatchEvent(new Event('change', { bubbles: true }));
+        if (params) params.set('ComputerNameMode', 'Custom');
+      }
+      var inpCompName = form.querySelector('input[name="ComputerName"]');
+      if (inpCompName) {
+        inpCompName.value = compNameVal;
+        inpCompName.dispatchEvent(new Event('input', { bubbles: true }));
+        inpCompName.dispatchEvent(new Event('change', { bubbles: true }));
+        if (params) params.set('ComputerName', compNameVal);
+      }
+    }
+  }
+
 
   return true;
 }
