@@ -24,7 +24,7 @@
               <input type="checkbox" name="UseConfigurationSet" value="true" />
               <span>Use a distribution&#xA0;share&#x2009;/&#x2009;configuration&#xA0;set</span>
             </label>
-            <div>This makes Windows Setup look for a folder named <code translate="no" class="notranslate" class="nowrap">$OEM$</code> in the root of the drive where your <code translate="no" class="notranslate" class="nowrap">autounattend.xml</code> file is located and <a href="https://schneegans.de/windows/unattend-generator/usage/#oemfolder" hreflang="en">copy its contents to the target partition</a>.</div>
+            <div>This makes Windows Setup look for a folder named <code translate="no" class="nowrap notranslate">$OEM$</code> in the root of the drive where your <code translate="no" class="nowrap notranslate">autounattend.xml</code> file is located and <a href="https://schneegans.de/windows/unattend-generator/usage/#oemfolder" hreflang="en">copy its contents to the target partition</a>.</div>
           </div>
 
           <div class="IndentContainer">
@@ -32,8 +32,8 @@
               <input type="checkbox" name="HidePowerShellWindows" value="true" />
               <span>Hide any PowerShell windows during Windows Setup</span>
             </label>
-            <div>By default, PowerShell scripts that run during Windows Setup will have a visible window. This makes debugging easier and lets you use interactive prompts in your scripts, but also carries the risk that this window gets inadvertently or deliberately closed, which would kill the script. If you choose to hide PowerShell windows, any PowerShell scripts during Windows Setup will be run with the <code translate="no" class="notranslate" class="nowrap">-WindowStyle "Hidden"</code> switch.</div>
-            <div class="Exclamation">Do not enable this checkbox if you are planning to use interactive prompts (like PowerShell's <code translate="no" class="notranslate" class="nowrap">Read-Host</code> cmdlet) in your scripts! Without a visible window, you would be unable to answer these prompts, and Windows Setup could not continue.</div>
+            <div>By default, PowerShell scripts that run during Windows Setup will have a visible window. This makes debugging easier and lets you use interactive prompts in your scripts, but also carries the risk that this window gets inadvertently or deliberately closed, which would kill the script. If you choose to hide PowerShell windows, any PowerShell scripts during Windows Setup will be run with the <code translate="no" class="nowrap notranslate">-WindowStyle "Hidden"</code> switch.</div>
+            <div class="Exclamation">Do not enable this checkbox if you are planning to use interactive prompts (like PowerShell's <code translate="no" class="nowrap notranslate">Read-Host</code> cmdlet) in your scripts! Without a visible window, you would be unable to answer these prompts, and Windows Setup could not continue.</div>
           </div>
 
           <div class="IndentContainer">

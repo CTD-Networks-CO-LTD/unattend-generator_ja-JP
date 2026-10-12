@@ -118,6 +118,9 @@ jobs:
           COMMIT_HASH="${{ github.sha }}" RELEASE_TAG="$LATEST_TAG" node build/build_engine.js
 
           # 2. パリティテストの自動実行（配信前の品質保証）
+          echo "Running UI parity tests..."
+          node test_tools/test_upstream_ui_sync.js
+          node test_tools/test_ui_parity.js
           echo "Running engine parity tests..."
           node test_tools/test_engine_parity.js
           echo "Running feature parity tests..."

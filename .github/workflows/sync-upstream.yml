@@ -84,6 +84,10 @@ jobs:
           echo "=== Staging Upstream Cache and Docs Sections Changes ==="
           node build/sync_upstream_site.js --update-cache --update-docs
 
+          echo "=== Verifying UI Parity and Static Guards ==="
+          node test_tools/test_upstream_ui_sync.js
+          node test_tools/test_ui_parity.js
+
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 

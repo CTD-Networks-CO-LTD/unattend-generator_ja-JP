@@ -128,6 +128,9 @@ function applyExclusions(sectionKey, rawHtml) {
     html = html.replace(/<a href="https:\/\/paypal\.me\/[^"]*"[^>]*>.*?<\/a>\s*·\s*/gi, '');
     html = html.replace(/<a href="https:\/\/buymeacoffee\.com\/[^"]*"[^>]*>.*?<\/a>\s*·\s*/gi, '');
     html = html.replace(/https:\/\/github\.com\/cschneegans\/unattend-generator/g, 'https://github.com/CTD-Networks-CO-LTD/unattend-generator_ja-JP');
+
+    // Normalize time-varying relative date (e.g. "updated 6 hours ago") to prevent false positive diffs
+    html = html.replace(/\(updated[&#xA0;\s\u00a0]+.*?ago\)/gi, '(updated)');
   } else if (sectionKey === 'presets' || sectionKey === 'presets.html') {
     // Normalize upload form and preset forms
     html = html.replace(/<form method="post" action="\." enctype="multipart\/form-data">/g,
@@ -214,6 +217,119 @@ function protectImageWords(html) {
 }
 
 /**
+ * Enforces upstream UI parity rules (initial items and AddMore button):
+ * - 08_user_accounts.html: 5 accounts visible, rest class="Hidden", <input type="button" value="Add more items" class="AddMore" /> after table
+ * - 25_custom_scripts.html: 3 scripts visible per phase, rest class="Hidden", <input type="button" value="Add more items" class="AddMore" /> after each ol
+ * - 27_xml_components.html: 3 components visible, rest class="Hidden", <input type="button" value="Add more items" class="AddMore" /> after ol
+ */
+function applyUiParityRules(fileName, rawHtml) {
+  let html = rawHtml;
+
+  if (fileName === '08_user_accounts.html') {
+    let rowIndex = 0;
+    html = html.replace(/(<tr\b[^>]*>)([\s\S]*?)(<\/tr>)/gi, (match, openTag, content, closeTag) => {
+      const isHeader = /<th\b/i.test(content) || (/<td\b/i.test(content) && /<strong>Account name<\/strong>/i.test(content));
+      if (isHeader) return match;
+      const isDataRow = /name=["']AccountName/i.test(content) || /name=["']AccountDisplayName/i.test(content) || /name=["']AccountPassword/i.test(content);
+      if (!isDataRow) return match;
+
+      const currentIndex = rowIndex++;
+      let updatedOpenTag = openTag;
+      if (currentIndex < 5) {
+        updatedOpenTag = updatedOpenTag.replace(/\bclass="([^"]*)"/i, (m, cls) => {
+          const classes = cls.split(/\s+/).filter(c => c && c !== 'Hidden');
+          return classes.length > 0 ? `class="${classes.join(' ')}"` : '';
+        }).replace(/\s+>/, '>').trimEnd();
+        if (!updatedOpenTag.endsWith('>')) updatedOpenTag += '>';
+      } else {
+        if (/class="[^"]*"/i.test(updatedOpenTag)) {
+          updatedOpenTag = updatedOpenTag.replace(/\bclass="([^"]*)"/i, (m, cls) => {
+            const classes = cls.split(/\s+/).filter(Boolean);
+            if (!classes.includes('Hidden')) classes.push('Hidden');
+            return `class="${classes.join(' ')}"`;
+          });
+        } else {
+          updatedOpenTag = updatedOpenTag.replace(/^<tr/i, '<tr class="Hidden"');
+        }
+      }
+      return `${updatedOpenTag}${content}${closeTag}`;
+    });
+
+    if (!/<input[^>]+class="[^"]*\bAddMore\b[^"]*"[^>]*>/i.test(html)) {
+      html = html.replace(/<\/table>/i, '</table><input type="button" value="Add more items" class="AddMore" />');
+    }
+  } else if (fileName === '25_custom_scripts.html') {
+    html = html.replace(/(<ol\b[^>]*>)([\s\S]*?)(<\/ol>)/gi, (olMatch, olOpen, olContent, olClose) => {
+      let itemIndex = 0;
+      const updatedOlContent = olContent.replace(/(<li\b[^>]*>)([\s\S]*?)(<\/li>)/gi, (liMatch, liOpen, liContent, liClose) => {
+        const isScriptItem = /name=["'](System|DefaultUser|FirstLogon|UserOnce)Script/i.test(liContent);
+        if (!isScriptItem) return liMatch;
+
+        const currentIndex = itemIndex++;
+        let updatedLiOpen = liOpen;
+        if (currentIndex < 3) {
+          updatedLiOpen = updatedLiOpen.replace(/\bclass="([^"]*)"/i, (m, cls) => {
+            const classes = cls.split(/\s+/).filter(c => c && c !== 'Hidden');
+            return classes.length > 0 ? `class="${classes.join(' ')}"` : '';
+          }).replace(/\s+>/, '>').trimEnd();
+          if (!updatedLiOpen.endsWith('>')) updatedLiOpen += '>';
+        } else {
+          if (/class="[^"]*"/i.test(updatedLiOpen)) {
+            updatedLiOpen = updatedLiOpen.replace(/\bclass="([^"]*)"/i, (m, cls) => {
+              const classes = cls.split(/\s+/).filter(Boolean);
+              if (!classes.includes('Hidden')) classes.push('Hidden');
+              return `class="${classes.join(' ')}"`;
+            });
+          } else {
+            updatedLiOpen = updatedLiOpen.replace(/^<li/i, '<li class="Hidden"');
+          }
+        }
+        return `${updatedLiOpen}${liContent}${liClose}`;
+      });
+      return `${olOpen}${updatedOlContent}${olClose}`;
+    });
+
+    html = html.replace(/(<\/ol>)(?![\s\r\n]*<input[^>]+class="[^"]*\bAddMore\b[^"]*")/gi,
+      '$1<input type="button" value="Add more items" class="AddMore" />');
+  } else if (fileName === '27_xml_components.html') {
+    html = html.replace(/(<ol\b[^>]*>)([\s\S]*?)(<\/ol>)/gi, (olMatch, olOpen, olContent, olClose) => {
+      let itemIndex = 0;
+      const updatedOlContent = olContent.replace(/(<li\b[^>]*>)([\s\S]*?)(<\/li>)/gi, (liMatch, liOpen, liContent, liClose) => {
+        const isComponentItem = /name=["'](Component|ComponentContent)/i.test(liContent);
+        if (!isComponentItem) return liMatch;
+
+        const currentIndex = itemIndex++;
+        let updatedLiOpen = liOpen;
+        if (currentIndex < 3) {
+          updatedLiOpen = updatedLiOpen.replace(/\bclass="([^"]*)"/i, (m, cls) => {
+            const classes = cls.split(/\s+/).filter(c => c && c !== 'Hidden');
+            return classes.length > 0 ? `class="${classes.join(' ')}"` : '';
+          }).replace(/\s+>/, '>').trimEnd();
+          if (!updatedLiOpen.endsWith('>')) updatedLiOpen += '>';
+        } else {
+          if (/class="[^"]*"/i.test(updatedLiOpen)) {
+            updatedLiOpen = updatedLiOpen.replace(/\bclass="([^"]*)"/i, (m, cls) => {
+              const classes = cls.split(/\s+/).filter(Boolean);
+              if (!classes.includes('Hidden')) classes.push('Hidden');
+              return `class="${classes.join(' ')}"`;
+            });
+          } else {
+            updatedLiOpen = updatedLiOpen.replace(/^<li/i, '<li class="Hidden"');
+          }
+        }
+        return `${updatedLiOpen}${liContent}${liClose}`;
+      });
+      return `${olOpen}${updatedOlContent}${olClose}`;
+    });
+
+    html = html.replace(/(<\/ol>)(?![\s\r\n]*<input[^>]+class="[^"]*\bAddMore\b[^"]*")/gi,
+      '$1<input type="button" value="Add more items" class="AddMore" />');
+  }
+
+  return html;
+}
+
+/**
  * Applies Fork-specific post-processing to HTML before writing to docs/sections/.
  */
 function postProcessForDocs(fileName, rawHtml, existingDocsHtml) {
@@ -257,6 +373,9 @@ function postProcessForDocs(fileName, rawHtml, existingDocsHtml) {
 
   // 2. Protect "image", "images", "imaging" in text nodes
   html = protectImageWords(html);
+
+  // 3. Enforce upstream UI parity rules (initial items and AddMore button)
+  html = applyUiParityRules(fileName, html);
 
   return normalizeHtml(html);
 }
@@ -573,6 +692,7 @@ module.exports = {
   applyExclusions,
   ensureTranslateAttributes,
   protectImageWords,
+  applyUiParityRules,
   postProcessForDocs,
   parseUpstreamHtml,
   compareWithCache,

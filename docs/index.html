@@ -7,7 +7,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <link rel="stylesheet" href="style.css?v=0fb5e07" />
+  <link rel="stylesheet" href="style.css?v=cc38e40" />
       <link rel="icon" type="image/png" href="favicon.png" />
   <script type="text/javascript">'use strict';
 {
@@ -664,22 +664,29 @@
             whenClicked(document.querySelectorAll('input.AddMore'), (event) => {
                 const eventTarget = event.target;
                 const getTargetContainer = function (target) {
-                    if (target.previousElementSibling && target.previousElementSibling.matches('table, ol')) {
-                        return target.previousElementSibling;
+                    let curr = target;
+                    while (curr && curr.parentElement && (curr.parentElement.tagName === 'FONT' || curr.parentElement.tagName === 'SPAN')) {
+                        curr = curr.parentElement;
                     }
-                    let wrapper = target.parentElement;
-                    while (wrapper && wrapper.tagName === 'FONT') {
-                        if (wrapper.previousElementSibling && wrapper.previousElementSibling.matches('table, ol')) {
-                            return wrapper.previousElementSibling;
-                        }
-                        wrapper = wrapper.parentElement;
-                    }
-                    let sib = (wrapper || target).previousElementSibling;
+                    let sib = curr ? curr.previousElementSibling : null;
                     while (sib) {
-                        if (sib.matches('table, ol')) return sib;
-                        const inner = sib.querySelector('table, ol');
+                        if (sib.matches && sib.matches('table, ol')) return sib;
+                        const inner = sib.querySelector ? sib.querySelector('table, ol') : null;
                         if (inner) return inner;
                         sib = sib.previousElementSibling;
+                    }
+                    const parent = target.closest ? target.closest('td, fieldset, div, form') : (target.parentElement);
+                    if (parent) {
+                        const lists = Array.from(parent.querySelectorAll('table, ol'));
+                        if (lists.length > 0) {
+                            for (let i = lists.length - 1; i >= 0; i--) {
+                                const list = lists[i];
+                                if (target.compareDocumentPosition && (target.compareDocumentPosition(list) & Node.DOCUMENT_POSITION_PRECEDING)) {
+                                    return list;
+                                }
+                            }
+                            return lists[lists.length - 1];
+                        }
                     }
                     return null;
                 };
@@ -1212,11 +1219,11 @@ td.Submits button {
 }
 
 .Hidden {
-  display: none;
+  display: none !important;
 }
 
 input.AddMore {
-  display: block;
+  display: block !important;
   margin: 10px;
 }</style>
 
@@ -1250,8 +1257,8 @@ input.AddMore {
     })();
   </script>
   <script type="text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
-  <script type="text/javascript" src="unattend_config.js?v=0fb5e07"></script>
-  <script type="text/javascript" src="unattend_engine.js?v=0fb5e07"></script>
+  <script type="text/javascript" src="unattend_config.js?v=cc38e40"></script>
+  <script type="text/javascript" src="unattend_engine.js?v=cc38e40"></script>
 </head>
 <body>
   <div id="app-header" data-src="sections/header.html"></div>
