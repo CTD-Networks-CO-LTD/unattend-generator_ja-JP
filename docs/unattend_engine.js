@@ -262,10 +262,10 @@ var SET_WALLPAPER_PS1 = [
 
 var REPO_URL = 'https://github.com/CTD-Networks-CO-LTD/unattend-generator_ja-JP';
 var COMMIT_URL_BASE = REPO_URL + '/commit/';
-var COMMIT_HASH = '3134e78651fd2d629325151a9a4849e8ab79fe40';
-var RELEASE_TAG = 'v1.6.1_20261001';
-var RELEASE_URL = 'https://github.com/CTD-Networks-CO-LTD/unattend-generator_ja-JP/releases/tag/v1.6.1_20261001';
-var COMMIT_DATE = '2026-10-12T10:00:31+09:00';
+var COMMIT_HASH = '2b941b8f9cff88c0044e07526cc9b75385ca89dc';
+var RELEASE_TAG = 'v1.7.0_20261012';
+var RELEASE_URL = 'https://github.com/CTD-Networks-CO-LTD/unattend-generator_ja-JP/releases/tag/v1.7.0_20261012';
+var COMMIT_DATE = '2026-10-12T11:16:08+09:00';
 
 
 var PAUSE_WINDOWS_UPDATE_XML = "<Task version=\"1.2\" xmlns=\"http://schemas.microsoft.com/windows/2004/02/mit/task\">\n\t<Triggers>\n\t\t<BootTrigger>\n\t\t\t<Repetition>\n\t\t\t\t<Interval>P1D</Interval>\n\t\t\t\t<StopAtDurationEnd>false</StopAtDurationEnd>\n\t\t\t</Repetition>\n\t\t\t<Enabled>true</Enabled>\n\t\t</BootTrigger>\n\t</Triggers>\n\t<Principals>\n\t\t<Principal id=\"Author\">\n\t\t\t<UserId>S-1-5-19</UserId>\n\t\t\t<RunLevel>LeastPrivilege</RunLevel>\n\t\t</Principal>\n\t</Principals>\n\t<Settings>\n\t\t<MultipleInstancesPolicy>IgnoreNew</MultipleInstancesPolicy>\n\t\t<DisallowStartIfOnBatteries>false</DisallowStartIfOnBatteries>\n\t\t<StopIfGoingOnBatteries>false</StopIfGoingOnBatteries>\n\t\t<AllowHardTerminate>true</AllowHardTerminate>\n\t\t<StartWhenAvailable>false</StartWhenAvailable>\n\t\t<RunOnlyIfNetworkAvailable>false</RunOnlyIfNetworkAvailable>\n\t\t<IdleSettings>\n\t\t\t<StopOnIdleEnd>true</StopOnIdleEnd>\n\t\t\t<RestartOnIdle>false</RestartOnIdle>\n\t\t</IdleSettings>\n\t\t<AllowStartOnDemand>true</AllowStartOnDemand>\n\t\t<Enabled>true</Enabled>\n\t\t<Hidden>false</Hidden>\n\t\t<RunOnlyIfIdle>false</RunOnlyIfIdle>\n\t\t<WakeToRun>false</WakeToRun>\n\t\t<ExecutionTimeLimit>PT72H</ExecutionTimeLimit>\n\t\t<Priority>7</Priority>\n\t</Settings>\n\t<Actions Context=\"Author\">\n\t\t<Exec>\n\t\t\t<Command>C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe</Command>\n\t\t\t<Arguments>-WindowStyle Hidden -NoProfile -NonInteractive -Command \"$format = 'yyyy-MM-ddTHH\\:mm\\:ssK'; $now = [datetime]::UtcNow; $start = $now.ToString($format); $end = $now.AddDays(7).ToString($format); $params = @{ LiteralPath = 'Registry::HKLM\\Software\\Microsoft\\WindowsUpdate\\UX\\Settings'; Type = 'String'; Force = $true; Verbose = $true; }; 'PauseFeatureUpdatesStartTime', 'PauseQualityUpdatesStartTime', 'PauseUpdatesStartTime' | foreach { Set-ItemProperty @params -Name $_ -Value $start; }; 'PauseFeatureUpdatesEndTime', 'PauseQualityUpdatesEndTime', 'PauseUpdatesExpiryTime' | foreach { Set-ItemProperty @params -Name $_ -Value $end; };\"</Arguments>\n\t\t</Exec>\n\t</Actions>\n</Task>";
@@ -3331,18 +3331,115 @@ function applyQueryToForm(queryString, targetForm) {
     }
   });
 
-  // 7. Auto-unhide rows/items that have non-empty values
-  var allInputs = form.querySelectorAll('input, select, textarea');
-  allInputs.forEach(function (elem) {
-    if (elem.value && elem.value.trim() !== '') {
-      var container = elem.closest('tr.Hidden, li.Hidden');
+  // 7. Synchronize dynamic item visibility (auto-unhide rows/items with actual non-empty content)
+  syncDynamicItemVisibility(form);
+
+  return true;
+}
+
+
+// Synchronize visibility of dynamic item rows/lists based on actual non-empty content
+function syncDynamicItemVisibility(form) {
+  if (!form || typeof document === 'undefined') return;
+
+  // 1. User accounts: 15 rows total (initial 5 visible, remaining 10 hidden)
+  var accNameInputs = Array.from(form.querySelectorAll('input[name^="AccountName"]'));
+  var accountTrs = accNameInputs.map(function (inp) { return inp.closest('tr'); }).filter(Boolean);
+
+  // Reset hidden state for account rows >= 5
+  accountTrs.forEach(function (tr, idx) {
+    if (idx >= 5) {
+      tr.classList.add('Hidden');
+    }
+  });
+
+  // Find maximum index with non-empty user data (excluding AccountGroup select which has default value)
+  var maxAccIdx = -1;
+  accountTrs.forEach(function (tr, idx) {
+    var nameInp = tr.querySelector('input[name^="AccountName"]');
+    var dispInp = tr.querySelector('input[name^="AccountDisplayName"]');
+    var passInp = tr.querySelector('input[name^="AccountPassword"]');
+    var hasVal = (nameInp && nameInp.value && nameInp.value.trim() !== '') ||
+                 (dispInp && dispInp.value && dispInp.value.trim() !== '') ||
+                 (passInp && passInp.value && passInp.value.trim() !== '');
+    if (hasVal) {
+      if (idx > maxAccIdx) maxAccIdx = idx;
+    }
+  });
+
+  // Expand rows up to maxAccIdx if exceeding initial 5 rows
+  if (maxAccIdx >= 5) {
+    for (var aIdx = 5; aIdx <= maxAccIdx && aIdx < accountTrs.length; aIdx++) {
+      var container = accountTrs[aIdx];
       if (container) {
         container.classList.remove('Hidden');
       }
     }
+  }
+
+  // 2. Custom scripts: 4 phases, each with 15 items (initial 3 visible, remaining 12 hidden)
+  var scriptPhases = ['SystemScript', 'DefaultUserScript', 'FirstLogonScript', 'UserOnceScript'];
+  scriptPhases.forEach(function (phase) {
+    var scriptTas = Array.from(form.querySelectorAll('textarea[name^="' + phase + '"]'));
+    var scriptLis = scriptTas.map(function (ta) { return ta.closest('li'); }).filter(Boolean);
+
+    // Reset hidden state for script items >= 3
+    scriptLis.forEach(function (li, idx) {
+      if (idx >= 3) {
+        li.classList.add('Hidden');
+      }
+    });
+
+    var maxScriptIdx = -1;
+    scriptTas.forEach(function (ta, idx) {
+      if (ta.value && ta.value.trim() !== '') {
+        if (idx > maxScriptIdx) maxScriptIdx = idx;
+      }
+    });
+
+    // Expand items up to maxScriptIdx if exceeding initial 3 items
+    if (maxScriptIdx >= 3) {
+      for (var sIdx = 3; sIdx <= maxScriptIdx && sIdx < scriptLis.length; sIdx++) {
+        var container = scriptLis[sIdx];
+        if (container) {
+          container.classList.remove('Hidden');
+        }
+      }
+    }
   });
 
-  // Update disabled state for AddMore buttons if all items are revealed
+  // 3. XML components: 15 items (initial 3 visible, remaining 12 hidden)
+  var compTas = Array.from(form.querySelectorAll('textarea[name^="ComponentContent"]'));
+  var compLis = compTas.map(function (ta) { return ta.closest('li'); }).filter(Boolean);
+
+  // Reset hidden state for component items >= 3
+  compLis.forEach(function (li, idx) {
+    if (idx >= 3) {
+      li.classList.add('Hidden');
+    }
+  });
+
+  var maxCompIdx = -1;
+  compLis.forEach(function (li, idx) {
+    var ta = li.querySelector('textarea[name^="ComponentContent"]');
+    var sel = li.querySelector('select[name^="Component"]');
+    var hasVal = (ta && ta.value && ta.value.trim() !== '') ||
+                 (sel && sel.value && sel.value.trim() !== '');
+    if (hasVal) {
+      if (idx > maxCompIdx) maxCompIdx = idx;
+    }
+  });
+
+  if (maxCompIdx >= 3) {
+    for (var cIdx = 3; cIdx <= maxCompIdx && cIdx < compLis.length; cIdx++) {
+      var container = compLis[cIdx];
+      if (container) {
+        container.classList.remove('Hidden');
+      }
+    }
+  }
+
+  // 4. Update disabled state for AddMore buttons if all items are revealed
   var addMoreButtons = form.querySelectorAll('input.AddMore');
   addMoreButtons.forEach(function (btn) {
     var getContainer = function (target) {
@@ -3556,6 +3653,8 @@ function applyXmlDomToForm(xmlDoc, targetForm) {
     });
   }
 
+  syncDynamicItemVisibility(form);
+
   return true;
 }
 
@@ -3707,6 +3806,7 @@ function overrideFormFromXmlDom(xmlDoc, targetForm, params) {
     }
   }
 
+  syncDynamicItemVisibility(form);
 
   return true;
 }
