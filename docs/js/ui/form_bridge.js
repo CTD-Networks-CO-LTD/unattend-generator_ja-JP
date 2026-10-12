@@ -140,9 +140,37 @@ function applyQueryToForm(queryString, targetForm) {
   // Update disabled state for AddMore buttons if all items are revealed
   var addMoreButtons = form.querySelectorAll('input.AddMore');
   addMoreButtons.forEach(function (btn) {
-    var hasHidden = btn.previousElementSibling ? btn.previousElementSibling.querySelector('.Hidden') : null;
+    var getContainer = function (target) {
+      var curr = target;
+      while (curr && curr.parentElement && (curr.parentElement.tagName === 'FONT' || curr.parentElement.tagName === 'SPAN')) {
+        curr = curr.parentElement;
+      }
+      var sib = curr ? curr.previousElementSibling : null;
+      while (sib) {
+        if (sib.matches && sib.matches('table, ol')) return sib;
+        var inner = sib.querySelector ? sib.querySelector('table, ol') : null;
+        if (inner) return inner;
+        sib = sib.previousElementSibling;
+      }
+      var parent = target.closest ? target.closest('td, fieldset, div, form') : target.parentElement;
+      if (parent) {
+        var lists = Array.from(parent.querySelectorAll('table, ol'));
+        for (var i = lists.length - 1; i >= 0; i--) {
+          var list = lists[i];
+          if (target.compareDocumentPosition && (target.compareDocumentPosition(list) & Node.DOCUMENT_POSITION_PRECEDING)) {
+            return list;
+          }
+        }
+        if (lists.length > 0) return lists[lists.length - 1];
+      }
+      return null;
+    };
+    var container = getContainer(btn);
+    var hasHidden = container ? container.querySelector('.Hidden') : null;
     if (!hasHidden) {
       btn.disabled = true;
+    } else {
+      btn.disabled = false;
     }
   });
 

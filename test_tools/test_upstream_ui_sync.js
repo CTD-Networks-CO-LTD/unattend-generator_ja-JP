@@ -26,14 +26,14 @@ assert('index.html: change() has null guard', indexHtml.includes('function chang
 assert('index.html: whenEvent() has null guard', indexHtml.includes('function whenEvent(types, elements, callback) {\n        if (!elements) return;'));
 assert('index.html: DiskAssertionMode has null guard', indexHtml.includes('if (partitionInteractive && assertionSkip) {'));
 assert('index.html: TargetDiskScript length validator added', indexHtml.includes('textarea[name="TargetDiskScript"]'));
-assert('index.html: contains .Hidden { display: none; } style', indexHtml.includes('.Hidden {\n  display: none;\n}'));
-assert('index.html: contains input.AddMore style', indexHtml.includes('input.AddMore {'));
+assert('index.html: contains .Hidden { display: none !important; } style', indexHtml.includes('.Hidden {\n  display: none !important;\n}'));
+assert('index.html: contains input.AddMore !important style', indexHtml.includes('display: block !important;'));
 assert('index.html: contains input.AddMore click handler', indexHtml.includes("whenClicked(document.querySelectorAll('input.AddMore')"));
 
 // 1.1 docs/style.css
 const styleCss = fs.readFileSync(path.join(repoRoot, 'docs/style.css'), 'utf8').replace(/\r\n/g, '\n');
-assert('style.css: contains .Hidden { display: none; }', styleCss.includes('.Hidden {\n  display: none;\n}'));
-assert('style.css: contains input.AddMore style', styleCss.includes('input.AddMore {'));
+assert('style.css: contains .Hidden { display: none !important; }', styleCss.includes('.Hidden {\n  display: none !important;\n}'));
+assert('style.css: contains input.AddMore !important style', styleCss.includes('display: block !important;'));
 
 // 1.2 docs/js/ui/form_bridge.js
 const formBridgeJs = fs.readFileSync(path.join(repoRoot, 'docs/js/ui/form_bridge.js'), 'utf8').replace(/\r\n/g, '\n');
@@ -46,6 +46,7 @@ assert('sync_upstream_site.js: has --update-docs option', syncJs.includes("isUpd
 assert('sync_upstream_site.js: has postProcessForDocs', syncJs.includes('function postProcessForDocs'));
 assert('sync_upstream_site.js: has ensureTranslateAttributes', syncJs.includes('function ensureTranslateAttributes'));
 assert('sync_upstream_site.js: has protectImageWords', syncJs.includes('function protectImageWords'));
+assert('sync_upstream_site.js: has applyUiParityRules', syncJs.includes('function applyUiParityRules'));
 
 // 3. docs/sections/02_windows_pe_stage.html
 const peHtml = fs.readFileSync(path.join(repoRoot, 'docs/sections/02_windows_pe_stage.html'), 'utf8').replace(/\r\n/g, '\n');
@@ -64,7 +65,12 @@ assert('23_personalization.html: contains Lock screen <span...image</span>', per
 // 5. .github/workflows/sync-upstream.yml
 const yml = fs.readFileSync(path.join(repoRoot, '.github/workflows/sync-upstream.yml'), 'utf8').replace(/\r\n/g, '\n');
 assert('sync-upstream.yml: runs --update-cache --update-docs', yml.includes('node build/sync_upstream_site.js --update-cache --update-docs'));
+assert('sync-upstream.yml: runs test_ui_parity.js', yml.includes('node test_tools/test_ui_parity.js'));
 assert('sync-upstream.yml: stages docs/sections/', yml.includes('git add .upstream-cache/ docs/sections/'));
+
+// 6. .github/workflows/deploy-pages.yml
+const deployYml = fs.readFileSync(path.join(repoRoot, '.github/workflows/deploy-pages.yml'), 'utf8').replace(/\r\n/g, '\n');
+assert('deploy-pages.yml: runs test_ui_parity.js', deployYml.includes('node test_tools/test_ui_parity.js'));
 
 console.log('\n====================================================');
 console.log(` Results: ${passes} PASSED / ${fails} FAILED`);

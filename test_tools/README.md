@@ -17,6 +17,8 @@
 | `verify_node_engine.js` | Node.js 環境での `unattend_engine.js` 日本語キーボード・基本生成テスト |
 | `verify_buttons.py` | 全ボタン・フォームの一括URL検証 & 個別ボタン動作シミュレーション |
 | `test_e2e_engine.py` | クライアント側XML生成・ダウンロード・インポートエンジンの自動検証 |
+| `test_upstream_ui_sync.js` | 上流UI構造同期・翻訳保護パリティ静的検証 |
+| `test_ui_parity.js` | 上流サイト初期項目数パリティ（アカウント5枠、スクリプト各3枠、コンポーネント3枠）および AddMore 動的展開・Google翻訳耐性・設定復元自動アンハイドDOM統合自動検証 |
 | `xml_client_engine.js` | クライアントサイドXML生成・ISOバイナリ作成・インポートエンジン本体 |
 
 ---
@@ -47,6 +49,15 @@ powershell -ExecutionPolicy Bypass -File .\test_tools\interactive_test.ps1
 ### 2. 単体での実行
 
 ```bash
+# UI初期項目数パリティおよび AddMore 動的展開・Google翻訳耐性テスト
+node test_tools/test_ui_parity.js
+
+# 上流UI構造同期および静的パリティ検証テスト
+node test_tools/test_upstream_ui_sync.js
+
+# エンジンベースライン完全一致検証テスト (全12ケース)
+node test_tools/test_engine_parity.js
+
 # 機能格差解消＆スマートクォート網羅テスト
 node test_tools/test_feature_parity.js
 

@@ -411,10 +411,10 @@ span.Guide {
 }
 
 .Hidden {
-  display: none;
+  display: none !important;
 }
 
 input.AddMore {
-  display: block;
+  display: block !important;
   margin: 10px;
 }

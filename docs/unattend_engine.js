@@ -220,10 +220,10 @@ var SET_WALLPAPER_PS1 = [
 
 var REPO_URL = 'https://github.com/CTD-Networks-CO-LTD/unattend-generator_ja-JP';
 var COMMIT_URL_BASE = REPO_URL + '/commit/';
-var COMMIT_HASH = '0fb5e0778bd508329649b914c413a5b1c53c91e6';
+var COMMIT_HASH = 'cc38e40884e9d20984f4f8d2e1bf0b0a90d43680';
 var RELEASE_TAG = 'v1.6.1_20261001';
 var RELEASE_URL = 'https://github.com/CTD-Networks-CO-LTD/unattend-generator_ja-JP/releases/tag/v1.6.1_20261001';
-var COMMIT_DATE = '2026-10-11T10:41:30+09:00';
+var COMMIT_DATE = '2026-10-12T05:24:59+09:00';
 
 
 var PAUSE_WINDOWS_UPDATE_XML = "<Task version=\"1.2\" xmlns=\"http://schemas.microsoft.com/windows/2004/02/mit/task\">\n\t<Triggers>\n\t\t<BootTrigger>\n\t\t\t<Repetition>\n\t\t\t\t<Interval>P1D</Interval>\n\t\t\t\t<StopAtDurationEnd>false</StopAtDurationEnd>\n\t\t\t</Repetition>\n\t\t\t<Enabled>true</Enabled>\n\t\t</BootTrigger>\n\t</Triggers>\n\t<Principals>\n\t\t<Principal id=\"Author\">\n\t\t\t<UserId>S-1-5-19</UserId>\n\t\t\t<RunLevel>LeastPrivilege</RunLevel>\n\t\t</Principal>\n\t</Principals>\n\t<Settings>\n\t\t<MultipleInstancesPolicy>IgnoreNew</MultipleInstancesPolicy>\n\t\t<DisallowStartIfOnBatteries>false</DisallowStartIfOnBatteries>\n\t\t<StopIfGoingOnBatteries>false</StopIfGoingOnBatteries>\n\t\t<AllowHardTerminate>true</AllowHardTerminate>\n\t\t<StartWhenAvailable>false</StartWhenAvailable>\n\t\t<RunOnlyIfNetworkAvailable>false</RunOnlyIfNetworkAvailable>\n\t\t<IdleSettings>\n\t\t\t<StopOnIdleEnd>true</StopOnIdleEnd>\n\t\t\t<RestartOnIdle>false</RestartOnIdle>\n\t\t</IdleSettings>\n\t\t<AllowStartOnDemand>true</AllowStartOnDemand>\n\t\t<Enabled>true</Enabled>\n\t\t<Hidden>false</Hidden>\n\t\t<RunOnlyIfIdle>false</RunOnlyIfIdle>\n\t\t<WakeToRun>false</WakeToRun>\n\t\t<ExecutionTimeLimit>PT72H</ExecutionTimeLimit>\n\t\t<Priority>7</Priority>\n\t</Settings>\n\t<Actions Context=\"Author\">\n\t\t<Exec>\n\t\t\t<Command>C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe</Command>\n\t\t\t<Arguments>-WindowStyle Hidden -NoProfile -NonInteractive -Command \"$format = 'yyyy-MM-ddTHH\\:mm\\:ssK'; $now = [datetime]::UtcNow; $start = $now.ToString($format); $end = $now.AddDays(7).ToString($format); $params = @{ LiteralPath = 'Registry::HKLM\\Software\\Microsoft\\WindowsUpdate\\UX\\Settings'; Type = 'String'; Force = $true; Verbose = $true; }; 'PauseFeatureUpdatesStartTime', 'PauseQualityUpdatesStartTime', 'PauseUpdatesStartTime' | foreach { Set-ItemProperty @params -Name $_ -Value $start; }; 'PauseFeatureUpdatesEndTime', 'PauseQualityUpdatesEndTime', 'PauseUpdatesExpiryTime' | foreach { Set-ItemProperty @params -Name $_ -Value $end; };\"</Arguments>\n\t\t</Exec>\n\t</Actions>\n</Task>";
@@ -3295,9 +3295,37 @@ function applyQueryToForm(queryString, targetForm) {
   // Update disabled state for AddMore buttons if all items are revealed
   var addMoreButtons = form.querySelectorAll('input.AddMore');
   addMoreButtons.forEach(function (btn) {
-    var hasHidden = btn.previousElementSibling ? btn.previousElementSibling.querySelector('.Hidden') : null;
+    var getContainer = function (target) {
+      var curr = target;
+      while (curr && curr.parentElement && (curr.parentElement.tagName === 'FONT' || curr.parentElement.tagName === 'SPAN')) {
+        curr = curr.parentElement;
+      }
+      var sib = curr ? curr.previousElementSibling : null;
+      while (sib) {
+        if (sib.matches && sib.matches('table, ol')) return sib;
+        var inner = sib.querySelector ? sib.querySelector('table, ol') : null;
+        if (inner) return inner;
+        sib = sib.previousElementSibling;
+      }
+      var parent = target.closest ? target.closest('td, fieldset, div, form') : target.parentElement;
+      if (parent) {
+        var lists = Array.from(parent.querySelectorAll('table, ol'));
+        for (var i = lists.length - 1; i >= 0; i--) {
+          var list = lists[i];
+          if (target.compareDocumentPosition && (target.compareDocumentPosition(list) & Node.DOCUMENT_POSITION_PRECEDING)) {
+            return list;
+          }
+        }
+        if (lists.length > 0) return lists[lists.length - 1];
+      }
+      return null;
+    };
+    var container = getContainer(btn);
+    var hasHidden = container ? container.querySelector('.Hidden') : null;
     if (!hasHidden) {
       btn.disabled = true;
+    } else {
+      btn.disabled = false;
     }
   });
 
