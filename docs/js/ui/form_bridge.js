@@ -126,18 +126,115 @@ function applyQueryToForm(queryString, targetForm) {
     }
   });
 
-  // 7. Auto-unhide rows/items that have non-empty values
-  var allInputs = form.querySelectorAll('input, select, textarea');
-  allInputs.forEach(function (elem) {
-    if (elem.value && elem.value.trim() !== '') {
-      var container = elem.closest('tr.Hidden, li.Hidden');
+  // 7. Synchronize dynamic item visibility (auto-unhide rows/items with actual non-empty content)
+  syncDynamicItemVisibility(form);
+
+  return true;
+}
+
+
+// Synchronize visibility of dynamic item rows/lists based on actual non-empty content
+function syncDynamicItemVisibility(form) {
+  if (!form || typeof document === 'undefined') return;
+
+  // 1. User accounts: 15 rows total (initial 5 visible, remaining 10 hidden)
+  var accNameInputs = Array.from(form.querySelectorAll('input[name^="AccountName"]'));
+  var accountTrs = accNameInputs.map(function (inp) { return inp.closest('tr'); }).filter(Boolean);
+
+  // Reset hidden state for account rows >= 5
+  accountTrs.forEach(function (tr, idx) {
+    if (idx >= 5) {
+      tr.classList.add('Hidden');
+    }
+  });
+
+  // Find maximum index with non-empty user data (excluding AccountGroup select which has default value)
+  var maxAccIdx = -1;
+  accountTrs.forEach(function (tr, idx) {
+    var nameInp = tr.querySelector('input[name^="AccountName"]');
+    var dispInp = tr.querySelector('input[name^="AccountDisplayName"]');
+    var passInp = tr.querySelector('input[name^="AccountPassword"]');
+    var hasVal = (nameInp && nameInp.value && nameInp.value.trim() !== '') ||
+                 (dispInp && dispInp.value && dispInp.value.trim() !== '') ||
+                 (passInp && passInp.value && passInp.value.trim() !== '');
+    if (hasVal) {
+      if (idx > maxAccIdx) maxAccIdx = idx;
+    }
+  });
+
+  // Expand rows up to maxAccIdx if exceeding initial 5 rows
+  if (maxAccIdx >= 5) {
+    for (var aIdx = 5; aIdx <= maxAccIdx && aIdx < accountTrs.length; aIdx++) {
+      var container = accountTrs[aIdx];
       if (container) {
         container.classList.remove('Hidden');
       }
     }
+  }
+
+  // 2. Custom scripts: 4 phases, each with 15 items (initial 3 visible, remaining 12 hidden)
+  var scriptPhases = ['SystemScript', 'DefaultUserScript', 'FirstLogonScript', 'UserOnceScript'];
+  scriptPhases.forEach(function (phase) {
+    var scriptTas = Array.from(form.querySelectorAll('textarea[name^="' + phase + '"]'));
+    var scriptLis = scriptTas.map(function (ta) { return ta.closest('li'); }).filter(Boolean);
+
+    // Reset hidden state for script items >= 3
+    scriptLis.forEach(function (li, idx) {
+      if (idx >= 3) {
+        li.classList.add('Hidden');
+      }
+    });
+
+    var maxScriptIdx = -1;
+    scriptTas.forEach(function (ta, idx) {
+      if (ta.value && ta.value.trim() !== '') {
+        if (idx > maxScriptIdx) maxScriptIdx = idx;
+      }
+    });
+
+    // Expand items up to maxScriptIdx if exceeding initial 3 items
+    if (maxScriptIdx >= 3) {
+      for (var sIdx = 3; sIdx <= maxScriptIdx && sIdx < scriptLis.length; sIdx++) {
+        var container = scriptLis[sIdx];
+        if (container) {
+          container.classList.remove('Hidden');
+        }
+      }
+    }
   });
 
-  // Update disabled state for AddMore buttons if all items are revealed
+  // 3. XML components: 15 items (initial 3 visible, remaining 12 hidden)
+  var compTas = Array.from(form.querySelectorAll('textarea[name^="ComponentContent"]'));
+  var compLis = compTas.map(function (ta) { return ta.closest('li'); }).filter(Boolean);
+
+  // Reset hidden state for component items >= 3
+  compLis.forEach(function (li, idx) {
+    if (idx >= 3) {
+      li.classList.add('Hidden');
+    }
+  });
+
+  var maxCompIdx = -1;
+  compLis.forEach(function (li, idx) {
+    var ta = li.querySelector('textarea[name^="ComponentContent"]');
+    var sel = li.querySelector('select[name^="Component"]');
+    var hasVal = (ta && ta.value && ta.value.trim() !== '') ||
+                 (sel && sel.value && sel.value.trim() !== '');
+    if (hasVal) {
+      if (idx > maxCompIdx) maxCompIdx = idx;
+    }
+  });
+
+  if (maxCompIdx >= 3) {
+    for (var cIdx = 3; cIdx <= maxCompIdx && cIdx < compLis.length; cIdx++) {
+      var container = compLis[cIdx];
+      if (container) {
+        container.classList.remove('Hidden');
+      }
+    }
+  }
+
+  // 4. Update disabled state for AddMore buttons if all items are revealed
   var addMoreButtons = form.querySelectorAll('input.AddMore');
   addMoreButtons.forEach(function (btn) {
     var getContainer = function (target) {
@@ -351,6 +448,8 @@ function applyXmlDomToForm(xmlDoc, targetForm) {
     });
   }
 
+  syncDynamicItemVisibility(form);
+
   return true;
 }
 
@@ -502,6 +601,7 @@ function overrideFormFromXmlDom(xmlDoc, targetForm, params) {
     }
   }
 
+  syncDynamicItemVisibility(form);
 
   return true;
 }

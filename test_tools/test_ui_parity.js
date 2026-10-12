@@ -367,17 +367,147 @@ assert('Restore test: AccountName5 is initially inside tr.Hidden', hiddenTargetT
 
 hiddenInput.value = 'SpecialAdmin';
 
-const allInputs = restoreDoc.querySelectorAll('input, select, textarea');
-allInputs.forEach(elem => {
-  if (elem.value && elem.value.trim() !== '') {
-    const container = elem.closest('tr.Hidden, li.Hidden');
-    if (container) {
-      container.classList.remove('Hidden');
+// Dynamic visibility sync simulation
+function testSyncDynamicItemVisibility(form) {
+  // 1. User accounts
+  const accNameInputs = form.querySelectorAll('input[name^="AccountName"]');
+  const accountTrs = accNameInputs.map(inp => inp.closest('tr')).filter(Boolean);
+  accountTrs.forEach((tr, idx) => {
+    if (idx >= 5) tr.classList.add('Hidden');
+  });
+  let maxAccIdx = -1;
+  accountTrs.forEach((tr, idx) => {
+    const nameInp = tr.querySelector('input[name^="AccountName"]');
+    const dispInp = tr.querySelector('input[name^="AccountDisplayName"]');
+    const passInp = tr.querySelector('input[name^="AccountPassword"]');
+    const hasVal = (nameInp && nameInp.value && nameInp.value.trim() !== '') ||
+                   (dispInp && dispInp.value && dispInp.value.trim() !== '') ||
+                   (passInp && passInp.value && passInp.value.trim() !== '');
+    if (hasVal) {
+      if (idx > maxAccIdx) maxAccIdx = idx;
+    }
+  });
+  if (maxAccIdx >= 5) {
+    for (let aIdx = 5; aIdx <= maxAccIdx && aIdx < accountTrs.length; aIdx++) {
+      const container = accountTrs[aIdx];
+      if (container) container.classList.remove('Hidden');
     }
   }
+
+  // 2. Custom scripts
+  const scriptPhases = ['SystemScript', 'DefaultUserScript', 'FirstLogonScript', 'UserOnceScript'];
+  scriptPhases.forEach(phase => {
+    const scriptTas = form.querySelectorAll('textarea[name^="' + phase + '"]');
+    const scriptLis = scriptTas.map(ta => ta.closest('li')).filter(Boolean);
+    scriptLis.forEach((li, idx) => {
+      if (idx >= 3) li.classList.add('Hidden');
+    });
+    let maxScriptIdx = -1;
+    scriptTas.forEach((ta, idx) => {
+      if (ta.value && ta.value.trim() !== '') {
+        if (idx > maxScriptIdx) maxScriptIdx = idx;
+      }
+    });
+    if (maxScriptIdx >= 3) {
+      for (let sIdx = 3; sIdx <= maxScriptIdx && sIdx < scriptLis.length; sIdx++) {
+        const container = scriptLis[sIdx];
+        if (container) container.classList.remove('Hidden');
+      }
+    }
+  });
+
+  // 3. XML components
+  const compTas = form.querySelectorAll('textarea[name^="ComponentContent"]');
+  const compLis = compTas.map(ta => ta.closest('li')).filter(Boolean);
+  compLis.forEach((li, idx) => {
+    if (idx >= 3) li.classList.add('Hidden');
+  });
+  let maxCompIdx = -1;
+  compLis.forEach((li, idx) => {
+    const ta = li.querySelector('textarea[name^="ComponentContent"]');
+    const sel = li.querySelector('select[name^="Component"]');
+    const hasVal = (ta && ta.value && ta.value.trim() !== '') ||
+                   (sel && sel.value && sel.value.trim() !== '');
+    if (hasVal) {
+      if (idx > maxCompIdx) maxCompIdx = idx;
+    }
+  });
+  if (maxCompIdx >= 3) {
+    for (let cIdx = 3; cIdx <= maxCompIdx && cIdx < compLis.length; cIdx++) {
+      const container = compLis[cIdx];
+      if (container) container.classList.remove('Hidden');
+    }
+  }
+
+  // 4. AddMore button state
+  const addMoreButtons = form.querySelectorAll('input.AddMore');
+  addMoreButtons.forEach(btn => {
+    const getContainer = (target) => {
+      let curr = target;
+      while (curr && curr.parentElement && (curr.parentElement.tagName === 'FONT' || curr.parentElement.tagName === 'SPAN')) {
+        curr = curr.parentElement;
+      }
+      let sib = curr ? curr.previousElementSibling : null;
+      while (sib) {
+        if (sib.matches && sib.matches('table, ol')) return sib;
+        const inner = sib.querySelector ? sib.querySelector('table, ol') : null;
+        if (inner) return inner;
+        sib = sib.previousElementSibling;
+      }
+      return target.closest ? target.closest('td, fieldset, div, form') : target.parentElement;
+    };
+    const container = getContainer(btn);
+    const hasHidden = container ? container.querySelector('.Hidden') : null;
+    btn.disabled = !hasHidden;
+  });
+}
+
+testSyncDynamicItemVisibility(restoreDoc);
+assert('Restore test: Non-empty row (AccountName5) automatically removed .Hidden class', !hiddenTargetTr.classList.contains('Hidden'));
+const emptyHiddenTrs = restoreDoc.querySelectorAll('tr.Hidden');
+assert('Restore test: Remaining 9 empty rows (AccountName6-14) remain Hidden', emptyHiddenTrs.length === 9, `got ${emptyHiddenTrs.length}`);
+
+// -----------------------------------------------------------------------------
+// Part 5: Import autounattend.xml Parity & Empty Items Suppression Verification
+// -----------------------------------------------------------------------------
+console.log('\n--- Part 5: Import Parity & Empty Items Suppression Verification ---');
+
+const fullCombinedHtml = sec08Html + '\n' + sec25Html + '\n' + sec27Html;
+const importSimDoc = parseHtmlFragment(fullCombinedHtml);
+
+// Simulate autounattend.xml state: AccountName0=admin, FirstLogonScript1='# test', all others empty
+const acc0Input = importSimDoc.querySelector('input[name="AccountName0"]');
+if (acc0Input) acc0Input.value = 'admin';
+const fls1Ta = importSimDoc.querySelector('textarea[name="FirstLogonScript1"]');
+if (fls1Ta) fls1Ta.value = '# test';
+
+testSyncDynamicItemVisibility(importSimDoc);
+
+// Verify User Accounts: exactly 5 visible, 10 hidden
+const accTrsAll = importSimDoc.querySelectorAll('input[name^="AccountName"]').map(inp => inp.closest('tr')).filter(Boolean);
+const visibleAccCount = accTrsAll.filter(tr => !tr.classList.contains('Hidden')).length;
+const hiddenAccCount = accTrsAll.filter(tr => tr.classList.contains('Hidden')).length;
+assert('Import autounattend.xml: User accounts visible count is exactly 5', visibleAccCount === 5, `got ${visibleAccCount}`);
+assert('Import autounattend.xml: User accounts hidden count is exactly 10', hiddenAccCount === 10, `got ${hiddenAccCount}`);
+
+// Verify Custom Scripts: each phase is exactly 3 visible, 12 hidden
+['SystemScript', 'DefaultUserScript', 'FirstLogonScript', 'UserOnceScript'].forEach(phase => {
+  const scriptLis = importSimDoc.querySelectorAll('textarea[name^="' + phase + '"]').map(ta => ta.closest('li')).filter(Boolean);
+  const visCount = scriptLis.filter(li => !li.classList.contains('Hidden')).length;
+  const hidCount = scriptLis.filter(li => li.classList.contains('Hidden')).length;
+  assert(`Import autounattend.xml: ${phase} visible is 3, hidden is 12`, visCount === 3 && hidCount === 12, `got vis=${visCount}, hid=${hidCount}`);
 });
 
-assert('Restore test: Non-empty row automatically removed .Hidden class', !hiddenTargetTr.classList.contains('Hidden'));
+// Verify XML Components: exactly 3 visible, 12 hidden
+const compLisAll = importSimDoc.querySelectorAll('textarea[name^="ComponentContent"]').map(ta => ta.closest('li')).filter(Boolean);
+const visComp = compLisAll.filter(li => !li.classList.contains('Hidden')).length;
+const hidComp = compLisAll.filter(li => li.classList.contains('Hidden')).length;
+assert('Import autounattend.xml: XML Components visible is 3, hidden is 12', visComp === 3 && hidComp === 12, `got vis=${visComp}, hid=${hidComp}`);
+
+// Verify all AddMore buttons are enabled (not disabled)
+const allAddMoreBtns = importSimDoc.querySelectorAll('input.AddMore');
+const allEnabled = allAddMoreBtns.every(btn => btn.disabled === false);
+assert('Import autounattend.xml: All AddMore buttons remain enabled (disabled=false)', allEnabled && allAddMoreBtns.length > 0);
 
 console.log('\n====================================================');
 console.log(` Results: ${passes} PASSED / ${fails} FAILED`);
