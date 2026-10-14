@@ -198,7 +198,7 @@
 - **認証**: なし
 - **レスポンスボディ (200 OK)**:
   - **Content-Type**: `application/x-iso9660-image`
-  - **Content-Disposition**: `attachment; filename="autounattend.iso"`
+  - **Content-Disposition**: `attachment; filename="unattend.iso"`
   - **Body**: ISO 9660 規格に準拠したバイナリデータストリーム
 
 ### 4.4 XML ファイル解析・パラメータ復元 (POST `/api/generator/parse-xml`)

@@ -262,10 +262,10 @@ var SET_WALLPAPER_PS1 = [
 
 var REPO_URL = 'https://github.com/CTD-Networks-CO-LTD/unattend-generator_ja-JP';
 var COMMIT_URL_BASE = REPO_URL + '/commit/';
-var COMMIT_HASH = '2b941b8f9cff88c0044e07526cc9b75385ca89dc';
+var COMMIT_HASH = 'df8a525acedb7dcf3357c0ecbde104cd69238e46';
 var RELEASE_TAG = 'v1.7.0_20261012';
 var RELEASE_URL = 'https://github.com/CTD-Networks-CO-LTD/unattend-generator_ja-JP/releases/tag/v1.7.0_20261012';
-var COMMIT_DATE = '2026-10-12T11:16:08+09:00';
+var COMMIT_DATE = '2026-10-15T00:44:49+09:00';
 
 
 var PAUSE_WINDOWS_UPDATE_XML = "<Task version=\"1.2\" xmlns=\"http://schemas.microsoft.com/windows/2004/02/mit/task\">\n\t<Triggers>\n\t\t<BootTrigger>\n\t\t\t<Repetition>\n\t\t\t\t<Interval>P1D</Interval>\n\t\t\t\t<StopAtDurationEnd>false</StopAtDurationEnd>\n\t\t\t</Repetition>\n\t\t\t<Enabled>true</Enabled>\n\t\t</BootTrigger>\n\t</Triggers>\n\t<Principals>\n\t\t<Principal id=\"Author\">\n\t\t\t<UserId>S-1-5-19</UserId>\n\t\t\t<RunLevel>LeastPrivilege</RunLevel>\n\t\t</Principal>\n\t</Principals>\n\t<Settings>\n\t\t<MultipleInstancesPolicy>IgnoreNew</MultipleInstancesPolicy>\n\t\t<DisallowStartIfOnBatteries>false</DisallowStartIfOnBatteries>\n\t\t<StopIfGoingOnBatteries>false</StopIfGoingOnBatteries>\n\t\t<AllowHardTerminate>true</AllowHardTerminate>\n\t\t<StartWhenAvailable>false</StartWhenAvailable>\n\t\t<RunOnlyIfNetworkAvailable>false</RunOnlyIfNetworkAvailable>\n\t\t<IdleSettings>\n\t\t\t<StopOnIdleEnd>true</StopOnIdleEnd>\n\t\t\t<RestartOnIdle>false</RestartOnIdle>\n\t\t</IdleSettings>\n\t\t<AllowStartOnDemand>true</AllowStartOnDemand>\n\t\t<Enabled>true</Enabled>\n\t\t<Hidden>false</Hidden>\n\t\t<RunOnlyIfIdle>false</RunOnlyIfIdle>\n\t\t<WakeToRun>false</WakeToRun>\n\t\t<ExecutionTimeLimit>PT72H</ExecutionTimeLimit>\n\t\t<Priority>7</Priority>\n\t</Settings>\n\t<Actions Context=\"Author\">\n\t\t<Exec>\n\t\t\t<Command>C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe</Command>\n\t\t\t<Arguments>-WindowStyle Hidden -NoProfile -NonInteractive -Command \"$format = 'yyyy-MM-ddTHH\\:mm\\:ssK'; $now = [datetime]::UtcNow; $start = $now.ToString($format); $end = $now.AddDays(7).ToString($format); $params = @{ LiteralPath = 'Registry::HKLM\\Software\\Microsoft\\WindowsUpdate\\UX\\Settings'; Type = 'String'; Force = $true; Verbose = $true; }; 'PauseFeatureUpdatesStartTime', 'PauseQualityUpdatesStartTime', 'PauseUpdatesStartTime' | foreach { Set-ItemProperty @params -Name $_ -Value $start; }; 'PauseFeatureUpdatesEndTime', 'PauseQualityUpdatesEndTime', 'PauseUpdatesExpiryTime' | foreach { Set-ItemProperty @params -Name $_ -Value $end; };\"</Arguments>\n\t\t</Exec>\n\t</Actions>\n</Task>";
@@ -3835,6 +3835,8 @@ function handleEngineAction(action, formElem, buttonElem) {
 
   var formData = new FormData(formElem);
   var xmlContent = generateAutounattendXml(formData);
+  var notFilename = formData.get('NotFilename') === 'true' || formData.get('NotFilename') === 'on';
+  var xmlFilename = notFilename ? 'notautounattend.xml' : 'autounattend.xml';
 
   if (action === 'view') {
     var blob = new Blob([xmlContent], { type: 'text/xml;charset=utf-8' });
@@ -3847,18 +3849,18 @@ function handleEngineAction(action, formElem, buttonElem) {
     var dlUrl = URL.createObjectURL(blobXml);
     var a = document.createElement('a');
     a.href = dlUrl;
-    a.download = 'autounattend.xml';
+    a.download = xmlFilename;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
     setTimeout(function () { URL.revokeObjectURL(dlUrl); }, 10000);
     return true;
   } else if (action === 'iso') {
-    var isoBlob = createIsoBlob('autounattend.xml', xmlContent);
+    var isoBlob = createIsoBlob(xmlFilename, xmlContent);
     var isoUrl = URL.createObjectURL(isoBlob);
     var aIso = document.createElement('a');
     aIso.href = isoUrl;
-    aIso.download = 'autounattend.iso';
+    aIso.download = 'unattend.iso';
     document.body.appendChild(aIso);
     aIso.click();
     document.body.removeChild(aIso);
@@ -4058,12 +4060,12 @@ function initEngine() {
     }
 
     var action = null;
-    if (formaction.indexOf('view') !== -1 || text.indexOf('表示') !== -1 || text.indexOf('View') !== -1) {
+    if (formaction.indexOf('view') !== -1 || text.indexOf('View .xml file') !== -1 || text.indexOf('表示') !== -1 || text.indexOf('View') !== -1) {
       action = 'view';
-    } else if (formaction.indexOf('download') !== -1 || text.indexOf('ダウンロード') !== -1 || text.indexOf('Download') !== -1) {
-      action = 'download';
-    } else if (formaction.indexOf('iso') !== -1 || text.indexOf('ISO') !== -1) {
+    } else if (formaction.indexOf('iso') !== -1 || text.toLowerCase().indexOf('.iso') !== -1 || text.indexOf('ISO') !== -1) {
       action = 'iso';
+    } else if (formaction.indexOf('download') !== -1 || text.indexOf('Download .xml file') !== -1 || text.indexOf('ダウンロード') !== -1 || text.indexOf('Download') !== -1) {
+      action = 'download';
     }
 
     if (action) {

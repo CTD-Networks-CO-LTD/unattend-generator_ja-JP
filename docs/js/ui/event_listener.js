@@ -17,6 +17,8 @@ function handleEngineAction(action, formElem, buttonElem) {
 
   var formData = new FormData(formElem);
   var xmlContent = generateAutounattendXml(formData);
+  var notFilename = formData.get('NotFilename') === 'true' || formData.get('NotFilename') === 'on';
+  var xmlFilename = notFilename ? 'notautounattend.xml' : 'autounattend.xml';
 
   if (action === 'view') {
     var blob = new Blob([xmlContent], { type: 'text/xml;charset=utf-8' });
@@ -29,18 +31,18 @@ function handleEngineAction(action, formElem, buttonElem) {
     var dlUrl = URL.createObjectURL(blobXml);
     var a = document.createElement('a');
     a.href = dlUrl;
-    a.download = 'autounattend.xml';
+    a.download = xmlFilename;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
     setTimeout(function () { URL.revokeObjectURL(dlUrl); }, 10000);
     return true;
   } else if (action === 'iso') {
-    var isoBlob = createIsoBlob('autounattend.xml', xmlContent);
+    var isoBlob = createIsoBlob(xmlFilename, xmlContent);
     var isoUrl = URL.createObjectURL(isoBlob);
     var aIso = document.createElement('a');
     aIso.href = isoUrl;
-    aIso.download = 'autounattend.iso';
+    aIso.download = 'unattend.iso';
     document.body.appendChild(aIso);
     aIso.click();
     document.body.removeChild(aIso);
@@ -240,12 +242,12 @@ function initEngine() {
     }
 
     var action = null;
-    if (formaction.indexOf('view') !== -1 || text.indexOf('表示') !== -1 || text.indexOf('View') !== -1) {
+    if (formaction.indexOf('view') !== -1 || text.indexOf('View .xml file') !== -1 || text.indexOf('表示') !== -1 || text.indexOf('View') !== -1) {
       action = 'view';
-    } else if (formaction.indexOf('download') !== -1 || text.indexOf('ダウンロード') !== -1 || text.indexOf('Download') !== -1) {
-      action = 'download';
-    } else if (formaction.indexOf('iso') !== -1 || text.indexOf('ISO') !== -1) {
+    } else if (formaction.indexOf('iso') !== -1 || text.toLowerCase().indexOf('.iso') !== -1 || text.indexOf('ISO') !== -1) {
       action = 'iso';
+    } else if (formaction.indexOf('download') !== -1 || text.indexOf('Download .xml file') !== -1 || text.indexOf('ダウンロード') !== -1 || text.indexOf('Download') !== -1) {
+      action = 'download';
     }
 
     if (action) {
