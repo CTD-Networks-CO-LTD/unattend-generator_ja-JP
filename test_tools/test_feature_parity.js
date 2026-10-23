@@ -655,6 +655,122 @@ function runTests() {
   assert(!randomXml.includes('<ComputerName>'), 'ComputerNameMode=Random 時に <ComputerName> 要素が出力されないこと');
   assert(!randomXml.includes('GetComputerName.ps1'), 'ComputerNameMode=Random 時に GetComputerName.ps1 が埋め込まれないこと');
 
+  // ============================================================
+  // ユーザーアカウント 15枠拡張テスト (plan_01)
+  // ============================================================
+  console.log('\n--- User Accounts 15 Slots Parity & Boundary Tests ---');
+
+  // 旧境界: index 9 と index 10
+  const accBoundaryParams = new MockFormData({
+    UserAccountMode: 'Unattended',
+    AccountName9: 'UserNine',
+    AccountGroup9: 'Administrators',
+    AccountPassword9: 'Pass9!',
+    AccountName10: 'UserTen',
+    AccountGroup10: 'Users',
+    AccountPassword10: 'Pass10!'
+  });
+  const accBoundaryXml = engine.generateAutounattendXml(accBoundaryParams);
+  assert(accBoundaryXml.includes('<Name>UserNine</Name>'), 'AccountName9 (旧上限内) が出力されること');
+  assert(accBoundaryXml.includes('<Name>UserTen</Name>'), 'AccountName10 (旧上限超え・新対応) が出力されること');
+  assert(accBoundaryXml.includes('<Group>Users</Group>'), 'AccountGroup10 のグループ指定が反映されること');
+
+  // 最大枠 index 14 のみ指定
+  const accMaxParams = new MockFormData({
+    UserAccountMode: 'Unattended',
+    AccountName14: 'UserFourteen',
+    AccountGroup14: 'Administrators'
+  });
+  const accMaxXml = engine.generateAutounattendXml(accMaxParams);
+  assert(accMaxXml.includes('<Name>UserFourteen</Name>'), 'AccountName14 (最大枠) のみ指定時に指定アカウントが出力されること');
+  assert(!accMaxXml.includes('<Name>Admin</Name>') && !accMaxXml.includes('<Name>User</Name>'), '高位枠のみ指定時に意図しない既定アカウント補完が走らないこと');
+
+  // 疎な入力 (0, 10, 14)
+  const accSparseParams = new MockFormData({
+    UserAccountMode: 'Unattended',
+    AccountName0: 'UserZero',
+    AccountName10: 'UserTen',
+    AccountName14: 'UserFourteen'
+  });
+  const accSparseXml = engine.generateAutounattendXml(accSparseParams);
+  assert(accSparseXml.includes('<Name>UserZero</Name>') &&
+         accSparseXml.includes('<Name>UserTen</Name>') &&
+         accSparseXml.includes('<Name>UserFourteen</Name>'), '疎な入力(0, 10, 14)がすべて反映されること');
+
+  // 全15枠入力
+  const accFullData = { UserAccountMode: 'Unattended' };
+  for (let i = 0; i < 15; i++) {
+    accFullData['AccountName' + i] = 'AccUser' + i;
+  }
+  const accFullXml = engine.generateAutounattendXml(new MockFormData(accFullData));
+  let allAccPresent = true;
+  for (let i = 0; i < 15; i++) {
+    if (!accFullXml.includes('<Name>AccUser' + i + '</Name>')) {
+      allAccPresent = false;
+      break;
+    }
+  }
+  assert(allAccPresent, '全15件のアカウント(AccUser0〜AccUser14)がXMLに出力されること');
+
+  // ============================================================
+  // XML コンポーネント 15枠拡張テスト (plan_02)
+  // ============================================================
+  console.log('\n--- XML Components 15 Slots Parity & Boundary Tests ---');
+
+  // 旧境界: index 2 と index 3
+  const compBoundaryParams = new MockFormData({
+    Component2: 'Microsoft-Windows-Setup-specialize',
+    ComponentContent2: '<Data>Val2</Data>',
+    Component3: 'Microsoft-Windows-Shell-Setup-specialize',
+    ComponentContent3: '<Data>Val3</Data>'
+  });
+  const compBoundaryXml = engine.generateAutounattendXml(compBoundaryParams);
+  assert(compBoundaryXml.includes('<Data>Val2</Data>'), 'ComponentContent2 (旧上限内) が出力されること');
+  assert(compBoundaryXml.includes('<Data>Val3</Data>'), 'ComponentContent3 (旧上限超え・新対応) が出力されること');
+
+  // 最大枠 index 14 のみ指定
+  const compMaxParams = new MockFormData({
+    Component14: 'Microsoft-Windows-Shell-Setup-specialize',
+    ComponentContent14: '<MaxSlotCustom>Slot14</MaxSlotCustom>'
+  });
+  const compMaxXml = engine.generateAutounattendXml(compMaxParams);
+  assert(compMaxXml.includes('<MaxSlotCustom>Slot14</MaxSlotCustom>'), 'ComponentContent14 (最大枠) が出力されること');
+
+  // 疎な入力 (0, 3, 14)
+  const compSparseParams = new MockFormData({
+    Component0: 'Microsoft-Windows-Setup-specialize',
+    ComponentContent0: '<Sparse>Sparse0</Sparse>',
+    Component3: 'Microsoft-Windows-Setup-offlineServicing',
+    ComponentContent3: '<Sparse>Sparse3</Sparse>',
+    Component14: 'Microsoft-Windows-Shell-Setup-oobeSystem',
+    ComponentContent14: '<Sparse>Sparse14</Sparse>'
+  });
+  const compSparseXml = engine.generateAutounattendXml(compSparseParams);
+  assert(compSparseXml.includes('<Sparse>Sparse0</Sparse>') &&
+         compSparseXml.includes('<Sparse>Sparse3</Sparse>') &&
+         compSparseXml.includes('<Sparse>Sparse14</Sparse>'), '疎な入力(0, 3, 14)がすべて対応Passに出力されること');
+
+  // UI ガードレール (08_user_accounts.html, 27_xml_components.html)
+  const accountsHtml = fs.readFileSync(path.join(__dirname, '..', 'docs', 'sections', '08_user_accounts.html'), 'utf8');
+  const accMatches = [];
+  let mAcc;
+  const regAcc = /name="AccountName(\d+)"/g;
+  while ((mAcc = regAcc.exec(accountsHtml)) !== null) {
+    accMatches.push(parseInt(mAcc[1], 10));
+  }
+  assert(accMatches.length === 15 && Math.max(...accMatches) === 14 && Math.min(...accMatches) === 0,
+    '08_user_accounts.html に AccountName0〜14 の 15 個の入力が存在');
+
+  const compHtml = fs.readFileSync(path.join(__dirname, '..', 'docs', 'sections', '27_xml_components.html'), 'utf8');
+  const compMatches = [];
+  let mComp;
+  const regComp = /name="ComponentContent(\d+)"/g;
+  while ((mComp = regComp.exec(compHtml)) !== null) {
+    compMatches.push(parseInt(mComp[1], 10));
+  }
+  assert(compMatches.length === 15 && Math.max(...compMatches) === 14 && Math.min(...compMatches) === 0,
+    '27_xml_components.html に ComponentContent0〜14 の 15 個の入力が存在');
+
   console.log('\n====================================================');
   console.log(` テスト結果: ${passed} 項目合格 / ${failed} 項目失敗`);
   console.log('====================================================\n');

@@ -38,3 +38,6 @@ jobs:
       - name: Run Feature Parity & AST Tests
         run: node test_tools/test_feature_parity.js
 
+      - name: Run Custom Scripts Full Lifecycle E2E Tests
+        run: node test_tools/verify_custom_scripts_e2e.js
+
