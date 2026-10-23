@@ -11,8 +11,9 @@ UsersModifier.prototype.process = function () {
   var autoLogonMode = ctx.getVal('AutoLogonMode', 'Own');
   var obscurePasswords = ctx.getBool('ObscurePasswords', false);
   var accounts = [];
+  var MAX_USER_ACCOUNTS = 15;
 
-  for (var i = 0; i < 10; i++) {
+  for (var i = 0; i < MAX_USER_ACCOUNTS; i++) {
     var accName = (ctx.formData && typeof ctx.formData.get === 'function') ? ctx.formData.get('AccountName' + i) : null;
     if (accName) {
       accounts.push({

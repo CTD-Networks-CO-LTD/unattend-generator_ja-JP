@@ -262,10 +262,10 @@ var SET_WALLPAPER_PS1 = [
 
 var REPO_URL = 'https://github.com/CTD-Networks-CO-LTD/unattend-generator_ja-JP';
 var COMMIT_URL_BASE = REPO_URL + '/commit/';
-var COMMIT_HASH = 'df8a525acedb7dcf3357c0ecbde104cd69238e46';
-var RELEASE_TAG = 'v1.7.0_20261012';
-var RELEASE_URL = 'https://github.com/CTD-Networks-CO-LTD/unattend-generator_ja-JP/releases/tag/v1.7.0_20261012';
-var COMMIT_DATE = '2026-10-15T00:44:49+09:00';
+var COMMIT_HASH = '7930587e99698f7f2d1bead68d273e47cc519e5f';
+var RELEASE_TAG = 'v1.7.1_20261015';
+var RELEASE_URL = 'https://github.com/CTD-Networks-CO-LTD/unattend-generator_ja-JP/releases/tag/v1.7.1_20261015';
+var COMMIT_DATE = '2026-10-23T14:40:13+09:00';
 
 
 var PAUSE_WINDOWS_UPDATE_XML = "<Task version=\"1.2\" xmlns=\"http://schemas.microsoft.com/windows/2004/02/mit/task\">\n\t<Triggers>\n\t\t<BootTrigger>\n\t\t\t<Repetition>\n\t\t\t\t<Interval>P1D</Interval>\n\t\t\t\t<StopAtDurationEnd>false</StopAtDurationEnd>\n\t\t\t</Repetition>\n\t\t\t<Enabled>true</Enabled>\n\t\t</BootTrigger>\n\t</Triggers>\n\t<Principals>\n\t\t<Principal id=\"Author\">\n\t\t\t<UserId>S-1-5-19</UserId>\n\t\t\t<RunLevel>LeastPrivilege</RunLevel>\n\t\t</Principal>\n\t</Principals>\n\t<Settings>\n\t\t<MultipleInstancesPolicy>IgnoreNew</MultipleInstancesPolicy>\n\t\t<DisallowStartIfOnBatteries>false</DisallowStartIfOnBatteries>\n\t\t<StopIfGoingOnBatteries>false</StopIfGoingOnBatteries>\n\t\t<AllowHardTerminate>true</AllowHardTerminate>\n\t\t<StartWhenAvailable>false</StartWhenAvailable>\n\t\t<RunOnlyIfNetworkAvailable>false</RunOnlyIfNetworkAvailable>\n\t\t<IdleSettings>\n\t\t\t<StopOnIdleEnd>true</StopOnIdleEnd>\n\t\t\t<RestartOnIdle>false</RestartOnIdle>\n\t\t</IdleSettings>\n\t\t<AllowStartOnDemand>true</AllowStartOnDemand>\n\t\t<Enabled>true</Enabled>\n\t\t<Hidden>false</Hidden>\n\t\t<RunOnlyIfIdle>false</RunOnlyIfIdle>\n\t\t<WakeToRun>false</WakeToRun>\n\t\t<ExecutionTimeLimit>PT72H</ExecutionTimeLimit>\n\t\t<Priority>7</Priority>\n\t</Settings>\n\t<Actions Context=\"Author\">\n\t\t<Exec>\n\t\t\t<Command>C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe</Command>\n\t\t\t<Arguments>-WindowStyle Hidden -NoProfile -NonInteractive -Command \"$format = 'yyyy-MM-ddTHH\\:mm\\:ssK'; $now = [datetime]::UtcNow; $start = $now.ToString($format); $end = $now.AddDays(7).ToString($format); $params = @{ LiteralPath = 'Registry::HKLM\\Software\\Microsoft\\WindowsUpdate\\UX\\Settings'; Type = 'String'; Force = $true; Verbose = $true; }; 'PauseFeatureUpdatesStartTime', 'PauseQualityUpdatesStartTime', 'PauseUpdatesStartTime' | foreach { Set-ItemProperty @params -Name $_ -Value $start; }; 'PauseFeatureUpdatesEndTime', 'PauseQualityUpdatesEndTime', 'PauseUpdatesExpiryTime' | foreach { Set-ItemProperty @params -Name $_ -Value $end; };\"</Arguments>\n\t\t</Exec>\n\t</Actions>\n</Task>";
@@ -1601,8 +1601,9 @@ UsersModifier.prototype.process = function () {
   var autoLogonMode = ctx.getVal('AutoLogonMode', 'Own');
   var obscurePasswords = ctx.getBool('ObscurePasswords', false);
   var accounts = [];
+  var MAX_USER_ACCOUNTS = 15;
 
-  for (var i = 0; i < 10; i++) {
+  for (var i = 0; i < MAX_USER_ACCOUNTS; i++) {
     var accName = (ctx.formData && typeof ctx.formData.get === 'function') ? ctx.formData.get('AccountName' + i) : null;
     if (accName) {
       accounts.push({
@@ -2432,30 +2433,27 @@ ScriptsModifier.prototype.process = function () {
     ctx.sequences.userOnce.restartExplorer();
   }
 
-  // 2. Process custom scripts across all phases
+  // 2. Process custom scripts across all phases (up to 15 per phase)
+  var MAX_CUSTOM_SCRIPTS_PER_PHASE = 15;
   var phases = [
     {
       name: 'System',
       sequence: ctx.sequences.specialize,
-      count: 4,
       defaultTypes: ['Cmd', 'Ps1', 'Reg', 'Vbs']
     },
     {
       name: 'DefaultUser',
       sequence: ctx.sequences.defaultUser,
-      count: 3,
       defaultTypes: ['Reg', 'Cmd', 'Ps1']
     },
     {
       name: 'FirstLogon',
       sequence: ctx.sequences.firstLogon,
-      count: 4,
       defaultTypes: ['Cmd', 'Ps1', 'Reg', 'Vbs']
     },
     {
       name: 'UserOnce',
       sequence: ctx.sequences.userOnce,
-      count: 4,
       defaultTypes: ['Cmd', 'Ps1', 'Reg', 'Vbs']
     }
   ];
@@ -2464,13 +2462,13 @@ ScriptsModifier.prototype.process = function () {
 
   for (var p = 0; p < phases.length; p++) {
     var phase = phases[p];
-    for (var i = 0; i < phase.count; i++) {
+    for (var i = 0; i < MAX_CUSTOM_SCRIPTS_PER_PHASE; i++) {
       var scriptKey = phase.name + 'Script' + i;
       var typeKey = phase.name + 'ScriptType' + i;
       var rawContent = ctx.getVal(scriptKey, '');
       if (rawContent && rawContent.trim().length > 0) {
         var content = rawContent.trim();
-        var type = ctx.getVal(typeKey, phase.defaultTypes[i] || 'Cmd');
+        var type = ctx.getVal(typeKey, (phase.defaultTypes && phase.defaultTypes[i]) || 'Cmd');
 
         scriptIndex++;
         var hexIndex = (scriptIndex < 16 ? '0' : '') + scriptIndex.toString(16).toLowerCase();
@@ -2693,8 +2691,9 @@ function ComponentsModifier(context) {
 ComponentsModifier.prototype.process = function () {
   var ctx = this.context;
   this.components = [];
+  var MAX_XML_COMPONENTS = 15;
 
-  for (var i = 0; i <= 2; i++) {
+  for (var i = 0; i < MAX_XML_COMPONENTS; i++) {
     var compVal = ctx.getVal('Component' + i, '');
     var compMarkup = ctx.getVal('ComponentContent' + i, '');
 
@@ -3320,7 +3319,11 @@ function applyQueryToForm(queryString, targetForm) {
   });
 
   // 6. Dependent / sequential controls
-  var dependentKeys = ['Keyboard', 'GeoLocation', 'Keyboard2', 'Keyboard3', 'AccountGroup0', 'AccountGroup1', 'AccountGroup2', 'AccountGroup3', 'AccountGroup4', 'AccountGroup5', 'AccountGroup6', 'AccountGroup7', 'AccountGroup8', 'AccountGroup9'];
+  var dependentKeys = ['Keyboard', 'GeoLocation', 'Keyboard2', 'Keyboard3',
+    'AccountGroup0', 'AccountGroup1', 'AccountGroup2', 'AccountGroup3', 'AccountGroup4',
+    'AccountGroup5', 'AccountGroup6', 'AccountGroup7', 'AccountGroup8', 'AccountGroup9',
+    'AccountGroup10', 'AccountGroup11', 'AccountGroup12', 'AccountGroup13', 'AccountGroup14'
+  ];
   dependentKeys.forEach(function (key) {
     if (params.has(key)) {
       var el = form.querySelector('select[name="' + key + '"], input[name="' + key + '"]');

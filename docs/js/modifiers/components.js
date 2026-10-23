@@ -128,8 +128,9 @@ function ComponentsModifier(context) {
 ComponentsModifier.prototype.process = function () {
   var ctx = this.context;
   this.components = [];
+  var MAX_XML_COMPONENTS = 15;
 
-  for (var i = 0; i <= 2; i++) {
+  for (var i = 0; i < MAX_XML_COMPONENTS; i++) {
     var compVal = ctx.getVal('Component' + i, '');
     var compMarkup = ctx.getVal('ComponentContent' + i, '');
 

@@ -13,30 +13,27 @@ ScriptsModifier.prototype.process = function () {
     ctx.sequences.userOnce.restartExplorer();
   }
 
-  // 2. Process custom scripts across all phases
+  // 2. Process custom scripts across all phases (up to 15 per phase)
+  var MAX_CUSTOM_SCRIPTS_PER_PHASE = 15;
   var phases = [
     {
       name: 'System',
       sequence: ctx.sequences.specialize,
-      count: 4,
       defaultTypes: ['Cmd', 'Ps1', 'Reg', 'Vbs']
     },
     {
       name: 'DefaultUser',
       sequence: ctx.sequences.defaultUser,
-      count: 3,
       defaultTypes: ['Reg', 'Cmd', 'Ps1']
     },
     {
       name: 'FirstLogon',
       sequence: ctx.sequences.firstLogon,
-      count: 4,
       defaultTypes: ['Cmd', 'Ps1', 'Reg', 'Vbs']
     },
     {
       name: 'UserOnce',
       sequence: ctx.sequences.userOnce,
-      count: 4,
       defaultTypes: ['Cmd', 'Ps1', 'Reg', 'Vbs']
     }
   ];
@@ -45,13 +42,13 @@ ScriptsModifier.prototype.process = function () {
 
   for (var p = 0; p < phases.length; p++) {
     var phase = phases[p];
-    for (var i = 0; i < phase.count; i++) {
+    for (var i = 0; i < MAX_CUSTOM_SCRIPTS_PER_PHASE; i++) {
       var scriptKey = phase.name + 'Script' + i;
       var typeKey = phase.name + 'ScriptType' + i;
       var rawContent = ctx.getVal(scriptKey, '');
       if (rawContent && rawContent.trim().length > 0) {
         var content = rawContent.trim();
-        var type = ctx.getVal(typeKey, phase.defaultTypes[i] || 'Cmd');
+        var type = ctx.getVal(typeKey, (phase.defaultTypes && phase.defaultTypes[i]) || 'Cmd');
 
         scriptIndex++;
         var hexIndex = (scriptIndex < 16 ? '0' : '') + scriptIndex.toString(16).toLowerCase();

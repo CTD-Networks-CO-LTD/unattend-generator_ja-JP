@@ -115,7 +115,11 @@ function applyQueryToForm(queryString, targetForm) {
   });
 
   // 6. Dependent / sequential controls
-  var dependentKeys = ['Keyboard', 'GeoLocation', 'Keyboard2', 'Keyboard3', 'AccountGroup0', 'AccountGroup1', 'AccountGroup2', 'AccountGroup3', 'AccountGroup4', 'AccountGroup5', 'AccountGroup6', 'AccountGroup7', 'AccountGroup8', 'AccountGroup9'];
+  var dependentKeys = ['Keyboard', 'GeoLocation', 'Keyboard2', 'Keyboard3',
+    'AccountGroup0', 'AccountGroup1', 'AccountGroup2', 'AccountGroup3', 'AccountGroup4',
+    'AccountGroup5', 'AccountGroup6', 'AccountGroup7', 'AccountGroup8', 'AccountGroup9',
+    'AccountGroup10', 'AccountGroup11', 'AccountGroup12', 'AccountGroup13', 'AccountGroup14'
+  ];
   dependentKeys.forEach(function (key) {
     if (params.has(key)) {
       var el = form.querySelector('select[name="' + key + '"], input[name="' + key + '"]');
