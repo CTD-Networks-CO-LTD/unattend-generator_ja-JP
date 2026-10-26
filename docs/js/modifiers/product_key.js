@@ -10,7 +10,7 @@ ProductKeyModifier.prototype.process = function () {
   ctx.peMode = ctx.getVal('PEMode', 'Default');
   ctx.winEditionMode = ctx.getVal('WindowsEditionMode', 'Interactive');
   ctx.productKeyVal = ctx.getVal('ProductKey', '00000-00000-00000-00000-00000');
-  ctx.useConfigurationSet = ctx.getBool('UseConfigurationSet', false);
+  ctx.useConfigurationSet = true;
 };
 
 if (typeof module !== 'undefined' && module.exports) {

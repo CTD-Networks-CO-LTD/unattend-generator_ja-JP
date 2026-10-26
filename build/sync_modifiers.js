@@ -158,6 +158,87 @@ function checkSync() {
     }
   }
 
+  // Check critical C# -> JS content parity for Disk.cs & UseConfigurationSet (PR #83 / #84 guardrail)
+  const parityErrors = [];
+  const csDiskFile = path.join(modifierDir, 'Disk.cs');
+  const jsDiskFile = path.join(jsModifiersDir, 'disk.js');
+  const xmlResourceFile = path.join(repoRoot, 'resource', 'autounattend.xml');
+
+  if (fs.existsSync(csDiskFile) && fs.existsSync(jsDiskFile)) {
+    const csDiskContent = fs.readFileSync(csDiskFile, 'utf8');
+    const jsDiskContent = fs.readFileSync(jsDiskFile, 'utf8');
+
+    const requiredDiskPatterns = [
+      {
+        label: 'WinPE driver loading message (%PEDRIVERS_FOLDER%)',
+        csCheck: 'call :print "Loading drivers from %PEDRIVERS_FOLDER%"',
+        jsCheck: 'call :print "Loading drivers from %PEDRIVERS_FOLDER%"'
+      },
+      {
+        label: 'WinPE driver loading loop (single-line for /R ... %%f IN (*.inf) do drvload.exe "%%f")',
+        csCheck: 'for /R %PEDRIVERS_FOLDER% %%f IN (*.inf) do drvload.exe "%%f"',
+        jsCheck: 'for /R %PEDRIVERS_FOLDER% %%f IN (*.inf) do drvload.exe "%%f"'
+      },
+      {
+        label: 'WinPE VirtIO driver loading message (%VIRTIO_DRIVE%)',
+        csCheck: 'call :print "Loading VirtIO drivers from %VIRTIO_DRIVE%"',
+        jsCheck: 'call :print "Loading VirtIO drivers from %VIRTIO_DRIVE%"'
+      },
+      {
+        label: 'WinPE driver injection message (%PEDRIVERS_FOLDER%)',
+        csCheck: 'call :print "Adding drivers from %PEDRIVERS_FOLDER% to new installation"',
+        jsCheck: 'call :print "Adding drivers from %PEDRIVERS_FOLDER% to new installation"'
+      },
+      {
+        label: 'WinPE VirtIO driver injection message (%VIRTIO_DRIVE%)',
+        csCheck: 'call :print "Adding VirtIO drivers from %VIRTIO_DRIVE% to new installation"',
+        jsCheck: 'call :print "Adding VirtIO drivers from %VIRTIO_DRIVE% to new installation"'
+      },
+      {
+        label: 'WinPE WinRE deletion message',
+        csCheck: 'call :print "Deleting winre.wim file to avoid creation of recovery partition"',
+        jsCheck: 'call :print "Deleting winre.wim file to avoid creation of recovery partition"'
+      },
+      {
+        label: 'WinPE $OEM$ copy message (%OEM_FOLDER%)',
+        csCheck: 'call :print "Copying contents of %OEM_FOLDER%"',
+        jsCheck: 'call :print "Copying contents of %OEM_FOLDER%"'
+      }
+    ];
+
+    for (const p of requiredDiskPatterns) {
+      if (csDiskContent.includes(p.csCheck) && !jsDiskContent.includes(p.jsCheck)) {
+        parityErrors.push(`docs/js/modifiers/disk.js missing C# parity pattern: ${p.label} -> expected '${p.jsCheck}'`);
+        hasError = true;
+      }
+    }
+
+    // Forbidden legacy patterns in disk.js
+    const forbiddenDiskPatterns = [
+      'Loading drivers from $WinPEDriver$ folder',
+      'Adding drivers from $WinPEDriver$ folder to new installation',
+      'Copying contents of $OEM$ folder',
+      "ctx.getBool('UseConfigurationSet'"
+    ];
+    for (const fb of forbiddenDiskPatterns) {
+      if (jsDiskContent.includes(fb)) {
+        parityErrors.push(`docs/js/modifiers/disk.js contains obsolete pattern: '${fb}'`);
+        hasError = true;
+      }
+    }
+  }
+
+  if (fs.existsSync(xmlResourceFile) && fs.existsSync(generatorEngineFile)) {
+    const xmlResContent = fs.readFileSync(xmlResourceFile, 'utf8');
+    const genEngContent = fs.readFileSync(generatorEngineFile, 'utf8');
+    if (xmlResContent.includes('<UseConfigurationSet>true</UseConfigurationSet>')) {
+      if (!genEngContent.includes("winSetup.addSimpleElement('UseConfigurationSet', 'true')")) {
+        parityErrors.push("docs/js/generator_engine.js must set <UseConfigurationSet> unconditionally to 'true' matching resource/autounattend.xml");
+        hasError = true;
+      }
+    }
+  }
+
   // Output results
   console.log('\n--- Verification Summary ---');
   console.log(`Total C# modifier files: ${csFiles.length}`);
@@ -190,6 +271,13 @@ function checkSync() {
     console.error('\n[ERROR] Script resource(s) missing from docs/js/core/constants.js:');
     for (const r of missingResources) {
       console.error(`  - "${r.resource}" (expected constant: ${r.expectedConst})`);
+    }
+  }
+
+  if (parityErrors.length > 0) {
+    console.error('\n[ERROR] C# <-> JS Content Parity Mismatch(es) detected:');
+    for (const pe of parityErrors) {
+      console.error(`  - ${pe}`);
     }
   }
 

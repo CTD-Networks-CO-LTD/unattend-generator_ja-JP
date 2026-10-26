@@ -344,15 +344,13 @@ function getPEScript(ctx) {
 
   // 4. Drivers
   lines.push('if defined PEDRIVERS_FOLDER (');
-  lines.push('    call :print "Loading drivers from $WinPEDriver$ folder"');
-  lines.push('    for /r "%PEDRIVERS_FOLDER%" %%s in (*.inf) do (');
-  lines.push('        drvload.exe "%%s"');
-  lines.push('    )');
+  lines.push('    call :print "Loading drivers from %PEDRIVERS_FOLDER%"');
+  lines.push('    for /R %PEDRIVERS_FOLDER% %%f IN (*.inf) do drvload.exe "%%f"');
   lines.push(')');
   lines.push('');
   if (ctx.getBool('VirtIoGuestTools', false)) {
     lines.push('if defined VIRTIO_DRIVE (');
-    lines.push('    call :print "Loading VirtIO drivers"');
+    lines.push('    call :print "Loading VirtIO drivers from %VIRTIO_DRIVE%"');
     lines.push('    drvload.exe "%VIRTIO_DRIVE%\\vioscsi\\w%OS_VERSION%\\%PROCESSOR_ARCHITECTURE%\\vioscsi.inf"');
     lines.push('    drvload.exe "%VIRTIO_DRIVE%\\viostor\\w%OS_VERSION%\\%PROCESSOR_ARCHITECTURE%\\viostor.inf"');
     lines.push('    drvload.exe "%VIRTIO_DRIVE%\\NetKVM\\w%OS_VERSION%\\%PROCESSOR_ARCHITECTURE%\\netkvm.inf"');
@@ -480,7 +478,7 @@ function getPEScript(ctx) {
 
   // 9. WinRE removal
   function deleteWinRE() {
-    lines.push('call :print "Deleting Windows Recovery Environment (WinRE)"');
+    lines.push('call :print "Deleting winre.wim file to avoid creation of recovery partition"');
     lines.push('del W:\\Windows\\System32\\Recovery\\winre.wim');
     lines.push('');
   }
@@ -506,13 +504,13 @@ function getPEScript(ctx) {
 
   // 11. Inject drivers
   lines.push('if defined PEDRIVERS_FOLDER (');
-  lines.push('    call :print "Adding drivers from $WinPEDriver$ folder to new installation"');
+  lines.push('    call :print "Adding drivers from %PEDRIVERS_FOLDER% to new installation"');
   lines.push('    dism.exe /Add-Driver /Image:W:\\ /Driver:"%PEDRIVERS_FOLDER%" /Recurse');
   lines.push(')');
   lines.push('');
   if (ctx.getBool('VirtIoGuestTools', false)) {
     lines.push('if defined VIRTIO_DRIVE (');
-    lines.push('    call :print "Adding VirtIO drivers to new installation"');
+    lines.push('    call :print "Adding VirtIO drivers from %VIRTIO_DRIVE% to new installation"');
     lines.push('    dism.exe /Add-Driver /Image:W:\\ /Driver:"%VIRTIO_DRIVE%\\vioscsi\\w%OS_VERSION%\\%PROCESSOR_ARCHITECTURE%\\vioscsi.inf"');
     lines.push('    dism.exe /Add-Driver /Image:W:\\ /Driver:"%VIRTIO_DRIVE%\\viostor\\w%OS_VERSION%\\%PROCESSOR_ARCHITECTURE%\\viostor.inf"');
     lines.push('    dism.exe /Add-Driver /Image:W:\\ /Driver:"%VIRTIO_DRIVE%\\NetKVM\\w%OS_VERSION%\\%PROCESSOR_ARCHITECTURE%\\netkvm.inf"');
@@ -587,19 +585,17 @@ function getPEScript(ctx) {
     lines.push('');
   }
 
-  // 18. UseConfigurationSet ($OEM$)
-  if (ctx.getBool('UseConfigurationSet', false)) {
-    lines.push('set "ROBOCOPY_ARGS=/E /XX /COPY:DAT /DCOPY:DAT /R:0"');
-    lines.push('if defined OEM_FOLDER (');
-    lines.push('    call :print "Copying contents of $OEM$ folder"');
-    lines.push('    if exist "%OEM_FOLDER%\\$$" robocopy.exe "%OEM_FOLDER%\\$$" W:\\Windows %ROBOCOPY_ARGS%');
-    lines.push('    if exist "%OEM_FOLDER%\\$1" robocopy.exe "%OEM_FOLDER%\\$1" W:\\ %ROBOCOPY_ARGS%');
-    lines.push('    for %%d in (C D E F G H I J K L M N O P Q R S T U V W X Y Z) do (');
-    lines.push('        if exist "%OEM_FOLDER%\\%%d" robocopy.exe "%OEM_FOLDER%\\%%d" %%d:\\ %ROBOCOPY_ARGS%');
-    lines.push('    )');
-    lines.push(')');
-    lines.push('');
-  }
+  // 18. UseConfigurationSet ($OEM$) - Unconditional per upstream commit 82d4ffd
+  lines.push('set "ROBOCOPY_ARGS=/E /XX /COPY:DAT /DCOPY:DAT /R:0"');
+  lines.push('if defined OEM_FOLDER (');
+  lines.push('    call :print "Copying contents of %OEM_FOLDER%"');
+  lines.push('    if exist "%OEM_FOLDER%\\$$" robocopy.exe "%OEM_FOLDER%\\$$" W:\\Windows %ROBOCOPY_ARGS%');
+  lines.push('    if exist "%OEM_FOLDER%\\$1" robocopy.exe "%OEM_FOLDER%\\$1" W:\\ %ROBOCOPY_ARGS%');
+  lines.push('    for %%d in (C D E F G H I J K L M N O P Q R S T U V W X Y Z) do (');
+  lines.push('        if exist "%OEM_FOLDER%\\%%d" robocopy.exe "%OEM_FOLDER%\\%%d" %%d:\\ %ROBOCOPY_ARGS%');
+  lines.push('    )');
+  lines.push(')');
+  lines.push('');
 
   // 19. Reboot and subroutines
   lines.push('call :print "Computer will now reboot"');

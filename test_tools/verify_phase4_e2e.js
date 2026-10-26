@@ -114,7 +114,7 @@ assert(defaultGenXml.includes('cmd.exe /c "X:\\pe.cmd"'), 'pe.cmd 実行コマ�
 const pePassMatch = defaultGenXml.match(/<settings pass="windowsPE">[\s\S]*?<\/settings>/);
 assert(pePassMatch !== null, 'windowsPE パスが存在');
 const syncCommands = pePassMatch[0].match(/<RunSynchronousCommand/g);
-assert(syncCommands && syncCommands.length === 36, 'windowsPE の RunSynchronousCommand が正確に 36 個存在 (実際: ' + (syncCommands ? syncCommands.length : 0) + ')');
+assert(syncCommands && syncCommands.length === 39, 'windowsPE の RunSynchronousCommand が正確に 39 個存在 (実際: ' + (syncCommands ? syncCommands.length : 0) + ')');
 
 console.log('\n====================================================');
 console.log(' 全 ' + (16 + 15) + ' 検証項目 合格！');
