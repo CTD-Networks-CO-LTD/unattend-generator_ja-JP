@@ -115,7 +115,7 @@ function generateAutounattendXml(formData) {
         prodKeyElem.addSimpleElement('WillShowUI', 'OnError');
       }
       userData.addSimpleElement('AcceptEula', 'true');
-      winSetup.addSimpleElement('UseConfigurationSet', context.useConfigurationSet ? 'true' : 'false');
+      winSetup.addSimpleElement('UseConfigurationSet', 'true');
 
       if (context.bypassRequirements) {
         var peRunSync = winSetup.addChild(new XmlNode('RunSynchronous'));

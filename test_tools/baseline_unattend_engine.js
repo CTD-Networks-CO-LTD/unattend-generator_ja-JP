@@ -262,10 +262,10 @@ var SET_WALLPAPER_PS1 = [
 
 var REPO_URL = 'https://github.com/CTD-Networks-CO-LTD/unattend-generator_ja-JP';
 var COMMIT_URL_BASE = REPO_URL + '/commit/';
-var COMMIT_HASH = '7930587e99698f7f2d1bead68d273e47cc519e5f';
-var RELEASE_TAG = 'v1.7.1_20261015';
-var RELEASE_URL = 'https://github.com/CTD-Networks-CO-LTD/unattend-generator_ja-JP/releases/tag/v1.7.1_20261015';
-var COMMIT_DATE = '2026-10-23T14:40:13+09:00';
+var COMMIT_HASH = 'be14d1a913fc86e71feb42a1ddd29a0518c8d2cf';
+var RELEASE_TAG = 'v1.7.2_20261023';
+var RELEASE_URL = 'https://github.com/CTD-Networks-CO-LTD/unattend-generator_ja-JP/releases/tag/v1.7.2_20261023';
+var COMMIT_DATE = '2026-10-26T20:35:54+09:00';
 
 
 var PAUSE_WINDOWS_UPDATE_XML = "<Task version=\"1.2\" xmlns=\"http://schemas.microsoft.com/windows/2004/02/mit/task\">\n\t<Triggers>\n\t\t<BootTrigger>\n\t\t\t<Repetition>\n\t\t\t\t<Interval>P1D</Interval>\n\t\t\t\t<StopAtDurationEnd>false</StopAtDurationEnd>\n\t\t\t</Repetition>\n\t\t\t<Enabled>true</Enabled>\n\t\t</BootTrigger>\n\t</Triggers>\n\t<Principals>\n\t\t<Principal id=\"Author\">\n\t\t\t<UserId>S-1-5-19</UserId>\n\t\t\t<RunLevel>LeastPrivilege</RunLevel>\n\t\t</Principal>\n\t</Principals>\n\t<Settings>\n\t\t<MultipleInstancesPolicy>IgnoreNew</MultipleInstancesPolicy>\n\t\t<DisallowStartIfOnBatteries>false</DisallowStartIfOnBatteries>\n\t\t<StopIfGoingOnBatteries>false</StopIfGoingOnBatteries>\n\t\t<AllowHardTerminate>true</AllowHardTerminate>\n\t\t<StartWhenAvailable>false</StartWhenAvailable>\n\t\t<RunOnlyIfNetworkAvailable>false</RunOnlyIfNetworkAvailable>\n\t\t<IdleSettings>\n\t\t\t<StopOnIdleEnd>true</StopOnIdleEnd>\n\t\t\t<RestartOnIdle>false</RestartOnIdle>\n\t\t</IdleSettings>\n\t\t<AllowStartOnDemand>true</AllowStartOnDemand>\n\t\t<Enabled>true</Enabled>\n\t\t<Hidden>false</Hidden>\n\t\t<RunOnlyIfIdle>false</RunOnlyIfIdle>\n\t\t<WakeToRun>false</WakeToRun>\n\t\t<ExecutionTimeLimit>PT72H</ExecutionTimeLimit>\n\t\t<Priority>7</Priority>\n\t</Settings>\n\t<Actions Context=\"Author\">\n\t\t<Exec>\n\t\t\t<Command>C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe</Command>\n\t\t\t<Arguments>-WindowStyle Hidden -NoProfile -NonInteractive -Command \"$format = 'yyyy-MM-ddTHH\\:mm\\:ssK'; $now = [datetime]::UtcNow; $start = $now.ToString($format); $end = $now.AddDays(7).ToString($format); $params = @{ LiteralPath = 'Registry::HKLM\\Software\\Microsoft\\WindowsUpdate\\UX\\Settings'; Type = 'String'; Force = $true; Verbose = $true; }; 'PauseFeatureUpdatesStartTime', 'PauseQualityUpdatesStartTime', 'PauseUpdatesStartTime' | foreach { Set-ItemProperty @params -Name $_ -Value $start; }; 'PauseFeatureUpdatesEndTime', 'PauseQualityUpdatesEndTime', 'PauseUpdatesExpiryTime' | foreach { Set-ItemProperty @params -Name $_ -Value $end; };\"</Arguments>\n\t\t</Exec>\n\t</Actions>\n</Task>";
@@ -1037,15 +1037,13 @@ function getPEScript(ctx) {
 
   // 4. Drivers
   lines.push('if defined PEDRIVERS_FOLDER (');
-  lines.push('    call :print "Loading drivers from $WinPEDriver$ folder"');
-  lines.push('    for /r "%PEDRIVERS_FOLDER%" %%s in (*.inf) do (');
-  lines.push('        drvload.exe "%%s"');
-  lines.push('    )');
+  lines.push('    call :print "Loading drivers from %PEDRIVERS_FOLDER%"');
+  lines.push('    for /R %PEDRIVERS_FOLDER% %%f IN (*.inf) do drvload.exe "%%f"');
   lines.push(')');
   lines.push('');
   if (ctx.getBool('VirtIoGuestTools', false)) {
     lines.push('if defined VIRTIO_DRIVE (');
-    lines.push('    call :print "Loading VirtIO drivers"');
+    lines.push('    call :print "Loading VirtIO drivers from %VIRTIO_DRIVE%"');
     lines.push('    drvload.exe "%VIRTIO_DRIVE%\\vioscsi\\w%OS_VERSION%\\%PROCESSOR_ARCHITECTURE%\\vioscsi.inf"');
     lines.push('    drvload.exe "%VIRTIO_DRIVE%\\viostor\\w%OS_VERSION%\\%PROCESSOR_ARCHITECTURE%\\viostor.inf"');
     lines.push('    drvload.exe "%VIRTIO_DRIVE%\\NetKVM\\w%OS_VERSION%\\%PROCESSOR_ARCHITECTURE%\\netkvm.inf"');
@@ -1173,7 +1171,7 @@ function getPEScript(ctx) {
 
   // 9. WinRE removal
   function deleteWinRE() {
-    lines.push('call :print "Deleting Windows Recovery Environment (WinRE)"');
+    lines.push('call :print "Deleting winre.wim file to avoid creation of recovery partition"');
     lines.push('del W:\\Windows\\System32\\Recovery\\winre.wim');
     lines.push('');
   }
@@ -1199,13 +1197,13 @@ function getPEScript(ctx) {
 
   // 11. Inject drivers
   lines.push('if defined PEDRIVERS_FOLDER (');
-  lines.push('    call :print "Adding drivers from $WinPEDriver$ folder to new installation"');
+  lines.push('    call :print "Adding drivers from %PEDRIVERS_FOLDER% to new installation"');
   lines.push('    dism.exe /Add-Driver /Image:W:\\ /Driver:"%PEDRIVERS_FOLDER%" /Recurse');
   lines.push(')');
   lines.push('');
   if (ctx.getBool('VirtIoGuestTools', false)) {
     lines.push('if defined VIRTIO_DRIVE (');
-    lines.push('    call :print "Adding VirtIO drivers to new installation"');
+    lines.push('    call :print "Adding VirtIO drivers from %VIRTIO_DRIVE% to new installation"');
     lines.push('    dism.exe /Add-Driver /Image:W:\\ /Driver:"%VIRTIO_DRIVE%\\vioscsi\\w%OS_VERSION%\\%PROCESSOR_ARCHITECTURE%\\vioscsi.inf"');
     lines.push('    dism.exe /Add-Driver /Image:W:\\ /Driver:"%VIRTIO_DRIVE%\\viostor\\w%OS_VERSION%\\%PROCESSOR_ARCHITECTURE%\\viostor.inf"');
     lines.push('    dism.exe /Add-Driver /Image:W:\\ /Driver:"%VIRTIO_DRIVE%\\NetKVM\\w%OS_VERSION%\\%PROCESSOR_ARCHITECTURE%\\netkvm.inf"');
@@ -1280,19 +1278,17 @@ function getPEScript(ctx) {
     lines.push('');
   }
 
-  // 18. UseConfigurationSet ($OEM$)
-  if (ctx.getBool('UseConfigurationSet', false)) {
-    lines.push('set "ROBOCOPY_ARGS=/E /XX /COPY:DAT /DCOPY:DAT /R:0"');
-    lines.push('if defined OEM_FOLDER (');
-    lines.push('    call :print "Copying contents of $OEM$ folder"');
-    lines.push('    if exist "%OEM_FOLDER%\\$$" robocopy.exe "%OEM_FOLDER%\\$$" W:\\Windows %ROBOCOPY_ARGS%');
-    lines.push('    if exist "%OEM_FOLDER%\\$1" robocopy.exe "%OEM_FOLDER%\\$1" W:\\ %ROBOCOPY_ARGS%');
-    lines.push('    for %%d in (C D E F G H I J K L M N O P Q R S T U V W X Y Z) do (');
-    lines.push('        if exist "%OEM_FOLDER%\\%%d" robocopy.exe "%OEM_FOLDER%\\%%d" %%d:\\ %ROBOCOPY_ARGS%');
-    lines.push('    )');
-    lines.push(')');
-    lines.push('');
-  }
+  // 18. UseConfigurationSet ($OEM$) - Unconditional per upstream commit 82d4ffd
+  lines.push('set "ROBOCOPY_ARGS=/E /XX /COPY:DAT /DCOPY:DAT /R:0"');
+  lines.push('if defined OEM_FOLDER (');
+  lines.push('    call :print "Copying contents of %OEM_FOLDER%"');
+  lines.push('    if exist "%OEM_FOLDER%\\$$" robocopy.exe "%OEM_FOLDER%\\$$" W:\\Windows %ROBOCOPY_ARGS%');
+  lines.push('    if exist "%OEM_FOLDER%\\$1" robocopy.exe "%OEM_FOLDER%\\$1" W:\\ %ROBOCOPY_ARGS%');
+  lines.push('    for %%d in (C D E F G H I J K L M N O P Q R S T U V W X Y Z) do (');
+  lines.push('        if exist "%OEM_FOLDER%\\%%d" robocopy.exe "%OEM_FOLDER%\\%%d" %%d:\\ %ROBOCOPY_ARGS%');
+  lines.push('    )');
+  lines.push(')');
+  lines.push('');
 
   // 19. Reboot and subroutines
   lines.push('call :print "Computer will now reboot"');
@@ -1441,7 +1437,7 @@ ProductKeyModifier.prototype.process = function () {
   ctx.peMode = ctx.getVal('PEMode', 'Default');
   ctx.winEditionMode = ctx.getVal('WindowsEditionMode', 'Interactive');
   ctx.productKeyVal = ctx.getVal('ProductKey', '00000-00000-00000-00000-00000');
-  ctx.useConfigurationSet = ctx.getBool('UseConfigurationSet', false);
+  ctx.useConfigurationSet = true;
 };
 
 if (typeof module !== 'undefined' && module.exports) {
@@ -2931,7 +2927,7 @@ function generateAutounattendXml(formData) {
         prodKeyElem.addSimpleElement('WillShowUI', 'OnError');
       }
       userData.addSimpleElement('AcceptEula', 'true');
-      winSetup.addSimpleElement('UseConfigurationSet', context.useConfigurationSet ? 'true' : 'false');
+      winSetup.addSimpleElement('UseConfigurationSet', 'true');
 
       if (context.bypassRequirements) {
         var peRunSync = winSetup.addChild(new XmlNode('RunSynchronous'));
