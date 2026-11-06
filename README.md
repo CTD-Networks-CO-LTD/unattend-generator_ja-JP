@@ -18,7 +18,7 @@ Modifications Copyright (c) 2026 CTD Networks CO., LTD.
 https://github.com/user-attachments/assets/f9b98d85-3cf4-421b-b8fe-5b79212971d0
 
 #### 2. サンプル_autounattend.xml（ZIP圧縮）
-[サンプル_autounattend.zip](https://github.com/user-attachments/files/32892418/_autounattend.zip)
+[サンプル_autounattend.xml.zip](https://github.com/user-attachments/files/34502171/_autounattend.xml.zip)
 > [!WARNING]
 > このサンプルに設定してあるログインパスワード（Passw@rd）は脆弱です。このまま運用に利用しないでください。
 
