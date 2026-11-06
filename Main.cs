@@ -375,7 +375,8 @@ public record class Configuration(
     ColorSettings: new DefaultColorSettings(),
     PESettings: new DefaultPESettings(
       EditionSettings: new InteractiveEditionSettings(),
-      BypassRequirementsCheck: true
+      BypassRequirementsCheck: true,
+      UseConfigurationSet: false
     ),
     ActivationKey: null,
     BypassNetworkCheck: false,
@@ -904,7 +905,7 @@ public static class Constants
           LocaleAndKeyboard2: null,
           LocaleAndKeyboard3: null,
           GeoLocation: generator.Lookup<GeoLocation>("244")
-        )
+        ),
       };
 
       return DiskModifier.GetPEScript(conf, pe, generator).JoinLines();
