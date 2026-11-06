@@ -64,6 +64,25 @@
               </div>
 
             </fieldset>
+
+            <div class="IndentContainer">
+              <label class="checkbox">
+                <input type="checkbox" name="BypassRequirementsCheck" value="true" />
+                <span>Bypass Windows&#xA0;11 requirements check (TPM, Secure Boot, etc.)</span>
+              </label>
+            </div>
+
+            <div class="IndentContainer">
+              <label class="checkbox">
+                <input type="checkbox" name="UseConfigurationSet" value="true" />
+                <span>Use a distribution&#xA0;share&#x2009;/&#x2009;configuration&#xA0;set</span>
+              </label>
+              <div>
+                See
+                <a href="https://github.com/cschneegans/unattend-generator/issues/474#issuecomment-6680934064">this GitHub comment</a> to learn how this setting works in various Windows versions.
+              </div>
+            </div>
+
           </div>
 
           <div class="IndentContainer">
