@@ -374,7 +374,25 @@ function runDirectDotnetOracleComparison() {
       en_default_true: { LanguageMode: 'Unattended', UILanguage: 'en-US', Locale: 'en-US', Keyboard: '00000409', GeoLocation: '244', PEMode: 'Default', BypassRequirementsCheck: 'false', UseConfigurationSet: 'true' },
       ja_default_false: { LanguageMode: 'Unattended', UILanguage: 'ja-JP', Locale: 'ja-JP', Keyboard: '00000411', GeoLocation: '122', PEMode: 'Default', BypassRequirementsCheck: 'false', UseConfigurationSet: 'false' },
       ja_default_true: { LanguageMode: 'Unattended', UILanguage: 'ja-JP', Locale: 'ja-JP', Keyboard: '00000411', GeoLocation: '122', PEMode: 'Default', BypassRequirementsCheck: 'false', UseConfigurationSet: 'true' },
-      en_generated: { LanguageMode: 'Unattended', UILanguage: 'en-US', Locale: 'en-US', Keyboard: '00000409', GeoLocation: '244', PEMode: 'Generated', PartitionMode: 'Unattended', PartitionLayout: 'GPT', RecoveryMode: 'Partition', InstallFromMode: 'Edition', InstallFromEdition: 'pro' },
+      en_generated: {
+        LanguageMode: 'Unattended',
+        UILanguage: 'en-US',
+        Locale: 'en-US',
+        Keyboard: '00000409',
+        GeoLocation: '244',
+        PEMode: 'Generated',
+        PartitionMode: 'Unattended',
+        PartitionLayout: 'GPT',
+        RecoveryMode: 'Partition',
+        InstallFromMode: 'Edition',
+        InstallFromEdition: 'pro',
+        TargetDiskSize: 'true',
+        TargetDiskMinSize: '100',
+        TargetDiskMaxSize: '4000',
+        TargetDiskIndex: 'true',
+        TargetDisk: '0',
+        TargetDiskNoPartitions: 'true'
+      },
       en_script: { LanguageMode: 'Unattended', UILanguage: 'en-US', Locale: 'en-US', Keyboard: '00000409', GeoLocation: '244', PEMode: 'Script', PEScript: '@echo off\r\necho Custom PE Script Test\r\nwpeutil.exe reboot' }
     };
 
