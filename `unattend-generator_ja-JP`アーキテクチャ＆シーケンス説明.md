@@ -149,7 +149,7 @@ sequenceDiagram
 開発時はメンテナンス性の高いモジュール分割コード（`docs/js/`）として管理し、ビルドスクリプトを実行することで配信用の単一ファイル（`docs/unattend_engine.js`）を生成します。
 
 1. **Git メタデータの抽出と同期**:
-   `git rev-parse HEAD`、リモート URL、最新タグ、コミット日時を取得し、`docs/js/core/constants.js`、`test_tools/baseline_unattend_engine.js`、および `docs/sections/header.html` を同期します。
+   `git rev-parse HEAD`、リモート URL、最新タグ、コミット日時を取得し、`docs/js/core/constants.js` および `docs/sections/header.html` を同期します（`test_tools/baseline_unattend_engine.js` は通常ビルドでは保護され、`--update-baseline` 明示指定時のみ更新されます）。
 2. **モジュールの順序付きバンドル**:
    依存関係の順序（`core/` → `modifiers/` → `generator_engine.js` → `ui/` → `index.js`）に従い、IIFE（即時実行関数式）でラップした単一ファイルを生成します。
 3. **改行コードの統一**:

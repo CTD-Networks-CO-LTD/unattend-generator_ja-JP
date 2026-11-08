@@ -143,7 +143,7 @@ function syncDynamicItemVisibility(form) {
 
   // 1. User accounts: 15 rows total (initial 5 visible, remaining 10 hidden)
   var accNameInputs = Array.from(form.querySelectorAll('input[name^="AccountName"]'));
-  var accountTrs = accNameInputs.map(function (inp) { return inp.closest('tr'); }).filter(Boolean);
+  var accountTrs = accNameInputs.map(function (inp) { return (inp && typeof inp.closest === 'function') ? inp.closest('tr') : null; }).filter(Boolean);
 
   // Reset hidden state for account rows >= 5
   accountTrs.forEach(function (tr, idx) {
@@ -180,7 +180,7 @@ function syncDynamicItemVisibility(form) {
   var scriptPhases = ['SystemScript', 'DefaultUserScript', 'FirstLogonScript', 'UserOnceScript'];
   scriptPhases.forEach(function (phase) {
     var scriptTas = Array.from(form.querySelectorAll('textarea[name^="' + phase + '"]'));
-    var scriptLis = scriptTas.map(function (ta) { return ta.closest('li'); }).filter(Boolean);
+    var scriptLis = scriptTas.map(function (ta) { return (ta && typeof ta.closest === 'function') ? ta.closest('li') : null; }).filter(Boolean);
 
     // Reset hidden state for script items >= 3
     scriptLis.forEach(function (li, idx) {
@@ -209,7 +209,7 @@ function syncDynamicItemVisibility(form) {
 
   // 3. XML components: 15 items (initial 3 visible, remaining 12 hidden)
   var compTas = Array.from(form.querySelectorAll('textarea[name^="ComponentContent"]'));
-  var compLis = compTas.map(function (ta) { return ta.closest('li'); }).filter(Boolean);
+  var compLis = compTas.map(function (ta) { return (ta && typeof ta.closest === 'function') ? ta.closest('li') : null; }).filter(Boolean);
 
   // Reset hidden state for component items >= 3
   compLis.forEach(function (li, idx) {

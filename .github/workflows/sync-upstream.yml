@@ -60,7 +60,22 @@ jobs:
             EXTRA_ARGS="--force-report"
           fi
 
-          node build/sync_upstream_site.js --report diff_report.md $EXTRA_ARGS || true
+          # 通信エラーやパース失敗時は非ゼロ終了コードで明示的に失敗させる（|| true で差分なしに誤認させない）
+          node build/sync_upstream_site.js --report diff_report.md $EXTRA_ARGS
+
+          echo "Checking C# <-> JS Engine Logic Parity..."
+          set +e
+          node build/sync_modifiers.js --check
+          MOD_SYNC_EXIT=$?
+          node test_tools/verify_csharp_oracle.js
+          ORACLE_EXIT=$?
+          set -e
+
+          if [ $MOD_SYNC_EXIT -ne 0 ] || [ $ORACLE_EXIT -ne 0 ]; then
+            echo "logic_parity_ok=false" >> $GITHUB_OUTPUT
+          else
+            echo "logic_parity_ok=true" >> $GITHUB_OUTPUT
+          fi
 
           if [ -f "diff_report.md" ]; then
             echo "has_changes=true" >> $GITHUB_OUTPUT
@@ -70,6 +85,13 @@ jobs:
             echo "has_changes=false" >> $GITHUB_OUTPUT
             echo "upstream_commit=none" >> $GITHUB_OUTPUT
           fi
+
+      - name: Fail if C# <-> JS Engine Logic Parity is Broken
+        if: steps.sync.outputs.logic_parity_ok == 'false'
+        run: |
+          echo "## ❌ C# <-> JS 生成ロジック同期エラー" >> $GITHUB_STEP_SUMMARY
+          echo "上流 C# コードと Fork JS エンジンの動作契約に不整合が検出されました。\`build/sync_modifiers.js --check\` および \`test_tools/verify_csharp_oracle.js\` を確認してください。" >> $GITHUB_STEP_SUMMARY
+          exit 1
 
       - name: Create or Update Sync Branch and Pull Request
         if: steps.sync.outputs.has_changes == 'true'

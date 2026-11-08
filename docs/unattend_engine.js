@@ -262,10 +262,10 @@ var SET_WALLPAPER_PS1 = [
 
 var REPO_URL = 'https://github.com/CTD-Networks-CO-LTD/unattend-generator_ja-JP';
 var COMMIT_URL_BASE = REPO_URL + '/commit/';
-var COMMIT_HASH = 'be14d1a913fc86e71feb42a1ddd29a0518c8d2cf';
-var RELEASE_TAG = 'v1.7.2_20261023';
-var RELEASE_URL = 'https://github.com/CTD-Networks-CO-LTD/unattend-generator_ja-JP/releases/tag/v1.7.2_20261023';
-var COMMIT_DATE = '2026-10-26T20:35:54+09:00';
+var COMMIT_HASH = '5fb1c4d1b2b814ee81e4a615ada76153f8674edc';
+var RELEASE_TAG = 'v1.7.3_20261029';
+var RELEASE_URL = 'https://github.com/CTD-Networks-CO-LTD/unattend-generator_ja-JP/releases/tag/v1.7.3_20261029';
+var COMMIT_DATE = '2026-11-07T07:32:41+09:00';
 
 
 var PAUSE_WINDOWS_UPDATE_XML = "<Task version=\"1.2\" xmlns=\"http://schemas.microsoft.com/windows/2004/02/mit/task\">\n\t<Triggers>\n\t\t<BootTrigger>\n\t\t\t<Repetition>\n\t\t\t\t<Interval>P1D</Interval>\n\t\t\t\t<StopAtDurationEnd>false</StopAtDurationEnd>\n\t\t\t</Repetition>\n\t\t\t<Enabled>true</Enabled>\n\t\t</BootTrigger>\n\t</Triggers>\n\t<Principals>\n\t\t<Principal id=\"Author\">\n\t\t\t<UserId>S-1-5-19</UserId>\n\t\t\t<RunLevel>LeastPrivilege</RunLevel>\n\t\t</Principal>\n\t</Principals>\n\t<Settings>\n\t\t<MultipleInstancesPolicy>IgnoreNew</MultipleInstancesPolicy>\n\t\t<DisallowStartIfOnBatteries>false</DisallowStartIfOnBatteries>\n\t\t<StopIfGoingOnBatteries>false</StopIfGoingOnBatteries>\n\t\t<AllowHardTerminate>true</AllowHardTerminate>\n\t\t<StartWhenAvailable>false</StartWhenAvailable>\n\t\t<RunOnlyIfNetworkAvailable>false</RunOnlyIfNetworkAvailable>\n\t\t<IdleSettings>\n\t\t\t<StopOnIdleEnd>true</StopOnIdleEnd>\n\t\t\t<RestartOnIdle>false</RestartOnIdle>\n\t\t</IdleSettings>\n\t\t<AllowStartOnDemand>true</AllowStartOnDemand>\n\t\t<Enabled>true</Enabled>\n\t\t<Hidden>false</Hidden>\n\t\t<RunOnlyIfIdle>false</RunOnlyIfIdle>\n\t\t<WakeToRun>false</WakeToRun>\n\t\t<ExecutionTimeLimit>PT72H</ExecutionTimeLimit>\n\t\t<Priority>7</Priority>\n\t</Settings>\n\t<Actions Context=\"Author\">\n\t\t<Exec>\n\t\t\t<Command>C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe</Command>\n\t\t\t<Arguments>-WindowStyle Hidden -NoProfile -NonInteractive -Command \"$format = 'yyyy-MM-ddTHH\\:mm\\:ssK'; $now = [datetime]::UtcNow; $start = $now.ToString($format); $end = $now.AddDays(7).ToString($format); $params = @{ LiteralPath = 'Registry::HKLM\\Software\\Microsoft\\WindowsUpdate\\UX\\Settings'; Type = 'String'; Force = $true; Verbose = $true; }; 'PauseFeatureUpdatesStartTime', 'PauseQualityUpdatesStartTime', 'PauseUpdatesStartTime' | foreach { Set-ItemProperty @params -Name $_ -Value $start; }; 'PauseFeatureUpdatesEndTime', 'PauseQualityUpdatesEndTime', 'PauseUpdatesExpiryTime' | foreach { Set-ItemProperty @params -Name $_ -Value $end; };\"</Arguments>\n\t\t</Exec>\n\t</Actions>\n</Task>";
@@ -1278,7 +1278,7 @@ function getPEScript(ctx) {
     lines.push('');
   }
 
-  // 18. UseConfigurationSet ($OEM$) - Unconditional per upstream commit 82d4ffd
+  // 18. Process $OEM$ folder unconditionally in pe.cmd (per upstream commit 8fdf1b9)
   lines.push('set "ROBOCOPY_ARGS=/E /XX /COPY:DAT /DCOPY:DAT /R:0"');
   lines.push('if defined OEM_FOLDER (');
   lines.push('    call :print "Copying contents of %OEM_FOLDER%"');
@@ -1325,6 +1325,7 @@ function DiskModifier(context) {
 DiskModifier.prototype.process = function () {
   var ctx = this.context;
   var peMode = ctx.getVal('PEMode', 'Default');
+  ctx.useConfigurationSet = (peMode === 'Default') && ctx.getBool('UseConfigurationSet', false);
 
   if (peMode === 'Default') {
     return;
@@ -1437,7 +1438,6 @@ ProductKeyModifier.prototype.process = function () {
   ctx.peMode = ctx.getVal('PEMode', 'Default');
   ctx.winEditionMode = ctx.getVal('WindowsEditionMode', 'Interactive');
   ctx.productKeyVal = ctx.getVal('ProductKey', '00000-00000-00000-00000-00000');
-  ctx.useConfigurationSet = true;
 };
 
 if (typeof module !== 'undefined' && module.exports) {
@@ -2927,7 +2927,7 @@ function generateAutounattendXml(formData) {
         prodKeyElem.addSimpleElement('WillShowUI', 'OnError');
       }
       userData.addSimpleElement('AcceptEula', 'true');
-      winSetup.addSimpleElement('UseConfigurationSet', 'true');
+      winSetup.addSimpleElement('UseConfigurationSet', context.useConfigurationSet ? 'true' : 'false');
 
       if (context.bypassRequirements) {
         var peRunSync = winSetup.addChild(new XmlNode('RunSynchronous'));
@@ -3343,7 +3343,7 @@ function syncDynamicItemVisibility(form) {
 
   // 1. User accounts: 15 rows total (initial 5 visible, remaining 10 hidden)
   var accNameInputs = Array.from(form.querySelectorAll('input[name^="AccountName"]'));
-  var accountTrs = accNameInputs.map(function (inp) { return inp.closest('tr'); }).filter(Boolean);
+  var accountTrs = accNameInputs.map(function (inp) { return (inp && typeof inp.closest === 'function') ? inp.closest('tr') : null; }).filter(Boolean);
 
   // Reset hidden state for account rows >= 5
   accountTrs.forEach(function (tr, idx) {
@@ -3380,7 +3380,7 @@ function syncDynamicItemVisibility(form) {
   var scriptPhases = ['SystemScript', 'DefaultUserScript', 'FirstLogonScript', 'UserOnceScript'];
   scriptPhases.forEach(function (phase) {
     var scriptTas = Array.from(form.querySelectorAll('textarea[name^="' + phase + '"]'));
-    var scriptLis = scriptTas.map(function (ta) { return ta.closest('li'); }).filter(Boolean);
+    var scriptLis = scriptTas.map(function (ta) { return (ta && typeof ta.closest === 'function') ? ta.closest('li') : null; }).filter(Boolean);
 
     // Reset hidden state for script items >= 3
     scriptLis.forEach(function (li, idx) {
@@ -3409,7 +3409,7 @@ function syncDynamicItemVisibility(form) {
 
   // 3. XML components: 15 items (initial 3 visible, remaining 12 hidden)
   var compTas = Array.from(form.querySelectorAll('textarea[name^="ComponentContent"]'));
-  var compLis = compTas.map(function (ta) { return ta.closest('li'); }).filter(Boolean);
+  var compLis = compTas.map(function (ta) { return (ta && typeof ta.closest === 'function') ? ta.closest('li') : null; }).filter(Boolean);
 
   // Reset hidden state for component items >= 3
   compLis.forEach(function (li, idx) {
