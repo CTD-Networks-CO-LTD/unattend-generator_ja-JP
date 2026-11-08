@@ -585,7 +585,7 @@ function getPEScript(ctx) {
     lines.push('');
   }
 
-  // 18. UseConfigurationSet ($OEM$) - Unconditional per upstream commit 82d4ffd
+  // 18. Process $OEM$ folder unconditionally in pe.cmd (per upstream commit 8fdf1b9)
   lines.push('set "ROBOCOPY_ARGS=/E /XX /COPY:DAT /DCOPY:DAT /R:0"');
   lines.push('if defined OEM_FOLDER (');
   lines.push('    call :print "Copying contents of %OEM_FOLDER%"');
@@ -632,6 +632,7 @@ function DiskModifier(context) {
 DiskModifier.prototype.process = function () {
   var ctx = this.context;
   var peMode = ctx.getVal('PEMode', 'Default');
+  ctx.useConfigurationSet = (peMode === 'Default') && ctx.getBool('UseConfigurationSet', false);
 
   if (peMode === 'Default') {
     return;

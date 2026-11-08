@@ -478,14 +478,61 @@ function runTests() {
   const cmdMatches = peMatch[0].match(/<RunSynchronousCommand/g);
   assert(cmdMatches && cmdMatches.length === 39, 'windowsPE の RunSynchronousCommand が正確に 39 個出力されること (実際: ' + (cmdMatches ? cmdMatches.length : 0) + ')');
 
-  // Case D: PEMode = 'Default'
+  // Case D: PEMode = 'Default' (and omitted) UseConfigurationSet matrix (PR #86 / upstream 8fdf1b9)
   const defaultPeFd = new MockFormData({
     PEMode: 'Default'
   });
   const defaultPeXml = engine.generateAutounattendXml(defaultPeFd);
   assert(!defaultPeXml.includes('<PEScriptCopy>'), 'PEMode: Default 時に PEScriptCopy が出力されないこと');
   assert(!defaultPeXml.includes('X:\\pe.cmd'), 'PEMode: Default 時に X:\\pe.cmd が出力されないこと');
-  assert(defaultPeXml.includes('<UseConfigurationSet>true</UseConfigurationSet>'), 'PEMode: Default 時に <UseConfigurationSet>true</UseConfigurationSet> が無条件出力されること');
+  assert(defaultPeXml.includes('<UseConfigurationSet>false</UseConfigurationSet>'), 'PEMode: Default (UseConfigurationSet未指定) 時に <UseConfigurationSet>false</UseConfigurationSet> が明示出力されること');
+  assert(!defaultPeXml.includes('<UseConfigurationSet>true</UseConfigurationSet>'), 'PEMode: Default (UseConfigurationSet未指定) 時に <UseConfigurationSet>true</UseConfigurationSet> が出力されないこと');
+
+  const omittedPeXml = engine.generateAutounattendXml(new MockFormData({}));
+  assert(omittedPeXml.includes('<UseConfigurationSet>false</UseConfigurationSet>'), 'PEMode省略 (UseConfigurationSet未指定) 時に <UseConfigurationSet>false</UseConfigurationSet> が明示出力されること');
+
+  const defaultPeFalseXml = engine.generateAutounattendXml(new MockFormData({
+    PEMode: 'Default',
+    UseConfigurationSet: 'false'
+  }));
+  assert(defaultPeFalseXml.includes('<UseConfigurationSet>false</UseConfigurationSet>'), 'PEMode: Default & UseConfigurationSet=false 時に <UseConfigurationSet>false</UseConfigurationSet> が明示出力されること');
+
+  const defaultPeTrueXml = engine.generateAutounattendXml(new MockFormData({
+    PEMode: 'Default',
+    UseConfigurationSet: 'true'
+  }));
+  assert(defaultPeTrueXml.includes('<UseConfigurationSet>true</UseConfigurationSet>'), 'PEMode: Default & UseConfigurationSet=true 時に <UseConfigurationSet>true</UseConfigurationSet> が明示出力されること');
+
+  const defaultPeOnXml = engine.generateAutounattendXml(new MockFormData({
+    PEMode: 'Default',
+    UseConfigurationSet: 'on'
+  }));
+  assert(defaultPeOnXml.includes('<UseConfigurationSet>true</UseConfigurationSet>'), 'PEMode: Default & UseConfigurationSet=on 時に <UseConfigurationSet>true</UseConfigurationSet> が明示出力されること');
+
+  const defaultPeOneXml = engine.generateAutounattendXml(new MockFormData({
+    PEMode: 'Default',
+    UseConfigurationSet: '1'
+  }));
+  assert(defaultPeOneXml.includes('<UseConfigurationSet>true</UseConfigurationSet>'), 'PEMode: Default & UseConfigurationSet=1 時に <UseConfigurationSet>true</UseConfigurationSet> が明示出力されること');
+
+  // Generated モードでは UseConfigurationSet の入力値に関わらず <UseConfigurationSet> 要素自体が出力されず、OEMコピーは無条件維持されること
+  for (const flagVal of [undefined, 'false', 'true']) {
+    const genMatrixParams = { PEMode: 'Generated' };
+    if (flagVal !== undefined) genMatrixParams.UseConfigurationSet = flagVal;
+    const genMatrixXml = engine.generateAutounattendXml(new MockFormData(genMatrixParams));
+    assert(!genMatrixXml.includes('<UseConfigurationSet>'), `PEMode: Generated (UseConfigurationSet=${flagVal}) 時に <UseConfigurationSet> 要素が出力されないこと`);
+    assert(genMatrixXml.includes('Copying contents of %OEM_FOLDER%'), `PEMode: Generated (UseConfigurationSet=${flagVal}) 時に %OEM_FOLDER% コピーが無条件維持されること`);
+  }
+
+  // Script モード（有効な非空入力）では UseConfigurationSet の入力値に関わらず <UseConfigurationSet> 要素が出力されず、OEMコピーも勝手に注入されないこと
+  for (const flagVal of [undefined, 'false', 'true']) {
+    const scriptMatrixParams = { PEMode: 'Script', PEScript: '@echo off\r\necho CustomPE\r\nwpeutil.exe reboot' };
+    if (flagVal !== undefined) scriptMatrixParams.UseConfigurationSet = flagVal;
+    const scriptMatrixXml = engine.generateAutounattendXml(new MockFormData(scriptMatrixParams));
+    assert(!scriptMatrixXml.includes('<UseConfigurationSet>'), `PEMode: Script (UseConfigurationSet=${flagVal}) 時に <UseConfigurationSet> 要素が出力されないこと`);
+    assert(scriptMatrixXml.includes('CustomPE'), `PEMode: Script (UseConfigurationSet=${flagVal}) 時に利用者スクリプトが保持されること`);
+    assert(!scriptMatrixXml.includes('Copying contents of %OEM_FOLDER%'), `PEMode: Script (UseConfigurationSet=${flagVal}) 時に OEMコピーが勝手に注入されないこと`);
+  }
 
   // Case E: PEMode = 'Generated' with Partial TargetDisk criteria (Only InterfaceType & Size specified)
   const partialGenFd = new MockFormData({

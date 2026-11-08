@@ -217,8 +217,7 @@ function checkSync() {
     const forbiddenDiskPatterns = [
       'Loading drivers from $WinPEDriver$ folder',
       'Adding drivers from $WinPEDriver$ folder to new installation',
-      'Copying contents of $OEM$ folder',
-      "ctx.getBool('UseConfigurationSet'"
+      'Copying contents of $OEM$ folder'
     ];
     for (const fb of forbiddenDiskPatterns) {
       if (jsDiskContent.includes(fb)) {
@@ -226,16 +225,63 @@ function checkSync() {
         hasError = true;
       }
     }
+
+    // Ensure getPEScript in disk.js outputs $OEM$ copy unconditionally while DiskModifier.prototype.process evaluates UseConfigurationSet for Default mode
+    const getPeScriptSection = jsDiskContent.split('function DiskModifier(context)')[0] || '';
+    const diskModifierSection = jsDiskContent.split('function DiskModifier(context)')[1] || '';
+
+    if (csDiskContent.includes('if (configuration.UseConfigurationSet)')) {
+      parityErrors.push('modifier/Disk.cs GetPEScript contains conditional UseConfigurationSet check around OEM copy; JS/C# parity requires review');
+      hasError = true;
+    }
+    if (getPeScriptSection.includes("getBool('UseConfigurationSet'") || getPeScriptSection.includes('useConfigurationSet')) {
+      parityErrors.push('docs/js/modifiers/disk.js getPEScript must not gate $OEM$ copy behind UseConfigurationSet (must remain unconditional)');
+      hasError = true;
+    }
+
+    const csEvaluatesDefaultUseConfig =
+      csDiskContent.includes('if (Configuration.PESettings is DefaultPESettings d && d.UseConfigurationSet)') &&
+      csDiskContent.includes('Document.SelectSingleNodeOrThrow("//u:UseConfigurationSet", NamespaceManager).InnerText = "true";');
+
+    const jsEvaluatesDefaultUseConfig =
+      diskModifierSection.includes("ctx.useConfigurationSet = (peMode === 'Default') && ctx.getBool('UseConfigurationSet', false);");
+
+    if (!csEvaluatesDefaultUseConfig) {
+      parityErrors.push('modifier/Disk.cs no longer matches expected DefaultPESettings.UseConfigurationSet evaluation contract');
+      hasError = true;
+    }
+    if (!jsEvaluatesDefaultUseConfig) {
+      parityErrors.push("docs/js/modifiers/disk.js DiskModifier.prototype.process must evaluate ctx.useConfigurationSet = (peMode === 'Default') && ctx.getBool('UseConfigurationSet', false)");
+      hasError = true;
+    }
+  }
+
+  const jsProductKeyFile = path.join(jsModifiersDir, 'product_key.js');
+  if (fs.existsSync(jsProductKeyFile)) {
+    const jsProductKeyContent = fs.readFileSync(jsProductKeyFile, 'utf8');
+    if (jsProductKeyContent.includes('useConfigurationSet')) {
+      parityErrors.push('docs/js/modifiers/product_key.js must not set or override ctx.useConfigurationSet (responsibility belongs to DiskModifier)');
+      hasError = true;
+    }
   }
 
   if (fs.existsSync(xmlResourceFile) && fs.existsSync(generatorEngineFile)) {
     const xmlResContent = fs.readFileSync(xmlResourceFile, 'utf8');
     const genEngContent = fs.readFileSync(generatorEngineFile, 'utf8');
-    if (xmlResContent.includes('<UseConfigurationSet>true</UseConfigurationSet>')) {
-      if (!genEngContent.includes("winSetup.addSimpleElement('UseConfigurationSet', 'true')")) {
-        parityErrors.push("docs/js/generator_engine.js must set <UseConfigurationSet> unconditionally to 'true' matching resource/autounattend.xml");
-        hasError = true;
-      }
+    const xmlDefaultFalse = xmlResContent.includes('<UseConfigurationSet>false</UseConfigurationSet>');
+    const xmlDefaultTrue = xmlResContent.includes('<UseConfigurationSet>true</UseConfigurationSet>');
+
+    if (!xmlDefaultFalse || xmlDefaultTrue) {
+      parityErrors.push('resource/autounattend.xml <UseConfigurationSet> default changed from false; synchronize JS engine and contract tests');
+      hasError = true;
+    }
+    if (genEngContent.includes("winSetup.addSimpleElement('UseConfigurationSet', 'true')")) {
+      parityErrors.push("docs/js/generator_engine.js contains hardcoded UseConfigurationSet='true'; must use context.useConfigurationSet ? 'true' : 'false'");
+      hasError = true;
+    }
+    if (!genEngContent.includes("winSetup.addSimpleElement('UseConfigurationSet', context.useConfigurationSet ? 'true' : 'false')")) {
+      parityErrors.push("docs/js/generator_engine.js must set <UseConfigurationSet> dynamically via context.useConfigurationSet ? 'true' : 'false'");
+      hasError = true;
     }
   }
 

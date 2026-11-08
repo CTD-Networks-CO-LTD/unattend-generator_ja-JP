@@ -9,8 +9,9 @@
 | ファイル名 | 役割 |
 | :--- | :--- |
 | `interactive_test.ps1` | 統合自動検収・対話式テストランナー（メニュー選択式CLI） |
-| `test_engine_parity.js` | モジュール分割エンジンとベースラインの完全一致検証（全9ケース Byte-exact 検証） |
-| `test_feature_parity.js` | C# / JS 機能格差解消＆スマートクォート網羅自動テスト (Node.js) |
+| `test_engine_parity.js` | JSベースライン回帰検証（`baseline_unattend_engine.js` vs `docs/unattend_engine.js` 全15ケース検証） |
+| `test_feature_parity.js` | C# / JS 機能格差解消＆スマートクォート＆UseConfigurationSet条件マトリクス網羅自動テスト (Node.js: 247項目) |
+| `verify_csharp_oracle.js` | C# オラクル・名前空間付きXML動作契約マトリクス・実.NET C# `UnattendGenerator.GenerateXml` 比較＆負例ガード検証ツール |
 | `verify_ast_quotes.ps1` | PowerShell AST パーサーによるスクリプト構文解析＆スマートクォート検出ツール |
 | `verify_vm_offline.ps1` | マウント済みVM仮想ディスク（オフライン）自動検収ツール |
 | `apply_vm_fix.ps1` | マウント済みVM仮想ディスクの `DefaultUser.ps1` 修正適用スクリプト（管理者権限昇格対応） |

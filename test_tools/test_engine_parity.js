@@ -155,11 +155,37 @@ const testCases = [
     params: {
       ComputerNameMode: 'Prompt'
     }
+  },
+  {
+    name: 'Case 14: Default PE mode with UseConfigurationSet explicitly false',
+    params: {
+      PEMode: 'Default',
+      UseConfigurationSet: 'false'
+    }
+  },
+  {
+    name: 'Case 15: Default PE mode with UseConfigurationSet explicitly true',
+    params: {
+      PEMode: 'Default',
+      UseConfigurationSet: 'true'
+    }
   }
 ];
 
+/**
+ * Normalizes only the <Build><Commit><Hash> and <GitHubUrl> SHA metadata
+ * so that baseline_unattend_engine.js does not need to be overwritten on every commit
+ * while still enforcing 100% byte-exact parity on all generated XML logic and structure.
+ */
+function normalizeCommitMetadata(xml) {
+  return xml
+    .replace(/<Hash>[0-9a-fA-F]{7,40}<\/Hash>/g, '<Hash>COMMIT_HASH_PLACEHOLDER</Hash>')
+    .replace(/<GitHubUrl>https:\/\/github\.com\/[^<]+\/commit\/[0-9a-fA-F]{7,40}<\/GitHubUrl>/g, '<GitHubUrl>COMMIT_URL_PLACEHOLDER</GitHubUrl>');
+}
+
 console.log('====================================================');
-console.log('  Baseline vs Modular Engine Parity Verification    ');
+console.log('  JS Baseline Regression Verification               ');
+console.log('  (baseline_unattend_engine.js vs unattend_engine.js)');
 console.log('====================================================\n');
 
 let passCount = 0;
@@ -167,11 +193,13 @@ let failCount = 0;
 
 testCases.forEach((tc, idx) => {
   const fd = createMockFormData(tc.params);
-  const baselineXml = baselineEngine.generateAutounattendXml(fd);
-  const bundledXml = bundledEngine.generateAutounattendXml(fd);
+  const rawBaselineXml = baselineEngine.generateAutounattendXml(fd);
+  const rawBundledXml = bundledEngine.generateAutounattendXml(fd);
+  const baselineXml = normalizeCommitMetadata(rawBaselineXml);
+  const bundledXml = normalizeCommitMetadata(rawBundledXml);
 
   if (baselineXml === bundledXml) {
-    console.log(`[PASS] ${tc.name} (Byte exact: ${baselineXml.length} chars)`);
+    console.log(`[PASS] ${tc.name} (Exact match: ${rawBundledXml.length} chars)`);
     passCount++;
   } else {
     console.log(`[FAIL] ${tc.name}`);

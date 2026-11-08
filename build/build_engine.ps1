@@ -1,7 +1,8 @@
 # Bundles modular JavaScript files under docs/js/ into docs/unattend_engine.js
 [CmdletBinding()]
 param(
-  [string]$OutputFile = "$PSScriptRoot/../docs/unattend_engine.js"
+  [string]$OutputFile = "$PSScriptRoot/../docs/unattend_engine.js",
+  [switch]$UpdateBaseline
 )
 
 $ErrorActionPreference = "Stop"
@@ -109,19 +110,7 @@ if (Test-Path $constantsPath) {
   Write-Host "  -> Synchronized $constantsPath"
 }
 
-# 4. Synchronize test_tools/baseline_unattend_engine.js
-if (Test-Path $baselinePath) {
-  $bText = [System.IO.File]::ReadAllText($baselinePath, [System.Text.Encoding]::UTF8)
-  if ($commitHash) {
-    $bText = $bText -replace "var commitHash = '[^']*';", "var commitHash = '$commitHash';"
-  }
-  if ($repoUrl) {
-    $bText = $bText -replace "https://github\.com/[^/]+/[^/]+/commit/", $commitUrlBase
-  }
-  $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
-  [System.IO.File]::WriteAllText($baselinePath, $bText, $utf8NoBom)
-  Write-Host "  -> Synchronized $baselinePath"
-}
+# 4. Baseline is preserved during normal builds (only updated when -UpdateBaseline is explicitly passed)
 # 5. Synchronize docs/sections/header.html
 if (Test-Path $headerPath) {
   $hText = [System.IO.File]::ReadAllText($headerPath, [System.Text.Encoding]::UTF8)
@@ -156,6 +145,7 @@ $moduleFiles = @(
 
   # Modifiers
   "modifiers/locales.js",
+  "modifiers/disk.js",
   "modifiers/bypass.js",
   "modifiers/product_key.js",
   "modifiers/computer_name.js",
@@ -166,9 +156,12 @@ $moduleFiles = @(
   "modifiers/users.js",
   "modifiers/delete.js",
   "modifiers/optimizations.js",
+  "modifiers/personalization.js",
   "modifiers/bloatware.js",
   "modifiers/wifi.js",
+  "modifiers/applocker.js",
   "modifiers/scripts.js",
+  "modifiers/components.js",
   "modifiers/build.js",
 
   # Generator Engine
@@ -213,3 +206,10 @@ $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
 [System.IO.File]::WriteAllText($targetPath, $result, $utf8NoBom)
 
 Write-Host "Successfully generated $targetPath ($(($result | Measure-Object -Character).Characters) characters)."
+
+if ($UpdateBaseline -or $env:UPDATE_BASELINE -eq 'true') {
+  [System.IO.File]::WriteAllText($baselinePath, $result, $utf8NoBom)
+  Write-Host "  -> Explicitly updated baseline: $baselinePath"
+} else {
+  Write-Host "  -> Baseline preserved (pass -UpdateBaseline for explicit reviewed baseline update)."
+}

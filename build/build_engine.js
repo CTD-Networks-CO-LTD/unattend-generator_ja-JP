@@ -277,7 +277,10 @@ bundle += '})(typeof window !== \'undefined\' ? window : globalThis);\r\n';
 fs.writeFileSync(targetPath, bundle, 'utf8');
 console.log('Successfully generated ' + targetPath + ' (' + bundle.length + ' chars).');
 
-if (fs.existsSync(path.dirname(baselinePath))) {
+const shouldUpdateBaseline = process.argv.includes('--update-baseline') || process.env.UPDATE_BASELINE === 'true';
+if (shouldUpdateBaseline && fs.existsSync(path.dirname(baselinePath))) {
   fs.copyFileSync(targetPath, baselinePath);
-  console.log('  -> Synchronized ' + baselinePath);
+  console.log('  -> Explicitly updated baseline: ' + baselinePath);
+} else {
+  console.log('  -> Baseline preserved (pass --update-baseline for explicit reviewed baseline update).');
 }

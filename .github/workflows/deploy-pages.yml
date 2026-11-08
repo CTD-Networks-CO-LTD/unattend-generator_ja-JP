@@ -10,9 +10,11 @@ on:
       - 'modifier/**'
       - 'resource/**'
       - 'build/**'
+      - 'test_tools/**'
       - '*.cs'
       - 'UnattendGenerator.csproj'
       - '.github/workflows/deploy-pages.yml'
+      - '.github/workflows/verify-engine.yml'
   release:
     types: [published]
   workflow_dispatch:
@@ -78,6 +80,11 @@ jobs:
         with:
           node-version: 24
 
+      - name: Setup .NET 10
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: 10
+
       - name: Setup Pages
         uses: actions/configure-pages@v6
 
@@ -117,14 +124,19 @@ jobs:
           echo "Building unattend engine bundle with latest commit hash and release tag..."
           COMMIT_HASH="${{ github.sha }}" RELEASE_TAG="$LATEST_TAG" node build/build_engine.js
 
-          # 2. パリティテストの自動実行（配信前の品質保証）
+          # 2. パリティテストおよび実C#オラクル・契約検証の自動実行（配信前の品質保証ゲート）
           echo "Running UI parity tests..."
           node test_tools/test_upstream_ui_sync.js
           node test_tools/test_ui_parity.js
-          echo "Running engine parity tests..."
+          echo "Running JS baseline regression tests..."
           node test_tools/test_engine_parity.js
           echo "Running feature parity tests..."
           node test_tools/test_feature_parity.js
+          echo "Running C# oracle and behavioral contract verification..."
+          node test_tools/verify_csharp_oracle.js --require-dotnet
+          echo "Running E2E lifecycle tests..."
+          node test_tools/verify_custom_scripts_e2e.js
+          node test_tools/verify_phase4_e2e.js
 
           # 3. 現在のブランチの docs/ から preview ディレクトリを除外して _src_clean にステージング
           echo "Staging clean sources from current branch (excluding preview/)..."
@@ -214,6 +226,11 @@ jobs:
 
           # 作業一時ディレクトリの整理
           rm -rf _src_clean _tag_docs _tag_clean
+
+          # 7. ステージ済み成果物 (_site / _site/preview) の配信前最終ゲート検証
+          echo "Verifying staged preview bundle against C# oracle & behavioral contract..."
+          node test_tools/verify_csharp_oracle.js --engine-path ./_site/preview/unattend_engine.js
+          node test_tools/verify_deployed_sites.js --staged-dir ./_site --deploy-mode "$DEPLOY_MODE" --expected-tag "$LATEST_TAG" --expected-preview-sha "${{ github.sha }}"
 
           echo "=== Content Staging Complete ==="
           echo "--- Root (_site/) ---"
