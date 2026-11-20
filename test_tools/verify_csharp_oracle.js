@@ -119,6 +119,11 @@ function verifyUpstreamCSharpSourceContract() {
     'modifier/Disk.cs の GetPEScript 内で OEM_FOLDER コピーが UseConfigurationSet フラグで条件分岐されていないこと（無条件出力）'
   );
   assert(
+    diskCs.includes('if exist %%d:\\$WinPEPackage$ set "MSU_FOLDER=%%d:\\$WinPEPackage$"') &&
+      diskCs.includes('dism.exe /Add-Package /Image:{DriveLetters.Windows}:\\ /PackagePath:%MSU_FOLDER%'),
+    'modifier/Disk.cs の GetPEScript 内で $WinPEPackage$ (MSU_FOLDER) の検出および dism.exe /Add-Package が実装されていること'
+  );
+  assert(
     /PESettings:\s*new DefaultPESettings\([\s\S]*?UseConfigurationSet:\s*false[\s\S]*?\)/.test(mainCs),
     'Main.cs の Configuration.Default.PESettings で UseConfigurationSet の既定値が false であること'
   );
@@ -210,6 +215,8 @@ function verifyContractMatrix() {
       assert(xml.includes('set "ROBOCOPY_ARGS=/E /XX /COPY:DAT /DCOPY:DAT /R:0"'), `${caseLabel}: ROBOCOPY_ARGS が無条件出力されること`);
       assert(xml.includes('Copying contents of %OEM_FOLDER%'), `${caseLabel}: %OEM_FOLDER% コピーが無条件出力されること`);
       assert(xml.includes('Loading drivers from %PEDRIVERS_FOLDER%'), `${caseLabel}: %PEDRIVERS_FOLDER% ドライバ読込が出力されること`);
+      assert(xml.includes('if exist %%d:\\$WinPEPackage$ set "MSU_FOLDER=%%d:\\$WinPEPackage$"'), `${caseLabel}: $WinPEPackage$ 検出が出力されること`);
+      assert(xml.includes('Adding packages from %MSU_FOLDER% to new installation'), `${caseLabel}: %MSU_FOLDER% パッケージ追加が出力されること`);
     }
 
     const customScript = '@echo off\r\necho Custom PE Script Test\r\nwpeutil.exe reboot';

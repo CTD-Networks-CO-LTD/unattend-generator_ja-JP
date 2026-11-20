@@ -170,6 +170,21 @@ function checkSync() {
 
     const requiredDiskPatterns = [
       {
+        label: 'WinPE $WinPEPackage$ drive discovery (MSU_FOLDER)',
+        csCheck: 'if exist %%d:\\$WinPEPackage$ set "MSU_FOLDER=%%d:\\$WinPEPackage$"',
+        jsCheck: 'if exist %%d:\\\\$WinPEPackage$ set "MSU_FOLDER=%%d:\\\\$WinPEPackage$"'
+      },
+      {
+        label: 'WinPE package installation message (%MSU_FOLDER%)',
+        csCheck: 'call :print "Adding packages from %MSU_FOLDER% to new installation"',
+        jsCheck: 'call :print "Adding packages from %MSU_FOLDER% to new installation"'
+      },
+      {
+        label: 'WinPE package installation command (dism.exe /Add-Package)',
+        csCheck: '/PackagePath:%MSU_FOLDER%',
+        jsCheck: 'dism.exe /Add-Package /Image:W:\\\\ /PackagePath:%MSU_FOLDER% /ScratchDir:W:\\\\Windows\\\\Temp || call :fail "dism.exe encountered an error."'
+      },
+      {
         label: 'WinPE driver loading message (%PEDRIVERS_FOLDER%)',
         csCheck: 'call :print "Loading drivers from %PEDRIVERS_FOLDER%"',
         jsCheck: 'call :print "Loading drivers from %PEDRIVERS_FOLDER%"'
