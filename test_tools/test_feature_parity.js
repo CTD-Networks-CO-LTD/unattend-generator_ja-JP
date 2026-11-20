@@ -466,6 +466,9 @@ function runTests() {
   assert(defaultGenXml.includes('bcdboot.exe W:\\Windows /s S:'), 'pe.cmd 内に bcdboot コマンドが存在すること');
   assert(defaultGenXml.includes('bcdedit.exe /set {fwbootmgr} bootsequence {bootmgr}'), 'pe.cmd 内に GPT時 bcdedit 設定が存在すること');
   assert(defaultGenXml.includes('DeviceRegion'), 'pe.cmd 内に DeviceRegion (GeoID 244) 設定が存在すること');
+  assert(defaultGenXml.includes('if exist %%d:\\$WinPEPackage$ set "MSU_FOLDER=%%d:\\$WinPEPackage$"'), 'pe.cmd 内に $WinPEPackage$ 検出処理が存在すること');
+  assert(defaultGenXml.includes('Adding packages from %MSU_FOLDER% to new installation'), 'pe.cmd 内に %MSU_FOLDER% からのパッケージ追加メッセージが存在すること');
+  assert(defaultGenXml.includes('dism.exe /Add-Package /Image:W:\\ /PackagePath:%MSU_FOLDER% /ScratchDir:W:\\Windows\\Temp || call :fail "dism.exe encountered an error."'), 'pe.cmd 内に dism.exe /Add-Package コマンドが存在すること');
   assert(defaultGenXml.includes('Loading drivers from %PEDRIVERS_FOLDER%'), 'pe.cmd 内に %PEDRIVERS_FOLDER% からのドライバ読込メッセージが存在すること');
   assert(defaultGenXml.includes('for /R %PEDRIVERS_FOLDER% %%f IN (*.inf) do drvload.exe "%%f"'), 'pe.cmd 内に1行形式の for /R ドライバ読込ループが存在すること');
   assert(defaultGenXml.includes('Adding drivers from %PEDRIVERS_FOLDER% to new installation'), 'pe.cmd 内に %PEDRIVERS_FOLDER% からのドライバ注入メッセージが存在すること');
@@ -476,7 +479,7 @@ function runTests() {
   const peMatch = defaultGenXml.match(/<settings pass="windowsPE">[\s\S]*?<\/settings>/);
   assert(peMatch !== null, 'PEMode: Generated 時に windowsPE パスが存在すること');
   const cmdMatches = peMatch[0].match(/<RunSynchronousCommand/g);
-  assert(cmdMatches && cmdMatches.length === 39, 'windowsPE の RunSynchronousCommand が正確に 39 個出力されること (実際: ' + (cmdMatches ? cmdMatches.length : 0) + ')');
+  assert(cmdMatches && cmdMatches.length === 40, 'windowsPE の RunSynchronousCommand が正確に 40 個出力されること (実際: ' + (cmdMatches ? cmdMatches.length : 0) + ')');
 
   // Case D: PEMode = 'Default' (and omitted) UseConfigurationSet matrix (PR #86 / upstream 8fdf1b9)
   const defaultPeFd = new MockFormData({
@@ -566,7 +569,7 @@ function runTests() {
   const partialPeMatch = partialGenXml.match(/<settings pass="windowsPE">[\s\S]*?<\/settings>/);
   assert(partialPeMatch !== null, 'windowsPE パスが存在すること');
   const partialCmdMatches = partialPeMatch[0].match(/<RunSynchronousCommand/g);
-  assert(partialCmdMatches && partialCmdMatches.length === 37, 'windowsPE の RunSynchronousCommand が正確に 37 個出力されること (実際: ' + (partialCmdMatches ? partialCmdMatches.length : 0) + ')');
+  assert(partialCmdMatches && partialCmdMatches.length === 38, 'windowsPE の RunSynchronousCommand が正確に 38 個出力されること (実際: ' + (partialCmdMatches ? partialCmdMatches.length : 0) + ')');
 
   // Case F: VirtIoGuestTools = 'true' & RecoveryMode = 'None' parity
   const virtioFd = new MockFormData({
@@ -839,10 +842,14 @@ function runTests() {
     '27_xml_components.html に ComponentContent0〜14 の 15 個の入力が存在');
 
   // ============================================================
-  // WinPE スクリプト & UseConfigurationSet 上流パリティ検証 (PR #83 / #84)
+  // WinPE スクリプト & UseConfigurationSet 上流パリティ検証 (PR #83 / #84 / #91)
   // ============================================================
-  console.log('\n--- WinPE Script & ConfigurationSet Upstream Parity Tests (Order 7-9, 30, 32-37) ---');
+  console.log('\n--- WinPE Script & ConfigurationSet Upstream Parity Tests (Order 4, 7-8, 29-38) ---');
   const peStageHtml = fs.readFileSync(path.join(__dirname, '..', 'docs', 'sections', '02_windows_pe_stage.html'), 'utf8');
+  assert(peStageHtml.includes('if exist %%d:\\$WinPEPackage$ set "MSU_FOLDER=%%d:\\$WinPEPackage$"'),
+    '02_windows_pe_stage.html テンプレートに $WinPEPackage$ 検出処理が含まれること');
+  assert(peStageHtml.includes('call :print "Adding packages from %MSU_FOLDER% to new installation"'),
+    '02_windows_pe_stage.html テンプレートに Adding packages from %MSU_FOLDER% が含まれること');
   assert(peStageHtml.includes('call :print "Loading drivers from %PEDRIVERS_FOLDER%"'),
     '02_windows_pe_stage.html テンプレートに Loading drivers from %PEDRIVERS_FOLDER% が含まれること');
   assert(peStageHtml.includes('for /R %PEDRIVERS_FOLDER% %%f IN (*.inf) do drvload.exe "%%f"'),
@@ -852,25 +859,39 @@ function runTests() {
   assert(peStageHtml.includes('call :print "Copying contents of %OEM_FOLDER%"'),
     '02_windows_pe_stage.html テンプレートに Copying contents of %OEM_FOLDER% が含まれること');
 
-  // Order 7〜8, Order 30, Order 32〜37 の厳密なパッキング位置検証 (Case E: Partial TargetDisk criteria = 37 orders = org_autounattend.xml)
+  // Order 4, 7〜8, 29〜38 の厳密なパッキング位置検証 (Case E: Partial TargetDisk criteria = 38 orders)
+  assert(partialGenXml.includes('<Order>4</Order>\r\n\t\t\t\t\t<Path>cmd.exe /c &gt;&gt;X:\\pe.cmd (echo:if exist ^%^%d:\\$OEM$ set ^"OEM_FOLDER=^%^%d:\\$OEM$^"&amp;echo:if exist ^%^%d:\\$WinPEDriver$ set ^"PEDRIVERS_FOLDER=^%^%d:\\$WinPEDriver$^"&amp;echo:if exist ^%^%d:\\$WinPEPackage$ set ^"MSU_FOLDER=^%^%d:\\$WinPEPackage$^"&amp;echo:^))</Path>'),
+    'Order 4 に $WinPEPackage$ (MSU_FOLDER) 検出が厳密な位置でパッキングされること');
   assert(partialGenXml.includes('<Order>7</Order>\r\n\t\t\t\t\t<Path>cmd.exe /c &gt;&gt;X:\\pe.cmd (echo:for /f ^"tokens=3 delims=.^" ^%^%v in (\'ver\'^) do (&amp;echo:if ^%^%v LSS 20000 set ^"OS_VERSION=10^"&amp;echo:^)&amp;echo:if defined PEDRIVERS_FOLDER (&amp;echo:call :print ^"Loading drivers from ^%PEDRIVERS_FOLDER^%^")</Path>'),
     'Order 7 に Loading drivers from %PEDRIVERS_FOLDER% が厳密な位置でパッキングされること');
   assert(partialGenXml.includes('<Order>8</Order>\r\n\t\t\t\t\t<Path>cmd.exe /c &gt;&gt;X:\\pe.cmd (echo:for /R ^%PEDRIVERS_FOLDER^% ^%^%f IN (*.inf^) do drvload.exe ^"^%^%f^"&amp;echo:^)&amp;echo:^&gt;X:\\target.vbs (&amp;echo:echo:Function Fail(message^^^)&amp;echo:echo:WScript.Echo message&amp;echo:echo:WScript.Quit 1&amp;echo:echo:End Function)</Path>'),
     'Order 8 に for /R %PEDRIVERS_FOLDER% %%f IN (*.inf) do drvload.exe "%%f" が厳密な位置でパッキングされること');
-  assert(partialGenXml.includes('<Order>30</Order>\r\n\t\t\t\t\t<Path>cmd.exe /c &gt;&gt;X:\\pe.cmd (echo:call :print ^"Adding drivers from ^%PEDRIVERS_FOLDER^% to new installation^"&amp;echo:dism.exe /Add-Driver /Image:W:\\ /Driver:^"^%PEDRIVERS_FOLDER^%^" /Recurse&amp;echo:^))</Path>'),
-    'Order 30 に Adding drivers from %PEDRIVERS_FOLDER% to new installation が厳密な位置でパッキングされること');
-  assert(partialGenXml.includes('<Order>32</Order>\r\n\t\t\t\t\t<Path>cmd.exe /c &gt;&gt;X:\\pe.cmd (echo:reg.exe ADD ^"HKLM\\mount\\Microsoft\\Windows\\CurrentVersion\\Control Panel\\DeviceRegion^" /v DeviceRegion /t REG_DWORD /d 122 /f&amp;echo:reg.exe UNLOAD HKLM\\mount&amp;echo:set ^"ROBOCOPY_ARGS=/E /XX /COPY:DAT /DCOPY:DAT /R:0^")</Path>'),
-    'Order 32 に ROBOCOPY_ARGS が無条件パッキングされること');
-  assert(partialGenXml.includes('<Order>33</Order>\r\n\t\t\t\t\t<Path>cmd.exe /c &gt;&gt;X:\\pe.cmd (echo:if defined OEM_FOLDER (&amp;echo:call :print ^"Copying contents of ^%OEM_FOLDER^%^"&amp;echo:if exist ^"^%OEM_FOLDER^%\\$$^" robocopy.exe ^"^%OEM_FOLDER^%\\$$^" W:\\Windows ^%ROBOCOPY_ARGS^%)</Path>'),
-    'Order 33 に Copying contents of %OEM_FOLDER% が無条件パッキングされること');
-  assert(partialGenXml.includes('<Order>34</Order>\r\n\t\t\t\t\t<Path>cmd.exe /c &gt;&gt;X:\\pe.cmd (echo:if exist ^"^%OEM_FOLDER^%\\$1^" robocopy.exe ^"^%OEM_FOLDER^%\\$1^" W:\\ ^%ROBOCOPY_ARGS^%&amp;echo:for ^%^%d in (C D E F G H I J K L M N O P Q R S T U V W X Y Z^) do ()</Path>'),
-    'Order 34 に $1 コピーおよびドライブ走査ループが無条件パッキングされること');
-  assert(partialGenXml.includes('<Order>35</Order>\r\n\t\t\t\t\t<Path>cmd.exe /c &gt;&gt;X:\\pe.cmd (echo:if exist ^"^%OEM_FOLDER^%\\^%^%d^" robocopy.exe ^"^%OEM_FOLDER^%\\^%^%d^" ^%^%d:\\ ^%ROBOCOPY_ARGS^%&amp;echo:^)&amp;echo:^)&amp;echo:call :print ^"Computer will now reboot^"&amp;echo:wpeutil.exe reboot&amp;echo:goto :eof&amp;echo::fail&amp;echo:echo:)</Path>'),
-    'Order 35 に %%d コピーおよび Reboot 遷移が無条件パッキングされること');
-  assert(partialGenXml.includes('<Order>36</Order>\r\n\t\t\t\t\t<Path>cmd.exe /c &gt;&gt;X:\\pe.cmd (echo:echo:Fatal error: ^%~1&amp;echo:echo:&amp;echo:pause&amp;echo:exit 1&amp;echo::print&amp;echo:echo:&amp;echo:echo:*** ^%~1 ***&amp;echo:echo:&amp;echo:goto :eof)</Path>'),
-    'Order 36 にサブルーチンが厳密な位置でパッキングされること');
-  assert(partialGenXml.includes('<Order>37</Order>\r\n\t\t\t\t\t<Path>cmd.exe /c "X:\\pe.cmd"</Path>'),
-    'Order 37 が cmd.exe /c "X:\\pe.cmd" であること');
+  assert(partialGenXml.includes('<Order>29</Order>\r\n\t\t\t\t\t<Path>cmd.exe /c &gt;&gt;X:\\pe.cmd (echo:^)&amp;echo:if defined MSU_FOLDER (&amp;echo:call :print ^"Adding packages from ^%MSU_FOLDER^% to new installation^")</Path>'),
+    'Order 29 に Adding packages from %MSU_FOLDER% が厳密な位置でパッキングされること');
+  assert(partialGenXml.includes('<Order>30</Order>\r\n\t\t\t\t\t<Path>cmd.exe /c &gt;&gt;X:\\pe.cmd (echo:dism.exe /Add-Package /Image:W:\\ /PackagePath:^%MSU_FOLDER^% /ScratchDir:W:\\Windows\\Temp ^|^| call :fail ^"dism.exe encountered an error.^"&amp;echo:^)&amp;echo:call :print ^"Copying answer file to target disk^")</Path>'),
+    'Order 30 に dism.exe /Add-Package が厳密な位置でパッキングされること');
+  assert(partialGenXml.includes('<Order>31</Order>\r\n\t\t\t\t\t<Path>cmd.exe /c &gt;&gt;X:\\pe.cmd (echo:mkdir W:\\Windows\\Panther&amp;echo:copy ^%XML_FILE^% W:\\Windows\\Panther\\unattend.xml&amp;echo:if defined PEDRIVERS_FOLDER (&amp;echo:call :print ^"Adding drivers from ^%PEDRIVERS_FOLDER^% to new installation^")</Path>'),
+    'Order 31 に Adding drivers from %PEDRIVERS_FOLDER% to new installation が厳密な位置でパッキングされること');
+  assert(partialGenXml.includes('<Order>33</Order>\r\n\t\t\t\t\t<Path>cmd.exe /c &gt;&gt;X:\\pe.cmd (echo:reg.exe ADD ^"HKLM\\mount\\Microsoft\\Windows\\CurrentVersion\\Control Panel\\DeviceRegion^" /v DeviceRegion /t REG_DWORD /d 122 /f&amp;echo:reg.exe UNLOAD HKLM\\mount&amp;echo:set ^"ROBOCOPY_ARGS=/E /XX /COPY:DAT /DCOPY:DAT /R:0^")</Path>'),
+    'Order 33 に ROBOCOPY_ARGS が無条件パッキングされること');
+  assert(partialGenXml.includes('<Order>34</Order>\r\n\t\t\t\t\t<Path>cmd.exe /c &gt;&gt;X:\\pe.cmd (echo:if defined OEM_FOLDER (&amp;echo:call :print ^"Copying contents of ^%OEM_FOLDER^%^"&amp;echo:if exist ^"^%OEM_FOLDER^%\\$$^" robocopy.exe ^"^%OEM_FOLDER^%\\$$^" W:\\Windows ^%ROBOCOPY_ARGS^%)</Path>'),
+    'Order 34 に Copying contents of %OEM_FOLDER% が無条件パッキングされること');
+  assert(partialGenXml.includes('<Order>35</Order>\r\n\t\t\t\t\t<Path>cmd.exe /c &gt;&gt;X:\\pe.cmd (echo:if exist ^"^%OEM_FOLDER^%\\$1^" robocopy.exe ^"^%OEM_FOLDER^%\\$1^" W:\\ ^%ROBOCOPY_ARGS^%&amp;echo:for ^%^%d in (C D E F G H I J K L M N O P Q R S T U V W X Y Z^) do ()</Path>'),
+    'Order 35 に $1 コピーおよびドライブ走査ループが無条件パッキングされること');
+  assert(partialGenXml.includes('<Order>36</Order>\r\n\t\t\t\t\t<Path>cmd.exe /c &gt;&gt;X:\\pe.cmd (echo:if exist ^"^%OEM_FOLDER^%\\^%^%d^" robocopy.exe ^"^%OEM_FOLDER^%\\^%^%d^" ^%^%d:\\ ^%ROBOCOPY_ARGS^%&amp;echo:^)&amp;echo:^)&amp;echo:call :print ^"Computer will now reboot^"&amp;echo:wpeutil.exe reboot&amp;echo:goto :eof&amp;echo::fail&amp;echo:echo:)</Path>'),
+    'Order 36 に %%d コピーおよび Reboot 遷移が無条件パッキングされること');
+  assert(partialGenXml.includes('<Order>37</Order>\r\n\t\t\t\t\t<Path>cmd.exe /c &gt;&gt;X:\\pe.cmd (echo:echo:Fatal error: ^%~1&amp;echo:echo:&amp;echo:pause&amp;echo:exit 1&amp;echo::print&amp;echo:echo:&amp;echo:echo:*** ^%~1 ***&amp;echo:echo:&amp;echo:goto :eof)</Path>'),
+    'Order 37 にサブルーチンが厳密な位置でパッキングされること');
+  assert(partialGenXml.includes('<Order>38</Order>\r\n\t\t\t\t\t<Path>cmd.exe /c "X:\\pe.cmd"</Path>'),
+    'Order 38 が cmd.exe /c "X:\\pe.cmd" であること');
+
+  // 新規タイムゾーン追加 (#478 / PR #91) の UI・出力パリティ検証
+  const tzHtml = fs.readFileSync(path.join(__dirname, '..', 'docs', 'sections', '07_time_zone.html'), 'utf8');
+  for (const newTz of ['British Columbia Standard Time', 'Alberta Standard Time', 'Manitoba Standard Time', 'Kamchatka Standard Time']) {
+    assert(tzHtml.includes(`value="${newTz}"`), `07_time_zone.html に新規タイムゾーン ${newTz} が含まれること`);
+  }
+  const bcTzXml = engine.generateAutounattendXml(new MockFormData({ TimeZoneMode: 'Explicit', TimeZone: 'British Columbia Standard Time' }));
+  assert(bcTzXml.includes('<TimeZone>British Columbia Standard Time</TimeZone>'), '新規タイムゾーン British Columbia Standard Time が XML に出力されること');
 
   console.log('\n====================================================');
   console.log(` テスト結果: ${passed} 項目合格 / ${failed} 項目失敗`);

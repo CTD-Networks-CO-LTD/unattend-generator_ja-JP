@@ -262,10 +262,10 @@ var SET_WALLPAPER_PS1 = [
 
 var REPO_URL = 'https://github.com/CTD-Networks-CO-LTD/unattend-generator_ja-JP';
 var COMMIT_URL_BASE = REPO_URL + '/commit/';
-var COMMIT_HASH = '5fb1c4d1b2b814ee81e4a615ada76153f8674edc';
-var RELEASE_TAG = 'v1.7.3_20261029';
-var RELEASE_URL = 'https://github.com/CTD-Networks-CO-LTD/unattend-generator_ja-JP/releases/tag/v1.7.3_20261029';
-var COMMIT_DATE = '2026-11-07T07:32:41+09:00';
+var COMMIT_HASH = '9e144ee835f82bebf15d583df156da67386e6d9e';
+var RELEASE_TAG = 'v1.7.4_20261108';
+var RELEASE_URL = 'https://github.com/CTD-Networks-CO-LTD/unattend-generator_ja-JP/releases/tag/v1.7.4_20261108';
+var COMMIT_DATE = '2026-11-20T21:40:50+09:00';
 
 
 var PAUSE_WINDOWS_UPDATE_XML = "<Task version=\"1.2\" xmlns=\"http://schemas.microsoft.com/windows/2004/02/mit/task\">\n\t<Triggers>\n\t\t<BootTrigger>\n\t\t\t<Repetition>\n\t\t\t\t<Interval>P1D</Interval>\n\t\t\t\t<StopAtDurationEnd>false</StopAtDurationEnd>\n\t\t\t</Repetition>\n\t\t\t<Enabled>true</Enabled>\n\t\t</BootTrigger>\n\t</Triggers>\n\t<Principals>\n\t\t<Principal id=\"Author\">\n\t\t\t<UserId>S-1-5-19</UserId>\n\t\t\t<RunLevel>LeastPrivilege</RunLevel>\n\t\t</Principal>\n\t</Principals>\n\t<Settings>\n\t\t<MultipleInstancesPolicy>IgnoreNew</MultipleInstancesPolicy>\n\t\t<DisallowStartIfOnBatteries>false</DisallowStartIfOnBatteries>\n\t\t<StopIfGoingOnBatteries>false</StopIfGoingOnBatteries>\n\t\t<AllowHardTerminate>true</AllowHardTerminate>\n\t\t<StartWhenAvailable>false</StartWhenAvailable>\n\t\t<RunOnlyIfNetworkAvailable>false</RunOnlyIfNetworkAvailable>\n\t\t<IdleSettings>\n\t\t\t<StopOnIdleEnd>true</StopOnIdleEnd>\n\t\t\t<RestartOnIdle>false</RestartOnIdle>\n\t\t</IdleSettings>\n\t\t<AllowStartOnDemand>true</AllowStartOnDemand>\n\t\t<Enabled>true</Enabled>\n\t\t<Hidden>false</Hidden>\n\t\t<RunOnlyIfIdle>false</RunOnlyIfIdle>\n\t\t<WakeToRun>false</WakeToRun>\n\t\t<ExecutionTimeLimit>PT72H</ExecutionTimeLimit>\n\t\t<Priority>7</Priority>\n\t</Settings>\n\t<Actions Context=\"Author\">\n\t\t<Exec>\n\t\t\t<Command>C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe</Command>\n\t\t\t<Arguments>-WindowStyle Hidden -NoProfile -NonInteractive -Command \"$format = 'yyyy-MM-ddTHH\\:mm\\:ssK'; $now = [datetime]::UtcNow; $start = $now.ToString($format); $end = $now.AddDays(7).ToString($format); $params = @{ LiteralPath = 'Registry::HKLM\\Software\\Microsoft\\WindowsUpdate\\UX\\Settings'; Type = 'String'; Force = $true; Verbose = $true; }; 'PauseFeatureUpdatesStartTime', 'PauseQualityUpdatesStartTime', 'PauseUpdatesStartTime' | foreach { Set-ItemProperty @params -Name $_ -Value $start; }; 'PauseFeatureUpdatesEndTime', 'PauseQualityUpdatesEndTime', 'PauseUpdatesExpiryTime' | foreach { Set-ItemProperty @params -Name $_ -Value $end; };\"</Arguments>\n\t\t</Exec>\n\t</Actions>\n</Task>";
@@ -1019,6 +1019,7 @@ function getPEScript(ctx) {
   lines.push('    if exist %%d:\\autounattend.xml set "XML_FILE=%%d:\\autounattend.xml"');
   lines.push('    if exist %%d:\\$OEM$ set "OEM_FOLDER=%%d:\\$OEM$"');
   lines.push('    if exist %%d:\\$WinPEDriver$ set "PEDRIVERS_FOLDER=%%d:\\$WinPEDriver$"');
+  lines.push('    if exist %%d:\\$WinPEPackage$ set "MSU_FOLDER=%%d:\\$WinPEPackage$"');
   if (ctx.getBool('VirtIoGuestTools', false)) {
     lines.push('    if exist %%d:\\virtio-win-guest-tools.exe set "VIRTIO_DRIVE=%%d:"');
   }
@@ -1169,7 +1170,14 @@ function getPEScript(ctx) {
   lines.push(')');
   lines.push('');
 
-  // 9. WinRE removal
+  // 9. Install .msu and .cab packages
+  lines.push('if defined MSU_FOLDER (');
+  lines.push('    call :print "Adding packages from %MSU_FOLDER% to new installation"');
+  lines.push('    dism.exe /Add-Package /Image:W:\\ /PackagePath:%MSU_FOLDER% /ScratchDir:W:\\Windows\\Temp || call :fail "dism.exe encountered an error."');
+  lines.push(')');
+  lines.push('');
+
+  // 10. WinRE removal
   function deleteWinRE() {
     lines.push('call :print "Deleting winre.wim file to avoid creation of recovery partition"');
     lines.push('del W:\\Windows\\System32\\Recovery\\winre.wim');

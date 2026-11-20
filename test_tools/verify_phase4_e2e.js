@@ -108,14 +108,17 @@ assert(defaultGenXml.includes('diskpart.exe /s X:\\%LAYOUT%.txt'), '動的レイ
 assert(defaultGenXml.includes('Windows %OS_VERSION% Pro'), 'Windowsイメージ適用に対象エディション名が存在');
 assert(defaultGenXml.includes('bcdboot.exe W:\\Windows /s S:'), 'bcdboot によるブート構成作成が存在');
 assert(defaultGenXml.includes('bcdedit.exe /set {fwbootmgr} bootsequence {bootmgr}'), 'GPT時の bcdedit ブートシーケンス設定が存在');
+assert(defaultGenXml.includes('if exist %%d:\\$WinPEPackage$ set "MSU_FOLDER=%%d:\\$WinPEPackage$"'), '$WinPEPackage$ 検出処理が存在');
+assert(defaultGenXml.includes('Adding packages from %MSU_FOLDER% to new installation'), 'MSU_FOLDER パッケージ追加メッセージが存在');
+assert(defaultGenXml.includes('dism.exe /Add-Package /Image:W:\\ /PackagePath:%MSU_FOLDER% /ScratchDir:W:\\Windows\\Temp'), 'dism.exe /Add-Package 実行コマンドが存在');
 assert(defaultGenXml.includes('DeviceRegion'), 'DeviceRegion レジストリ設定が存在');
 assert(defaultGenXml.includes('cmd.exe /c "X:\\pe.cmd"'), 'pe.cmd 実行コマンドが存在');
 
 const pePassMatch = defaultGenXml.match(/<settings pass="windowsPE">[\s\S]*?<\/settings>/);
 assert(pePassMatch !== null, 'windowsPE パスが存在');
 const syncCommands = pePassMatch[0].match(/<RunSynchronousCommand/g);
-assert(syncCommands && syncCommands.length === 39, 'windowsPE の RunSynchronousCommand が正確に 39 個存在 (実際: ' + (syncCommands ? syncCommands.length : 0) + ')');
+assert(syncCommands && syncCommands.length === 40, 'windowsPE の RunSynchronousCommand が正確に 40 個存在 (実際: ' + (syncCommands ? syncCommands.length : 0) + ')');
 
 console.log('\n====================================================');
-console.log(' 全 ' + (16 + 15) + ' 検証項目 合格！');
+console.log(' 全 ' + (16 + 18) + ' 検証項目 合格！');
 console.log('====================================================');

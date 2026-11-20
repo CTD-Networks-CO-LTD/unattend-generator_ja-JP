@@ -169,6 +169,24 @@ const testCases = [
       PEMode: 'Default',
       UseConfigurationSet: 'true'
     }
+  },
+  {
+    name: 'Case 16: Generated PE mode ($WinPEPackage$ / MSU_FOLDER parity)',
+    params: {
+      PEMode: 'Generated',
+      TargetDiskMode: 'Generated',
+      TargetDiskSize: 'true',
+      TargetDiskMinSize: '100',
+      TargetDiskMaxSize: '4000',
+      TargetDiskIndex: 'true',
+      TargetDisk: '0',
+      TargetDiskNoPartitions: 'true',
+      PartitionMode: 'Unattended',
+      PartitionLayout: 'GPT',
+      RecoveryMode: 'Partition',
+      InstallFromMode: 'Edition',
+      InstallFromEdition: 'pro'
+    }
   }
 ];
 

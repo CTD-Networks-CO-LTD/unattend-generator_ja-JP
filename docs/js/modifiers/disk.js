@@ -326,6 +326,7 @@ function getPEScript(ctx) {
   lines.push('    if exist %%d:\\autounattend.xml set "XML_FILE=%%d:\\autounattend.xml"');
   lines.push('    if exist %%d:\\$OEM$ set "OEM_FOLDER=%%d:\\$OEM$"');
   lines.push('    if exist %%d:\\$WinPEDriver$ set "PEDRIVERS_FOLDER=%%d:\\$WinPEDriver$"');
+  lines.push('    if exist %%d:\\$WinPEPackage$ set "MSU_FOLDER=%%d:\\$WinPEPackage$"');
   if (ctx.getBool('VirtIoGuestTools', false)) {
     lines.push('    if exist %%d:\\virtio-win-guest-tools.exe set "VIRTIO_DRIVE=%%d:"');
   }
@@ -476,7 +477,14 @@ function getPEScript(ctx) {
   lines.push(')');
   lines.push('');
 
-  // 9. WinRE removal
+  // 9. Install .msu and .cab packages
+  lines.push('if defined MSU_FOLDER (');
+  lines.push('    call :print "Adding packages from %MSU_FOLDER% to new installation"');
+  lines.push('    dism.exe /Add-Package /Image:W:\\ /PackagePath:%MSU_FOLDER% /ScratchDir:W:\\Windows\\Temp || call :fail "dism.exe encountered an error."');
+  lines.push(')');
+  lines.push('');
+
+  // 10. WinRE removal
   function deleteWinRE() {
     lines.push('call :print "Deleting winre.wim file to avoid creation of recovery partition"');
     lines.push('del W:\\Windows\\System32\\Recovery\\winre.wim');

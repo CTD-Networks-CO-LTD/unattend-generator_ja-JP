@@ -468,6 +468,7 @@ for %%d in (C D E F G H I J K L M N O P Q T U V X Y Z) do (
     if exist %%d:\autounattend.xml set "XML_FILE=%%d:\autounattend.xml"
     if exist %%d:\$OEM$ set "OEM_FOLDER=%%d:\$OEM$"
     if exist %%d:\$WinPEDriver$ set "PEDRIVERS_FOLDER=%%d:\$WinPEDriver$"
+    if exist %%d:\$WinPEPackage$ set "MSU_FOLDER=%%d:\$WinPEPackage$"
 )
 for /f "tokens=3" %%t in ('reg.exe query HKLM\System\Setup /v UnattendFile 2^&gt;nul') do ( if exist %%t set "XML_FILE=%%t" )
 if not defined IMAGE_FILE call :fail "Could not locate install.wim, install.esd or install.swm."
@@ -594,6 +595,11 @@ call :print "Making system partition bootable"
 bcdboot.exe W:\Windows /s S: || call :fail "bcdboot.exe encountered an error."
 if %LAYOUT% == GPT (
     bcdedit.exe /set {fwbootmgr} bootsequence {bootmgr} || call :fail "bcdedit.exe encountered an error."
+)
+
+if defined MSU_FOLDER (
+    call :print "Adding packages from %MSU_FOLDER% to new installation"
+    dism.exe /Add-Package /Image:W:\ /PackagePath:%MSU_FOLDER% /ScratchDir:W:\Windows\Temp || call :fail "dism.exe encountered an error."
 )
 
 call :print "Copying answer file to target disk"
